@@ -1,0 +1,90 @@
+name: Build desktop apps
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: dist:win
+            files: |
+              dist/EvenUCan-Setup-*.exe
+              dist/EvenUCan-Portable-*.exe
+          - os: macos-latest
+            script: dist:mac
+            files: dist/*.dmg
+          - os: ubuntu-latest
+            script: dist:linux
+            files: |
+              dist/*.AppImage
+              dist/*.deb
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build installer
+        run: npm run ${{ matrix.script }}
+        env:
+          # No signing certificates are set up, so the apps are built unsigned
+          # (electron-builder falls back to an ad-hoc signature on the Mac so Apple Silicon Macs will open it).
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: EvenUCan-${{ runner.os }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: release
+          merge-multiple: true
+
+      # The web version: the same files the desktop app uses (app/), as one zip.
+      - name: Make the web zip and the checksums file
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          (cd app && zip -q -X "../release/EvenUCan_${VERSION}_Web.zip" *)
+          cd release
+          sha256sum * > "SHA256-checksums.txt"
+          ls -la
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: EvenUCan ${{ github.ref_name }}
+          files: release/*
+          generate_release_notes: true

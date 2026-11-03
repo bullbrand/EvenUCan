@@ -1,0 +1,36 @@
+EvenUCan 1.9.32 (web version)  -  SHA-256 checksums
+© 2026 David John Waugh
+
+A checksum is a "fingerprint" of a file. If even one byte of the file is
+changed (by a virus, a hacker or a broken download), the fingerprint
+comes out completely different.
+
+13e7336a32b49cde814809b233765c41b0a7ed4610d5efb0d2d0db56a860c13e  EvenUCan.html
+2fc09d93dee61c53b5175b16682904554420dc0ec5a2b902da6455a291fb3a76  parts-library.json
+247770d54a1c1aa52206481190ee300c7f4a6459d0f9e52d8199b365e2e1dfad  eagle-parts.json
+861f4c1a1ce2a98fd0383f5bc61e56501ed892706475d07ab009e108004d22bd  kicad-parts.json
+634c2550f03fd4c83b448666f2988b5f909f5c85765be7a712033d576c94dff4  EvenUCan User Manual.pdf
+
+
+HOW TO CHECK YOUR COPY
+----------------------
+1. Open the folder that holds the files.
+2. Click in the address bar at the top of the window, type  powershell
+   and press Enter. A blue window opens in that folder.
+3. Type this (with the name of the file you have) and press Enter:
+
+     Get-FileHash "EvenUCan.html"
+
+4. Compare the long code it shows with the one above.
+   The same = the file is exactly as it was released. Safe to use.
+   Different = do NOT use it. Delete it and download a fresh copy.
+
+   (Capitals don't matter. Checking the first 8 and last 8 characters
+   is enough to spot a change.)
+
+
+IMPORTANT
+---------
+Also compare with the codes on the official download page:
+  https://github.com/bullbrand/EvenUCan/releases
+If someone could swap a file, they could swap this list too.

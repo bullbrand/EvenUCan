@@ -1,0 +1,52 @@
+EvenUCan 1.9.32 - web-page version 
+© 2026 David John Waugh. Free software under the GNU GPL v3 or later
+(see LICENSE.txt). It comes with no warranty.
+
+This is EvenUCan as a web page: nothing to install. It runs in Chrome or
+Edge on Windows, Mac or Linux, and works offline.
+
+HOW TO START
+  1. Unzip this folder (right-click > Extract All). Keep the files together.
+  2. Double-click EvenUCan.html. It opens in your web browser.
+
+THE PARTS LIBRARY (over 2,300 ready-made parts)
+  The first time you click Parts > "Browse parts...", it asks for a file:
+  choose parts-library.json, eagle-parts.json and kicad-parts.json together
+  (all three are in this folder; select them all at once in the file
+  picker). Your browser keeps them, so it only asks once.
+
+WHAT'S DIFFERENT FROM THE DESKTOP PROGRAM
+  Everything for drawing, printing, the Enclosure Wizard, Wiring and the
+  ESPHome file works the same. A web page can't reach the rest of your
+  computer, so these need the desktop program (the .exe):
+    - "Send to ESPHome" and "Check with ESPHome": in the web version use
+      "Save .yaml" and add the file in ESPHome Device Builder yourself.
+    - Downloading product photos during the AI look-up.
+    - NVIDIA (free) as the AI: it doesn't accept calls from a web page, so
+      this version uses Google Gemini or Claude instead.
+  Your parts and drawings are kept in this browser only. To move parts to
+  another browser or the desktop program, use Parts > Export... / Import....
+
+  The full guide is "EvenUCan User Manual.pdf". "README - EvenUCan.txt"
+  covers the desktop program as well.
+
+CHECKING THE FILES ARE GENUINE
+  "SHA256 checksums - Web version.txt" lists a code for each file. To check
+  one, open PowerShell in this folder and type, for example:
+      Get-FileHash EvenUCan.html
+  The code must match the list, and the list on the download page:
+      https://github.com/bullbrand/EvenUCan/releases
+
+CREDITS
+  Made by David John Waugh. Source code and downloads:
+  https://github.com/bullbrand/EvenUCan
+  Built in: the Manifold geometry library (© The Manifold Authors, Apache
+  License 2.0) and the Anthropic TypeScript SDK (© Anthropic, Apache License
+  2.0). The parts library is made from the Fritzing parts library,
+  © Fritzing contributors, licensed under CC BY-SA 3.0
+  (https://creativecommons.org/licenses/by-sa/3.0/); keep that credit and
+  licence if you share it. The extra Eagle-library boards are from the
+  SparkFun Eagle Libraries (CC BY-SA 4.0) and the Ai EAGLE Libraries by
+  ACROBOTIC (Beerware licence); the extra KiCad-library boards are from the
+  SparkFun KiCad Libraries and Adafruit's KiCad Libraries (both CC BY-SA
+  4.0); keep their credit too if you share them.
