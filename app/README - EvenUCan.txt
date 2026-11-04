@@ -1,13 +1,16 @@
 EvenUCan  -  from idea to object 
-Version 1.9.36
+Version 1.9.37
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
 Draw your own 3D parts, or let EvenUCan design a printable box
 (an "enclosure") around your electronics. Everything runs on your own
-computer. No internet connection is needed, except for one optional
-extra: looking up a part's sizes online (see "FILL IN AUTOMATICALLY"
-below).
+computer. The drawing, box design, wiring and ESPHome code all work
+offline. The wizard's AI helper (turning your idea into a parts list,
+and writing Arduino sketches) uses the internet with a free key from
+Google Gemini or NVIDIA (desktop program), or your own paid Claude key
+if you prefer - or you can carry on without AI. "Fill in automatically"
+(looking up a part's sizes online) uses the same AI key.
 
 
 =====================================================================
@@ -16,11 +19,11 @@ below).
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan-Portable-1.9.36.exe
+  EvenUCan-Portable-1.9.37.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan-Setup-1.9.36.exe
+  EvenUCan-Setup-1.9.37.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 
@@ -35,6 +38,29 @@ First thing to do:
   Choose File > Printer size... at the top and pick your printer, or
   type its build size (X, Y and Z in mm). The app then warns you if
   anything is too big to print.
+
+NEW in 1.9.37: the wizard is upfront about the AI helper. Its first
+screen ("About the AI helper") says what the AI does, which free keys
+work (Google Gemini, or NVIDIA in the desktop program), what is sent to
+the AI company, and lets you set up and test a key there and then. No
+key? Click "Carry on without AI": pick one of six example projects, or
+tick the parts you have, and carry on to the box, the wiring and the
+code. On the Code tab, "Make a starter sketch (no AI)" writes an Arduino
+sketch (or Raspberry Pi program) with your pins already filled in, and
+"Open in Arduino IDE" still opens it for you.
+The wiring picture is now easy to read: only the pins in use are
+labelled, outside the boards, and the labels never overlap. Wires are
+coloured by job - red for power (dashed for 5 V), black for ground and
+a colour of its own for each signal - with a key at the bottom. Click a
+wire, a part or a line of the wiring list to see just that one with a
+big label such as "GPIO8 -> SDA (SSD1306 OLED)"; "Show all" brings the
+rest back. "One wire at a time" steps through them with Next and Back
+in the same order as the list. Scroll (or pinch) to zoom, drag the
+background to move about, and "Fit" shows it all. "Save picture" saves
+the whole picture with every label.
+Fixed: NVIDIA's free AI in the desktop program (and the photo, page and
+datasheet look-ups of "Fill in automatically") now work - the desktop
+program was missing the connection they need.
 
 NEW in 1.9.36: Follow Me is easier. Click the shape (face), then click
 the line it should follow - every line joined end-to-end to it turns
@@ -472,18 +498,28 @@ IN ONE SENTENCE
       (it tells you which resistors to add), or a speaker wire to GND.
 
   You get:
-    - a diagram: each board with its pins and coloured wires (red 5 V,
-      orange battery, pink 3.3 V, black GND). Drag boards to tidy it.
-      Hover a wire in the list to find it in the picture.
+    - a picture: the controller in the middle with the other boards
+      round it. Only the pins in use are labelled, outside the boards,
+      and the labels never overlap. Wires are coloured by job: red for
+      power (3.3 V, battery; 5 V is dashed), black for ground, and a
+      colour of its own for each signal - the key is at the bottom.
+      Click a line of the wiring list, a wire or a board to see just
+      that one, with a big label such as "GPIO8 -> SDA (SSD1306 OLED)";
+      "Show all" brings everything back. "One wire at a time" steps
+      through the wires with Next and Back (or the arrow keys), in the
+      same order as the list. Scroll the mouse wheel (or pinch) to
+      zoom, drag the background to move about, "Fit" shows it all
+      again, and drag a board to tidy the picture. "Save picture"
+      saves the whole picture with every label.
     - a wiring list to tick off as you solder ("Save wiring list"
       saves it as a text file to print).
     - the matching pin settings for ESPHome and Arduino ("Code pins").
 
   Every part needs its pins. The built-in parts have them. For your
   own parts, open "Parts" and either add pins by hand at the bottom of
-  the part's details, or click "Import pins...". If a parts library is
-  installed on this computer it lists all its parts to search, and it
-  takes the pin names, their positions and the picture. You can also
+  the part's details, or click "Import pins...". It lists all the parts in the parts
+  library that comes with EvenUCan to search, and it takes the pin
+  names, their positions and the picture. You can also
   choose a .fzpz part file (a common format for electronics parts,
   free to download for many modules). Check each pin's role, and
   measure the board: these pictures keep the pin spacing exact but are

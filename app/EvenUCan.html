@@ -377,6 +377,15 @@ const $=id=>document.getElementById(id);
 //     to the wizard's own AI call (intentAnalyse), and a board the user has is preselected over the AI's pick.
 //     Then the wizard's thinking and results steps, and "Looks good" opens the Enclosure Wizard.
 //  3. Keyboard: Tab stays inside the window, Enter on a button, Ctrl+Enter for Next in the idea box, Esc closes.
+// 1.9.37 (4 Nov 2026):
+//  1. Desktop bridge: preload.js/main.js now provide aiPost, fetchPage, fetchImage and fetchPdf (netbridge.js:
+//     http(s) only, aiPost only to the known AI hosts, time and size limits), so NVIDIA works in the desktop app.
+//  2. Welcome: "About the AI helper" (what it does, free keys, what is sent, set up / test a key), "Carry on
+//     without AI" (example projects or ticked parts -> the same box/wiring/code flow), the "needs a key" dead ends
+//     replaced by a choice, and a no-AI starter sketch/program on the Code tab with the pins filled in.
+//  3. Wiring picture: controller in the middle, labels only on used pins outside the boards (leader lines, no
+//     overlaps), wires coloured by job with a key, focus on a wire/part/list row with a big label, one wire at a
+//     time, wheel/pinch zoom, drag to pan, Fit; Save picture draws the whole view.
 
 // ---------------------------------------------------------------- math
 const add=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
@@ -3672,7 +3681,7 @@ function toggleHelp(){
   if(h.style.display==='block'){h.style.display='none';return;}
   h.innerHTML=`<h3>EvenUCan – quick guide</h3>
 <p><b>EvenUCan</b>${appVersion?' version '+appVersion:''}: from idea to object.<br>Created by David John Waugh. © 2026 David John Waugh. Free software under the GNU General Public License v3 (or later), with no warranty.</p>
-<p>Everything runs inside this one file. No internet connection is needed, except for the optional "Fill in automatically" look-up in the Parts Library.</p>
+<p>Everything runs inside this one file. The drawing, box design, wiring and ESPHome code all work offline. Only the AI helper needs the internet: the wizard's <b>I have an idea for a gadget</b> (your idea into a parts list), <b>Write the code with AI</b> for Arduino sketches, <b>Make it with AI</b> and the <b>Fill in automatically</b> look-up in the Parts Library. It uses a free key from Google Gemini or NVIDIA (NVIDIA in the desktop app only), or your own paid Claude key. No key? Choose <b>Carry on without AI</b> in the wizard: start from an example project or tick the parts you have, and the <b>Code</b> tab makes a starter sketch with your pins filled in.</p>
 <table>
 <tr><td><kbd>R</kbd> Rectangle</td><td>Click two corners on the ground or on any face. Type <b>3, 4</b> + Enter for exact sizes.</td></tr>
 <tr><td><kbd>P</kbd> Push/Pull</td><td>Click a face and move the mouse to extrude it into 3D. Type a distance + Enter. Double-click repeats. Push a shape drawn on a wall right through to cut an opening. <b>Several faces at once:</b> Shift+click them first (e.g. the strips of a rectangle split by lines), then click one of them and pull: they all move together, as one solid with no walls between them.</td></tr>
@@ -3722,7 +3731,7 @@ function toggleHelp(){
 <tr><td>Check Model</td><td>Click <b>File → Check model for printing</b> to see if your part is ready to print. Gaps that stop it being watertight are marked on the model with <b>thick red lines</b>, and inside-out faces with <b>orange outlines</b>. One click fixes them: <b>Fill holes</b>, <b>Fix directions</b> or <b>Delete loose lines</b>. <b>Zoom to problems</b> takes you straight there. It opens by itself if a Save or Export finds a problem, and re-checks as you edit.</td></tr>
 <tr><td>Enclosure</td><td>Click <b>Tools → Box designer</b> (or the box button) to design a box around your electronics. Pick the parts, Power (USB cable, or a battery with charger and switch), a style (<b>Compact</b> for soldered wires, <b>Prototype / Dupont</b> with room for jumper plugs, or <b>Rugged</b> with thick walls, screw lid, gasket groove and mounting ears) and a lid. <b>Auto arrange</b> finds the smallest box that obeys the rules: ports open through a wall, mics face out away from the speaker, antennas stay clear, chargers sit near batteries. Drag parts in the top view to change the layout, then <b>Generate</b> makes the base and the lid (turned over, ready to print) as two groups. See-through outlines show where each part goes; they are never exported.</td></tr>
 <tr><td>Parts Library</td><td>Click <b>Tools → Parts library</b> (or the chip button) to see the built-in parts and add your own. Type the sizes, or load a <b>top photo</b> and click the board's 4 corners: the photo is straightened to scale. Then add features by clicking or dragging on it: ports and antennas on an edge; mic holes, speaker cones, mounting holes, buttons, LEDs, pin rows, hot areas and display windows on the face. A <b>side photo</b> measures the heights (click both ends of the board, its top, the tallest part and the pin tips). Export/Import shares your parts as a file.<br><b>Fill in automatically</b> (optional, the only feature that uses the internet): <b>Look up online</b>: type the part number and Google's free Gemini AI searches the web, reads the datasheet and fills in a draft (sizes, holes, sockets, pins) with links to its sources. <b>Read a drawing</b> does the same from a dimension drawing you have saved (a picture or PDF; you can also drag it onto the part picture, or press Ctrl+V). In the desktop app, <b>Look up online</b> also downloads product photos it found (click one, then click its 4 corners to line it up with the part), and reads any dimension drawing or datasheet PDF on those pages for exact hole and socket positions. Always check the draft before saving. Choose the AI in the box: <b>Google Gemini</b> (free key from Google AI Studio) or <b>Claude</b> (paid per use from an Anthropic account at console.anthropic.com). Keys are stored on this computer only.</td></tr>
-<tr><td>Wiring</td><td>Click <b>Wiring</b> (or <b>Wiring…</b> in the Enclosure Wizard) to see what wire goes where for the parts in your box. It picks safe controller pins (on the ESP32-S3 it avoids the start-up, USB, serial, PSRAM and LED pins), builds the power chain (USB, or battery → charger → switch) and warns about anything risky, like 5 V signals into 3.3 V pins. You get a diagram (drag the boards to tidy it), a wiring list to tick off while soldering, and the matching ESPHome and Arduino pin settings. Each part needs its pins: the built-in parts have them, and in <b>Parts</b> you can add them or <b>Import pins…</b> (it searches a parts library on this computer if there is one, or reads a .fzpz part file).</td></tr>
+<tr><td>Wiring</td><td>Click <b>Wiring</b> (or <b>Wiring…</b> in the Enclosure Wizard) to see what wire goes where for the parts in your box. It picks safe controller pins (on the ESP32-S3 it avoids the start-up, USB, serial, PSRAM and LED pins), builds the power chain (USB, or battery → charger → switch) and warns about anything risky, like 5 V signals into 3.3 V pins. You get a picture, a wiring list to tick off while soldering, and the matching ESPHome and Arduino pin settings. In the picture only the pins in use are labelled, outside the boards, and the wires are coloured by job: red for power (dashed for 5 V), black for ground, and a colour of its own for each signal (the key is at the bottom). Click a line of the wiring list, a wire or a part to see just that one with a big label such as <i>GPIO8 → SDA (SSD1306 OLED)</i>; <b>Show all</b> brings everything back. <b>One wire at a time</b> goes through the wires with <b>Next</b> and <b>Back</b> (or the arrow keys), in the same order as the list. Scroll the mouse wheel (or pinch) to zoom, drag the background to move about, <b>Fit</b> shows it all again, and drag a board to tidy the picture. <b>Save picture</b> saves the whole picture with every label. Each part needs its pins: the built-in parts have them, and in <b>Parts</b> you can add them or <b>Import pins…</b> (from the parts library that comes with EvenUCan, or a .fzpz part file).</td></tr>
 <tr><td>Printer</td><td>Click <b>File → Printer size</b> to set your bed size (X, Y and height Z in mm), or pick a preset. The grid shows only on the bed, with an outline of the full build height. If a part won't fit, the size turns red and Save/Export warns you. The setting is remembered in this browser.</td></tr>
 <tr><td>3D printing</td><td><b>Export 3MF</b> or <b>Export STL</b> and open the file in your slicer (PrusaSlicer, Cura, Bambu Studio, OrcaSlicer…). Sizes are always in millimetres. If something is selected, only the selection is exported. Each separate piece becomes its own part in 3MF. You'll get a warning if the model isn't fully closed (watertight).</td></tr>
 <tr><td>Other</td><td>Ctrl+Z undo, Ctrl+Y redo, Delete removes the selection, Esc cancels.</td></tr>
@@ -3737,7 +3746,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.36';
+const APP_VERSION='1.9.37';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -4722,7 +4731,12 @@ markDirty();
 .wrNet{border:1px solid #e3e3e3;border-radius:5px;padding:4px 7px;margin:4px 0;font-size:12.5px;line-height:1.5}
 .wrNet.on{border-color:var(--accent);background:#f2f6ff}
 .wrNet .sw{display:inline-block;width:22px;height:5px;border-radius:3px;margin-right:6px;vertical-align:middle}
-.wrNet label{display:block;padding-left:28px;user-select:text}
+.wrNet label,.wrNet .wrLink{display:block;padding:1px 4px 1px 28px;user-select:text;border-radius:4px}
+.wrNet .wrLink{cursor:pointer;text-indent:-20px;padding-left:44px}.wrNet .wrLink:hover{background:#eef3ff}.wrNet .wrLink.on{background:#dbe7ff;outline:2px solid var(--accent)}
+.wrNet [data-netfocus]{cursor:pointer}.wrNet .sw.dash{background-image:linear-gradient(90deg,transparent 60%,#fff 60%)!important;background-size:8px 5px}
+#wrTools{position:absolute;left:8px;top:8px;display:flex;gap:4px;flex-wrap:wrap;align-items:center;z-index:2}
+#wrTools button{padding:4px 9px;font-size:12.5px;background:#fff;box-shadow:0 1px 3px #0002}#wrTools button.primary{background:var(--accent);color:#fff}
+#wrStepBox{display:none;align-items:center;gap:4px;background:#fff;border-radius:6px;box-shadow:0 1px 3px #0002;padding:0 2px}#wrStepN{font-size:12.5px;white-space:nowrap}
 .ef{display:block;margin:5px 0;font-size:13px}
 .ef input[data-ef=name]{width:170px}
 .ef label{margin-right:8px}
@@ -7011,16 +7025,16 @@ function aiChanged(){
   if(plBack.style.display==='grid'&&ed)renderEditor();
   if(wrBack.style.display==='grid')renderWiringSide();
 }
-function askKey(){
+function askKey(prov){
   return new Promise(res=>{
     const back=document.createElement('div');back.id='askBack';// (while it is open, keys belong to it)
     back.innerHTML='<div id="askBox" class="keyBox"></div>';
     const box=back.querySelector('#askBox');
-    let p=aiProv(),busy=false;
+    let p=PROVIDERS[prov]?prov:aiProv(),busy=false;
     const draw=()=>{
       const h=KEY_HELP[p],has=!!aiKey(p);
       box.innerHTML=`<div class="kHead"><b>AI key for</b> <select data-k="prov">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${k===p?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></div>
-<div class="ewNote">${h.about}</div>${has?'<div class="ok">✓ A key is saved for this AI. Paste a new one to replace it.</div>':''}
+<div class="ewNote">${h.about}</div>${p==='nvidia'&&!(window.wfNative&&window.wfNative.aiPost)?'<div class="warn">This is the web version: NVIDIA only works in the EvenUCan desktop app. Here, pick Google Gemini (free) or Claude.</div>':''}${has?'<div class="ok">✓ A key is saved for this AI. Paste a new one to replace it.</div>':''}
 <ol>${h.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
 <div class="btns kOpen"><button data-k="open">${esc(h.open)}</button></div>
 <input data-k="key" autocomplete="off" spellcheck="false" placeholder="Paste your ${esc(PROVIDERS[p].short)} key here" value="${esc(has?aiKey(p):'')}">
@@ -7185,9 +7199,9 @@ const NV_TEXT=['deepseek-ai/deepseek-v4.1-flash','moonshotai/kimi-k2.6','mistral
 const NV_VISION=['meta/llama-3.2-90b-vision-instruct','meta/llama-3.2-11b-vision-instruct'];
 async function nvChat(key,model,content,maxTokens){
   const post=window.wfNative&&window.wfNative.aiPost;
-  if(!post)throw new Error('NVIDIA works in the EvenUCan desktop app only. Pick Gemini or Claude here.');
+  if(!post)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini (free) or Claude instead.');
   let r;
-  try{r=await post('https://integrate.api.nvidia.com/v1/chat/completions',key,JSON.stringify({model,messages:[{role:'user',content}],temperature:0.1,max_tokens:maxTokens}));}
+  try{r=await post('https://integrate.api.nvidia.com/v1/chat/completions',key,JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:maxTokens}));}
   catch(e){throw new Error('Couldn\'t reach NVIDIA. Check the internet connection and try again.');}
   let j={};try{j=JSON.parse(r.text);}catch(e){/* intentional: handled below as an empty answer */}
   return {status:r.status,j,msg:String(j.detail||j.title||(j.error&&(j.error.message||j.error))||'')};
@@ -7202,7 +7216,7 @@ async function nvidia(text,pic){
     aiLastReply=`NVIDIA model ${m} · HTTP ${status}\n`+JSON.stringify(j,null,1).slice(0,6000);
     if(status===401||status===403)throw new Error('NVIDIA didn\'t accept the key. Click "Change NVIDIA key…" and paste it again.');
     if(status===429||status>=500){busy++;skipped=msg;continue;}// busy or over the free limit: try the next model
-    if(status===404||(status===400&&/model|not found|not supported|unknown/i.test(msg))){skipped=msg;continue;}
+    if(status===404||status===410||(status===400&&/model|not found|not supported|unknown/i.test(msg))){skipped=msg;continue;}
     if(status!==200)throw new Error('NVIDIA said: '+(msg||'HTTP '+status));
     if(!pic)WF.store.set('nvidiaModel',m);
     const c=j.choices&&j.choices[0],txt=String((c&&c.message&&c.message.content)||'');
@@ -7693,68 +7707,78 @@ function wiringCode(ctrl,assigned,s3){
   if(sda&&scl)yml+=`i2c:\n  sda: ${g(sda)}\n  scl: ${g(scl)}\n`;
   for(const a of assigned.filter(a=>['sig','uart_tx','uart_rx'].includes(a.role)))yml+=`# ${a.inst.label} ${a.pin?a.pin.n:''}: ${g(a)}\n`;
   let ino='// Pins for Arduino, worked out by EvenUCan\n';
-  for(const a of assigned){
+  for(const a of assigned){const nm=inoName(a);if(!ino.includes('#define '+nm+' '))ino+=`#define ${nm} ${num_(a)}\n`;}
+  return {esphome:yml,arduino:ino};
+}
+// The #define name for one wired pin: a short name from the part number ("HC-SR04 Ultrasonic..." → HC_SR04_TRIG), _2... for repeats.
+function inoName(a){
     const base=SIG_NAMES[a.role]||a.role.toUpperCase();
-    // short name from the part number ("HC-SR04 Ultrasonic…" → HC_SR04), plus #2… for repeats
     const words=a.inst.label.split(/\s+/),num2=(a.inst.label.match(/#(\d+)$/)||[])[1];
     const who=(words.find(w=>/\d/.test(w)&&!/^#/.test(w))||words[0]).replace(/[^A-Za-z0-9]+/g,'_').replace(/^_|_$/g,'').toUpperCase().slice(0,16)+(num2?'_'+num2:'');
     const nm=(['sig','uart_tx','uart_rx','trig','echo','sda','scl'].includes(a.role)?who+'_':'')+(a.role==='sig'&&a.pin?a.pin.n.replace(/[^A-Za-z0-9]+/g,'_').toUpperCase():base);
-    if(!ino.includes('#define '+nm+' '))ino+=`#define ${nm} ${num_(a)}\n`;
-  }
-  return {esphome:yml,arduino:ino};
+    return nm;
 }
 
 // ---- the wiring window
-let wr=null;// {plan, pos:{key:[x,y]}, view, hi, tab, drag}
-const WIRE_COLOURS={gnd:'#1b1b1b','3v3':'#e0457b','5v':'#d61f1f',vbat:'#e67300',spk:'#7a4f2a'};
-const SIG_COLOURS=['#1f6fd6','#16a085','#8e44ad','#2e8b57','#c58b00','#0097a7','#5d4037','#c2185b','#3949ab','#689f38'];
+// (1.9.37) The picture is made to be read: only the pins in use get a label, outside the board with a
+// leader line, placed so no two labels overlap; wires coloured by job (red power, black ground, a colour
+// of their own for each signal) with a key; zoom (wheel or pinch), drag the background to move about,
+// Fit; click a wire, a part or a wiring-list row to see just that one, or go one wire at a time.
+let wr=null;// {plan, pos:{key:[x,y]}, view, userView, focus, step, hi, tab, done, labelRects, partRects, hit}
+const WIRE_COLOURS={gnd:'#111111','3v3':'#e53935','5v':'#b00020',vbat:'#d00000',spk:'#7a4f2a'};
+const SIG_COLOURS=['#1f6fd6','#f2a900','#8e44ad','#16a085','#00acc1','#7cb342','#3949ab','#ff7f0e','#6d4c41','#ec407a'];
+const WIRE_KEY={'3v3':'Power 3.3 V','5v':'Power 5 V (dashed)',vbat:'Battery +',gnd:'Ground',spk:'Speaker'};
+const WR_FONT='"Segoe UI",system-ui,sans-serif',WR_MIN_S=3;// at least 3 pixels a millimetre, so small boards stay readable
 document.body.insertAdjacentHTML('beforeend',`<div id="wrBack" class="ewBack"><div class="ewWin">
-  <div class="ewHead"><h2>Wiring</h2><span class="ewNote">What wire goes where, for the parts in your Enclosure Wizard. Drag the boards to tidy the picture.</span>
+  <div class="ewHead"><h2>Wiring</h2><span class="ewNote">What wire goes where. Click a wire, a part or a line of the wiring list to see just that one. Scroll to zoom, drag the background to move about, drag a board to tidy it.</span>
     <button id="wrRedo" title="Work the wiring out again">Work it out again</button><button id="wrX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
   <div class="ewBody" style="grid-template-columns:minmax(0,1fr) 400px">
-    <div class="ewMain"><div class="ewCanvasWrap"><canvas id="wrCanvas" tabindex="0"></canvas></div></div>
+    <div class="ewMain"><div class="ewCanvasWrap"><canvas id="wrCanvas" tabindex="0"></canvas>
+      <div id="wrTools"><button id="wrFit" title="Show the whole picture">Fit</button><button id="wrZin" title="Zoom in (or scroll the mouse wheel)">+</button><button id="wrZout" title="Zoom out">−</button><button id="wrStep" title="Show the wires one by one, in the same order as the wiring list">One wire at a time</button><span id="wrStepBox"><button id="wrPrev" title="The wire before (← key)">◀ Back</button><span id="wrStepN"></span><button id="wrNext" title="The next wire (→ key)">Next ▶</button></span><button id="wrShowAll" class="primary" title="Show every wire and label again">Show all</button></div>
+    </div></div>
     <div class="ewSide" id="wrSide" style="border-right:none;border-left:1px solid var(--line)"></div>
   </div>
   <div class="ewFoot"><span class="ewNote" style="flex:1">Check every connection against the boards' own labels before you power up.</span>
-    <button id="wrPng">Save picture</button><button id="wrTxt">Save wiring list</button><button id="wrClose">Close</button></div>
+    <button id="wrPng" title="Save the whole wiring picture, with every label, as a PNG file">Save picture</button><button id="wrTxt">Save wiring list</button><button id="wrClose">Close</button></div>
 </div></div>`);
 const wrBack=$('wrBack');
 function openWiring(){
   ewBack.style.display='none';plBack.style.display='none';wrBack.style.display='grid';
   const plan=planWiring();
-  wr={plan,pos:{},hi:-1,tab:(wr&&wr.tab)||'list',chat:(wr&&wr.chat)||{msgs:[],busy:false}};
+  wr={plan,pos:{},hi:-1,focus:null,step:-1,userView:null,done:{},tab:(wr&&wr.tab)||'list',chat:(wr&&wr.chat)||{msgs:[],busy:false}};
   if(!plan.error){placeModules();linkNets();}
   renderWiringSide();drawWiring();$('wrCanvas').focus();drawGuide();
 }
 function closeWiring(){wrBack.style.display='none';drawGuide();}
-// Controller in the middle; parts wired to its top pins above it, bottom pins below; power parts to the left.
+// Controller in the middle with the parts spread round it: above it, then below it, then to the right;
+// power parts (battery, charger, switch) on the left.
 function placeModules(){
-  const {insts,ctrl,nets}=wr.plan,pos=wr.pos,gap=12;
+  const {insts,ctrl,nets}=wr.plan,pos=wr.pos,G=26,R=38,cw=ctrl.part.w,cd=ctrl.part.d;
   pos[ctrl.key]=[0,0];
   const power=new Set(insts.filter(i=>pinsOf(i.part).some(p=>/^(bat|chg_|sw_)/.test(p.r))).map(i=>i.key));
-  const rows={top:[],bottom:[],left:[]};
+  const rows={top:[],bottom:[],right:[],left:[]},others=[];
   for(const i of insts){
     if(i===ctrl)continue;
     if(power.has(i.key)){rows.left.push(i);continue;}
     const cps=nets.filter(n=>n.pins.some(p=>p.inst===i)).flatMap(n=>n.pins.filter(p=>p.inst===ctrl&&p.pin.x!==undefined).map(p=>p.pin));
-    const amp=nets.find(n=>n.kind==='spk'&&n.pins.some(p=>p.inst===i));
-    i._ax=cps.length?cps.reduce((s,p)=>s+p.x,0)/cps.length:ctrl.part.w/2;
-    let side=cps.length?(cps.reduce((s,p)=>s+p.y,0)/cps.length>ctrl.part.d/2?'top':'bottom'):'top';
-    if(amp&&!cps.length){const other=amp.pins.find(p=>p.inst!==i).inst;i._ax=(other._ax||ctrl.part.w)+30;side=other._side||'top';}
-    i._side=side;rows[side].push(i);
+    i._ax=cps.length?cps.reduce((s,p)=>s+p.x,0)/cps.length:cw/2;
+    i._side=cps.length?(cps.reduce((s,p)=>s+p.y,0)/cps.length>cd/2?'top':'bottom'):'top';
+    others.push(i);
   }
-  // each part over the controller pins it uses, nudged right where it would overlap the one before
-  const lay=(list,y,below)=>{
-    list.sort((a,b)=>a._ax-b._ax);
-    let prev=-1e9;
-    for(const i of list){
-      const room=Math.max(i.part.w,i.label.length*1.9);// leave space for the name above it
-      const x=Math.max(i._ax-i.part.w/2,prev+gap);
-      pos[i.key]=[x,below?y:y-i.part.d];prev=x+room;
-    }
-  };
-  lay(rows.top,-45,false);lay(rows.bottom,ctrl.part.d+45,true);
-  let y=-20;for(const i of rows.left){pos[i.key]=[-45-i.part.w,y];y+=i.part.d+gap;}
+  // a speaker sits by its amplifier
+  for(const i of others){const amp=nets.find(n=>n.kind==='spk'&&n.pins.some(p=>p.inst===i));if(amp){const o=amp.pins.find(p=>p.inst!==i).inst;if(o&&o._ax!==undefined&&!nets.some(n=>n.kind!=='spk'&&n.pins.some(p=>p.inst===i)&&n.pins.some(p=>p.inst===ctrl))){i._ax=o._ax+1;i._side=o._side;}}}
+  others.sort((a,b)=>a._ax-b._ax);
+  const used=list=>list.reduce((s,i)=>s+i.part.w,0)+G*list.length,room=cw+40;
+  for(const i of others){
+    const want=i._side,other=want==='top'?'bottom':'top';
+    if(used(rows[want])+i.part.w<=room)rows[want].push(i);
+    else if(rows.right.length<2)rows.right.push(i);
+    else if(used(rows[other])+i.part.w<=room)rows[other].push(i);
+    else if(rows.right.length<=rows.left.length)rows.right.push(i);else rows.left.push(i);
+  }
+  const row=(list,below)=>{let x=cw/2-(used(list)-G)/2;for(const i of list){pos[i.key]=[x,below?cd+R:-R-i.part.d];x+=i.part.w+G;}};
+  const col=(list,right)=>{let y=cd/2-(list.reduce((s,i)=>s+i.part.d,0)+G*(list.length-1))/2;for(const i of list){pos[i.key]=[right?cw+R:-R-i.part.w,y];y+=i.part.d+G;}};
+  row(rows.top,false);row(rows.bottom,true);col(rows.right,true);col(rows.left,false);
 }
 // pin position in the picture (mm, y down)
 function pinXY(i,p){
@@ -7762,7 +7786,12 @@ function pinXY(i,p){
   if(p.x===undefined){const k=i.pins.indexOf(p),n=i.pins.length;return [mx+w*(k+1)/(n+1),my+d];}
   return [mx+p.x,my+(d-p.y)];
 }
-function netColour(n,k){return WIRE_COLOURS[n.kind]||SIG_COLOURS[k%SIG_COLOURS.length];}
+// red for power, black for ground, and each signal wire a colour of its own
+function netColour(n,k){
+  if(WIRE_COLOURS[n.kind])return WIRE_COLOURS[n.kind];
+  const nets=wr&&wr.plan&&wr.plan.nets||[];let j=0;for(let q=0;q<k&&q<nets.length;q++)if(!WIRE_COLOURS[nets[q].kind])j++;
+  return SIG_COLOURS[j%SIG_COLOURS.length];
+}
 // Which pins each wire joins: every pin to its nearest pin already on that connection (a short chain,
 // like a real ground bus), instead of one long wire per pin back to the first.
 function linkNets(){
@@ -7775,56 +7804,195 @@ function linkNets(){
     }
   }
 }
+// every wire in wiring-list order (the "one wire at a time" order)
+function wrLinks(){return wr.plan.nets.flatMap((n,k)=>n.links.map(([ia,ib],j)=>({k,j,n,a:n.pins[ia],b:n.pins[ib]})));}
+const wrPinId=p=>p.inst.key+'|'+p.pin.n+'|'+p.pin.h;
+// a short name for a part: its model number (SSD1306, MPU6050...) plus what it is, e.g. "SSD1306 OLED"
+function wrShort(i){
+  const l=i.label.replace(/\s*\(.*$/,''),w=l.split(/\s+/),num=(i.label.match(/#\d+$/)||[''])[0];
+  const model=w.find(x=>/[A-Za-z]/.test(x)&&/\d/.test(x)&&!/^\d/.test(x)&&!/^#/.test(x)),kind=(l.match(/\b(OLED|LCD|TFT|buzzer|relay|PIR|servo|speaker|microphone|button|LED)\b/i)||[])[0];
+  return ((model?model+(kind&&kind!==model?' '+kind:''):w.slice(0,2).join(' '))+(num?' '+num:'')).slice(0,30);
+}
+function wrLinkText(a,b){
+  const ctrl=wr.plan.ctrl;if(b.inst===ctrl&&a.inst!==ctrl)[a,b]=[b,a];
+  return (a.inst===ctrl?a.pin.n:a.pin.n+' ('+wrShort(a.inst)+')')+' → '+b.pin.n+' ('+wrShort(b.inst)+')';
+}
+// what is in focus: the wires, pins and parts to show, and the big label
+function wrFocusSets(){
+  const f=wr.focus;if(!f)return null;
+  const L=wrLinks(),pick=f.type==='link'?L.filter(l=>l.k===f.k&&l.j===f.j):f.type==='net'?L.filter(l=>l.k===f.k):L.filter(l=>l.a.inst.key===f.key||l.b.inst.key===f.key);
+  const S={links:new Set(pick.map(l=>l.k+'-'+l.j)),pins:new Set(),insts:new Set(f.type==='inst'?[f.key]:[]),big:'',sub:'',col:'#333'};
+  for(const l of pick){S.pins.add(wrPinId(l.a));S.pins.add(wrPinId(l.b));S.insts.add(l.a.inst.key);S.insts.add(l.b.inst.key);}
+  if(f.type==='link'&&pick[0]){const l=pick[0];S.big=wrLinkText(l.a,l.b);S.col=netColour(l.n,l.k);S.sub=l.n.name+(wr.step>=0?' · wire '+(wr.step+1)+' of '+L.length:'');}
+  else if(f.type==='net'){const n=wr.plan.nets[f.k];S.big=n.name;S.col=netColour(n,f.k);S.sub=pick.length+(pick.length===1?' wire':' wires');}
+  else{const i=wr.plan.insts.find(i=>i.key===f.key);S.big=i?i.label:'';S.sub=pick.length+(pick.length===1?' wire goes':' wires go')+' to this part';}
+  return S;
+}
+// the view that shows everything (pixels per mm and offset), leaving room round the edge for labels
+function wrFitView(cw,ch){
+  const {insts}=wr.plan,M={l:56,r:56,t:92,b:86};
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const i of insts){if(!wr.pos[i.key])continue;const [x,y]=wr.pos[i.key];x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+i.part.w);y1=Math.max(y1,y+i.part.d);}
+  let s=Math.min((cw-M.l-M.r)/(x1-x0),(ch-M.t-M.b)/(y1-y0));
+  if(!(s>0))s=WR_MIN_S;
+  if(s<WR_MIN_S){// too small to read: keep it readable, centred on the controller (zoom out or Fit... drag to move about)
+    s=WR_MIN_S;const c=wr.plan.ctrl,p=wr.pos[c.key]||[0,0];
+    return {s,ox:cw/2-(p[0]+c.part.w/2)*s,oy:ch/2-(p[1]+c.part.d/2)*s,fit:true};
+  }
+  return {s,ox:M.l+(cw-M.l-M.r-(x1-x0)*s)/2-x0*s,oy:M.t+(ch-M.t-M.b-(y1-y0)*s)/2-y0*s,fit:true};
+}
 function drawWiring(){
   const cv=$('wrCanvas'),wrap=cv.parentElement,dpr=window.devicePixelRatio||1,cw=wrap.clientWidth,ch=wrap.clientHeight;if(!cw||!ch)return;
   if(cv.width!==Math.round(cw*dpr)||cv.height!==Math.round(ch*dpr)){cv.width=Math.round(cw*dpr);cv.height=Math.round(ch*dpr);}
-  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,cw,ch);c.fillStyle='#fbfcfe';c.fillRect(0,0,cw,ch);
-  c.font='13px "Segoe UI",system-ui,sans-serif';
-  if(!wr||wr.plan.error){c.fillStyle='#777';c.textAlign='center';c.fillText(wr?wr.plan.error:'',cw/2,ch/2);return;}
-  const {insts,nets}=wr.plan;
-  // fit everything
-  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
-  for(const i of insts){if(!wr.pos[i.key])continue;const [x,y]=wr.pos[i.key];x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+i.part.w);y1=Math.max(y1,y+i.part.d);}
-  x0-=25;y0-=25;x1+=25;y1+=25;
-  const s=Math.min(cw/(x1-x0),ch/(y1-y0));
-  wr.view={s,ox:(cw-(x1-x0)*s)/2-x0*s,oy:(ch-(y1-y0)*s)/2-y0*s};
-  const X=x=>wr.view.ox+x*s,Y=y=>wr.view.oy+y*s;
-  // boards
+  const c=cv.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  wrToolsShow();
+  if(!wr||wr.plan.error){c.clearRect(0,0,cw,ch);c.fillStyle='#fbfcfe';c.fillRect(0,0,cw,ch);c.font='13px '+WR_FONT;c.fillStyle='#777';c.textAlign='center';c.fillText(wr?wr.plan.error:'',cw/2,ch/2);return;}
+  wr.view=wr.userView||wrFitView(cw,ch);
+  const r=renderWiring(c,cw,ch,wr.view,wrFocusSets(),false);
+  Object.assign(wr,r);
+}
+// Draws the whole picture on c; returns where the labels, parts and wires ended up (for clicks and tests).
+function renderWiring(c,cw,ch,view,F,exporting){
+  const {insts,nets,ctrl}=wr.plan,s=view.s,X=x=>view.ox+x*s,Y=y=>view.oy+y*s;
+  c.clearRect(0,0,cw,ch);c.fillStyle=exporting?'#ffffff':'#fbfcfe';c.fillRect(0,0,cw,ch);
+  const partRects=[],hit=[],labelRects=[],obst=[];
+  const hitR=(a,b)=>a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h;
+  const fitText=(t,max)=>{if(c.measureText(t).width<=max)return t;while(t.length>3&&c.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
+  for(const i of insts){if(!wr.pos[i.key])continue;const [mx,my]=wr.pos[i.key];partRects.push({x:X(mx),y:Y(my),w:i.part.w*s,h:i.part.d*s,key:i.key});}
+  for(const q of partRects)obst.push({x:q.x-3,y:q.y-3,w:q.w+6,h:q.h+6});
+  if(!exporting){const tb=$('wrTools');obst.push({x:0,y:0,w:tb.offsetWidth+14,h:tb.offsetHeight+12});obst.push({x:0,y:ch-40,w:Math.min(cw,420),h:40});}
+  // boards and their names
+  c.font='bold 13px '+WR_FONT;
+  const names=[];
   for(const i of insts){
-    if(!wr.pos[i.key])continue;const [mx,my]=wr.pos[i.key],p=i.part,col=typeOf(p).color;
-    c.save();c.beginPath();c.rect(X(mx),Y(my),p.w*s,p.d*s);
+    if(!wr.pos[i.key])continue;const [mx,my]=wr.pos[i.key],p=i.part,col=typeOf(p).color,on=!F||F.insts.has(i.key);
+    c.save();c.globalAlpha=on?1:0.22;c.beginPath();c.rect(X(mx),Y(my),p.w*s,p.d*s);
     const im=imgOf(p.photo,drawWiring);
     if(im){c.save();c.clip();c.drawImage(im,X(mx),Y(my),p.w*s,p.d*s);c.restore();c.fillStyle='#ffffff55';c.fill();}
     else{c.fillStyle=col+'2a';c.fill();}
-    c.lineWidth=2;c.strokeStyle=col;c.stroke();
-    c.fillStyle='#111';c.textAlign='left';c.font='bold 13px "Segoe UI",system-ui,sans-serif';
-    c.fillText(i.label,X(mx),Y(my)-6);
+    c.lineWidth=F&&F.insts.has(i.key)?3:2;c.strokeStyle=col;c.stroke();
+    const t=fitText(i===ctrl?i.label:i.label.replace(/\s*\(.*$/,''),i===ctrl?p.w*s-8:Math.max(60,Math.min(Math.max(p.w*s+18*s,120),cw-X(mx)-6))),tw=c.measureText(t).width;
+    // the name goes on the side away from the pins in use (inside the controller, which is big enough)
+    const up=nets.flatMap(n=>n.pins.filter(q=>q.inst===i)).map(q=>pinXY(i,q.pin)[1]-my),pinsTop=up.length&&up.reduce((a,b)=>a+b,0)/up.length<p.d/2;
+    let nr=i===ctrl&&p.d*s>40?{x:X(mx)+(p.w*s-tw)/2,y:Y(my)+(p.d*s-17)/2,w:tw,h:17}:pinsTop?{x:X(mx),y:Y(my+p.d)+4,w:tw,h:17}:{x:X(mx),y:Y(my)-21,w:tw,h:17};
+    if(i!==ctrl&&(names.some(o=>hitR(o,nr))||nr.y<2))nr=pinsTop?{x:X(mx),y:Y(my)-21,w:tw,h:17}:{x:X(mx),y:Y(my+p.d)+4,w:tw,h:17};
+    names.push(nr);obst.push(nr);
+    c.fillStyle='#111';c.textAlign='left';c.textBaseline='alphabetic';c.fillText(t,nr.x,nr.y+13);
     c.restore();
-    for(const pin of i.pins){if(pin.r==='nc'&&i!==wr.plan.ctrl)continue;const [px,py]=pinXY(i,pin);c.beginPath();c.arc(X(px),Y(py),Math.max(2,s*0.55),0,Math.PI*2);c.fillStyle='#b9a24a';c.fill();}
+    // pins: a small dot each (the used ones get a ring further down)
+    c.save();c.globalAlpha=on?1:0.22;
+    for(const pin of i.pins){if(pin.r==='nc'&&i!==ctrl)continue;const [px,py]=pinXY(i,pin);c.beginPath();c.arc(X(px),Y(py),Math.max(1.6,Math.min(3,s*0.5)),0,Math.PI*2);c.fillStyle='#b9a24a';c.fill();}
+    c.restore();
   }
-  // wires: each net joins its first pin to every other one
+  // wires
   nets.forEach((n,k)=>{
-    const colr=netColour(n,k),dim=wr.hi>=0&&wr.hi!==k;
-    c.save();c.globalAlpha=dim?0.15:1;c.strokeStyle=colr;c.lineWidth=(wr.hi===k?4.5:2.6);c.lineCap='round';
-    for(const [ia,ib] of n.links){
-      const a=n.pins[ia],b=n.pins[ib];
-      const [ax,ay]=pinXY(a.inst,a.pin),[bx,by]=pinXY(b.inst,b.pin);
+    const colr=netColour(n,k);
+    n.links.forEach(([ia,ib],j)=>{
+      const on=F?F.links.has(k+'-'+j):(exporting||wr.hi<0||wr.hi===k);
+      const a=n.pins[ia],b=n.pins[ib],[ax,ay]=pinXY(a.inst,a.pin),[bx,by]=pinXY(b.inst,b.pin);
       const out=(i,x,y)=>{const [mx,my]=wr.pos[i.key],d=[[0,-1,y-my],[0,1,my+i.part.d-y],[-1,0,x-mx],[1,0,mx+i.part.w-x]].sort((u,v)=>u[2]-v[2])[0];return [d[0],d[1]];};
       const [adx,ady]=out(a.inst,ax,ay),[bdx,bdy]=out(b.inst,bx,by),L=Math.max(12,Math.hypot(bx-ax,by-ay)*0.35);
-      c.beginPath();c.moveTo(X(ax),Y(ay));c.bezierCurveTo(X(ax+adx*L),Y(ay+ady*L),X(bx+bdx*L),Y(by+bdy*L),X(bx),Y(by));c.stroke();
-    }
-    c.restore();
+      const P=[[X(ax),Y(ay)],[X(ax+adx*L),Y(ay+ady*L)],[X(bx+bdx*L),Y(by+bdy*L)],[X(bx),Y(by)]];
+      const pts=[];for(let q=0;q<=24;q++){const t=q/24,u=1-t;pts.push([0,1].map(e=>u*u*u*P[0][e]+3*u*u*t*P[1][e]+3*u*t*t*P[2][e]+t*t*t*P[3][e]));}
+      hit.push({k,j,pts});
+      c.save();c.globalAlpha=on?1:(F?0.07:0.15);c.strokeStyle=colr;c.lineCap='round';
+      c.lineWidth=F&&on?5:(wr.hi===k&&!F&&!exporting?4.5:2.6);if(n.kind==='5v')c.setLineDash([9,5]);
+      if(F&&on){c.save();c.strokeStyle='#ffffff';c.lineWidth=9;c.setLineDash([]);c.beginPath();c.moveTo(...P[0]);c.bezierCurveTo(...P[1],...P[2],...P[3]);c.stroke();c.restore();}
+      c.beginPath();c.moveTo(...P[0]);c.bezierCurveTo(...P[1],...P[2],...P[3]);c.stroke();c.restore();
+    });
   });
-  // labels for the pins that are used
-  c.font='11px "Segoe UI",system-ui,sans-serif';
-  const done=new Set();
-  nets.forEach((n,k)=>{for(const p of n.pins){
-    const id=p.inst.key+'|'+p.pin.n+'|'+p.pin.h;if(done.has(id))continue;done.add(id);
-    const [px,py]=pinXY(p.inst,p.pin),[mx,my]=wr.pos[p.inst.key],top=py-my<p.inst.part.d/2;
-    const t=p.pin.n,tw=c.measureText(t).width;
-    c.save();c.globalAlpha=wr.hi>=0&&wr.hi!==k?0.25:1;c.translate(X(px),Y(py));c.rotate(-Math.PI/2);
-    const dx=top?6:-6-tw;c.fillStyle='#ffffffd9';c.fillRect(dx-2,-7,tw+4,13);c.fillStyle='#222';c.textAlign='left';c.fillText(t,dx,4);c.restore();
-  }});
+  // labels: only the pins in use, outside the boards, each moved along/outwards until it overlaps nothing
+  const big=!!F,seen=new Set(),todo=[];
+  if(F&&F.big){c.font='bold 20px '+WR_FONT;const w1=c.measureText(F.big).width;c.font='13px '+WR_FONT;const bw=Math.min(cw-16,Math.max(w1,c.measureText(F.sub).width)+28);obst.push({x:(cw-bw)/2-4,y:(exporting?8:44)-4,w:bw+8,h:60});}
+  nets.forEach((n,k)=>{for(const p of n.pins){const id=wrPinId(p);if(seen.has(id))continue;seen.add(id);if(F&&!F.pins.has(id))continue;todo.push({p,k,col:netColour(n,k)});}});
+  c.font=(big?'bold 14px ':'bold 11px ')+WR_FONT;const lh=big?20:15;
+  for(const L of todo){
+    const {p}=L,[px0,py0]=pinXY(p.inst,p.pin),[mx,my]=wr.pos[p.inst.key],pw=p.inst.part.w,pd=p.inst.part.d;
+    const px=X(px0),py=Y(py0),t=p.pin.n,tw=c.measureText(t).width+8;
+    const e=[[0,-1,py0-my],[0,1,my+pd-py0],[-1,0,px0-mx],[1,0,mx+pw-px0]].sort((u,v)=>u[2]-v[2])[0],[dx,dy]=e;
+    const edge=dy<0?Y(my):dy>0?Y(my+pd):dx<0?X(mx):X(mx+pw);// the board edge the label goes past
+    let best=null;
+    search:for(let tier=0;tier<9;tier++){
+      const off=8+tier*(dy?lh+2:tw*0.6+6);
+      for(const sh of [0,1,-1,2,-2,3,-3,4,-4]){
+        let r;
+        if(dy){const y=dy<0?edge-off-lh:edge+off;r={x:px-tw/2+sh*(tw*0.55+3),y,w:tw,h:lh};}
+        else{const x=dx<0?edge-off-tw:edge+off;r={x,y:py-lh/2+sh*(lh+2),w:tw,h:lh};}
+        if(!obst.some(o=>hitR(o,r))&&!labelRects.some(o=>hitR({x:o.x-2,y:o.y-2,w:o.w+4,h:o.h+4},r))){best=r;break search;}
+        if(!best)best=r;
+      }
+    }
+    const r=best;labelRects.push({x:r.x,y:r.y,w:r.w,h:r.h,t:p.inst.label+' '+t,px,py,col:L.col,text:t});
+  }
+  for(const r of labelRects){// leader line from the pin to the nearest point of its label
+    const qx=Math.max(r.x,Math.min(r.px,r.x+r.w)),qy=Math.max(r.y,Math.min(r.py,r.y+r.h));
+    c.save();c.strokeStyle=r.col;c.globalAlpha=0.85;c.lineWidth=1.2;c.beginPath();c.moveTo(r.px,r.py);c.lineTo(qx,qy);c.stroke();
+    c.beginPath();c.arc(r.px,r.py,big?4:3,0,Math.PI*2);c.fillStyle='#fff';c.fill();c.lineWidth=big?2.5:1.8;c.stroke();c.restore();
+  }
+  for(const r of labelRects){
+    c.save();c.fillStyle='#ffffff';c.strokeStyle=r.col;c.lineWidth=big?2:1.4;
+    c.beginPath();c.roundRect?c.roundRect(r.x,r.y,r.w,r.h,4):c.rect(r.x,r.y,r.w,r.h);c.fill();c.stroke();
+    c.fillStyle='#111';c.textAlign='center';c.textBaseline='middle';c.fillText(r.text,r.x+r.w/2,r.y+r.h/2+0.5);c.restore();
+  }
+  // the key
+  const kinds=[...new Set(nets.map(n=>WIRE_COLOURS[n.kind]?n.kind:'sig'))].sort((a,b)=>'3v35vvbatgndspksig'.indexOf(a)-'3v35vvbatgndspksig'.indexOf(b));
+  c.font='12px '+WR_FONT;
+  const items=kinds.map(k=>({k,t:k==='sig'?'Signals: one colour each':WIRE_KEY[k]}));
+  let kx=10;const ky=ch-24,kw=items.reduce((s,it)=>s+30+c.measureText(it.t).width+12,0);
+  c.save();c.fillStyle='#ffffffe8';c.strokeStyle='#ccd';c.lineWidth=1;c.beginPath();c.rect(6,ky-11,Math.min(kw+6,cw-12),22);c.fill();c.stroke();
+  for(const it of items){
+    c.lineWidth=4;c.lineCap='round';c.setLineDash(it.k==='5v'?[6,4]:[]);
+    if(it.k==='sig'){SIG_COLOURS.slice(0,3).forEach((cl,q)=>{c.strokeStyle=cl;c.beginPath();c.moveTo(kx+4+q*8,ky);c.lineTo(kx+9+q*8,ky);c.stroke();});}
+    else{c.strokeStyle=WIRE_COLOURS[it.k];c.beginPath();c.moveTo(kx+4,ky);c.lineTo(kx+24,ky);c.stroke();}
+    c.setLineDash([]);c.fillStyle='#222';c.textAlign='left';c.textBaseline='middle';c.fillText(it.t,kx+30,ky+0.5);kx+=30+c.measureText(it.t).width+12;
+  }
+  c.restore();
+  // the big label for what is in focus
+  let bigLabel='';
+  if(F&&F.big){
+    bigLabel=F.big;
+    c.save();c.font='bold 20px '+WR_FONT;const t=fitText(F.big,cw-30),w1=c.measureText(t).width;c.font='13px '+WR_FONT;const w2=c.measureText(F.sub).width;
+    const bw=Math.min(cw-16,Math.max(w1,w2)+28),bx=(cw-bw)/2,by=exporting?8:44;
+    c.fillStyle='#ffffff';c.strokeStyle=F.col;c.lineWidth=3;c.beginPath();c.roundRect?c.roundRect(bx,by,bw,52,8):c.rect(bx,by,bw,52);c.fill();c.stroke();
+    c.fillStyle='#111';c.textAlign='center';c.textBaseline='alphabetic';c.font='bold 20px '+WR_FONT;c.fillText(t,cw/2,by+25);
+    c.font='13px '+WR_FONT;c.fillStyle='#555';c.fillText(F.sub,cw/2,by+44);c.restore();
+  }
+  return {labelRects,partRects,hit,bigLabel,keyShown:items.length>0};
+}
+// the buttons over the picture
+function wrToolsShow(){
+  const ok=wr&&!wr.plan.error;$('wrTools').style.display=ok?'flex':'none';if(!ok)return;
+  $('wrStepBox').style.display=wr.step>=0?'inline-flex':'none';$('wrStep').style.display=wr.step>=0?'none':'';
+  $('wrShowAll').style.display=wr.focus?'':'none';
+  if(wr.step>=0)$('wrStepN').textContent=' Wire '+(wr.step+1)+' of '+wrLinks().length+' ';
+}
+// focus on one wire / connection / part (null = show all), and mark it in the wiring list
+function wrSetFocus(f,step){
+  wr.focus=f;wr.step=f&&f.type==='link'&&step!==undefined?step:(f&&f.type==='link'&&wr.step>=0?wrLinks().findIndex(l=>l.k===f.k&&l.j===f.j):-1);
+  if(!f)wr.step=-1;
+  document.querySelectorAll('#wrSide [data-link]').forEach(el=>el.classList.toggle('on',!!f&&f.type==='link'&&el.dataset.link===f.k+'-'+f.j));
+  document.querySelectorAll('#wrSide .wrNet').forEach(el=>el.classList.toggle('on',!!f&&f.type==='net'&&+el.dataset.net===f.k));
+  if(f&&f.type==='link'){const el=document.querySelector(`#wrSide [data-link="${f.k}-${f.j}"]`);if(el&&wr.step>=0)el.scrollIntoView({block:'nearest'});}
+  drawWiring();
+}
+function wrGoStep(i){const L=wrLinks();if(!L.length)return;i=Math.max(0,Math.min(L.length-1,i));wrSetFocus({type:'link',k:L[i].k,j:L[i].j},i);}
+function wrZoom(f,sx,sy){
+  const cv=$('wrCanvas'),v=wr.userView||{...wr.view},fit=wrFitView(cv.clientWidth,cv.clientHeight);
+  const s=Math.max(fit.s*0.4,Math.min(fit.s*8,v.s*f)),k=s/v.s;
+  if(sx===undefined){sx=cv.clientWidth/2;sy=cv.clientHeight/2;}
+  wr.userView={s,ox:sx-(sx-v.ox)*k,oy:sy-(sy-v.oy)*k};drawWiring();
+}
+// "Save picture": the whole picture at a good size, every label shown, whatever is zoomed or in focus
+function wrSavePicture(){
+  if(!wr||wr.plan.error)return;
+  const {insts}=wr.plan;let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const i of insts){if(!wr.pos[i.key])continue;const [x,y]=wr.pos[i.key];x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+i.part.w);y1=Math.max(y1,y+i.part.d);}
+  // drawn at 5 px a millimetre and then doubled, so the labels and names are big and sharp too
+  const K=2,S=Math.min(6,Math.max(4.5,1800/Math.max(x1-x0,y1-y0))),W=Math.round((x1-x0)*S+180),H=Math.round((y1-y0)*S+200);
+  const cv=document.createElement('canvas');cv.width=W*K;cv.height=H*K;
+  const v={s:S,ox:90-x0*S,oy:110-y0*S},c=cv.getContext('2d');c.setTransform(K,0,0,K,0,0);
+  renderWiring(c,W,H,v,null,true);
+  cv.toBlob(b=>WF.downloadBlob('Wiring diagram.png',b));
 }
 function renderWiringSide(){
   const s=$('wrSide'),P=wr.plan;
@@ -7834,9 +8002,10 @@ function renderWiringSide(){
   const info=P.info.map(w=>`<li class="ok"><span class="ic">✓</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('');
   let body='';
   if(tab==='list'){
-    body='<div class="ewNote" style="margin:6px 0">Tick each wire as you solder it. Hover a wire to find it in the picture.</div>'+P.nets.map((n,k)=>
-      `<div class="wrNet${wr.hi===k?' on':''}" data-net="${k}"><span class="sw" style="background:${netColour(n,k)}"></span><b>${esc(n.name)}</b>`+
-        n.links.map(([ia,ib],j)=>{const a=n.pins[ia],b=n.pins[ib];return `<label><input type="checkbox" data-done="${k}-${j}"> ${esc(a.inst.label)} <b>${esc(a.pin.n)}</b> → ${esc(b.inst.label)} <b>${esc(b.pin.n)}</b></label>`;}).join('')+'</div>'
+    const F=wr.focus;
+    body='<div class="ewNote" style="margin:6px 0">Tick each wire as you solder it. Click a line to see just that wire in the picture, or a heading for the whole connection; <b>One wire at a time</b> (over the picture) goes through them in this order.</div>'+P.nets.map((n,k)=>
+      `<div class="wrNet${F&&F.type==='net'&&F.k===k?' on':''}" data-net="${k}"><span class="sw${n.kind==='5v'?' dash':''}" style="background:${netColour(n,k)}"></span><b data-netfocus="${k}" title="Show this whole connection">${esc(n.name)}</b>`+
+        n.links.map(([ia,ib],j)=>{const a=n.pins[ia],b=n.pins[ib],id=k+'-'+j;return `<div class="wrLink${F&&F.type==='link'&&F.k===k&&F.j===j?' on':''}" data-link="${id}" title="Show just this wire"><input type="checkbox" data-done="${id}"${wr.done[id]?' checked':''}> ${esc(a.inst.label)} <b>${esc(a.pin.n)}</b> → ${esc(b.inst.label)} <b>${esc(b.pin.n)}</b></div>`;}).join('')+'</div>'
     ).join('');
   }else if(tab==='esphome')body=pf==='esphome'?esphPanel():platformCodePanel(pf);
   else if(tab==='ai')body=chatPanel();
@@ -8230,13 +8399,93 @@ async function platformCodeAI(pf){
   if(/^\s*(\/\/|#).*\b(not possible|isn'?t possible|impossible|cannot be done|can'?t be done)\b/im.test(code))bad.push('The code says something you asked for isn\'t possible.');
   return {code,notes:String(data.notes||'').slice(0,800),warn,bad};
 }
+// ---- A starter program made without AI: the includes, the pins from the wiring, and setup()/loop() with a note
+// for each part saying what to add. It compiles as it is but doesn't "do" the project: that part is up to you.
+const STARTER_LIBS=[
+  [/ssd1306|oled/i,'Adafruit_SSD1306.h','Adafruit SSD1306 (and Adafruit GFX)','the little OLED screen'],
+  [/sh1106/i,'Adafruit_SH110X.h','Adafruit SH110X','the OLED screen'],
+  [/mpu-?6050|mpu-?9250|gy-?521/i,'Adafruit_MPU6050.h','Adafruit MPU6050','the tilt / motion sensor'],
+  [/bme280/i,'Adafruit_BME280.h','Adafruit BME280','the temperature / pressure / humidity sensor'],
+  [/bmp280/i,'Adafruit_BMP280.h','Adafruit BMP280','the pressure sensor'],
+  [/aht[12]0/i,'Adafruit_AHTX0.h','Adafruit AHTX0','the temperature / humidity sensor'],
+  [/sht3/i,'Adafruit_SHT31.h','Adafruit SHT31','the temperature / humidity sensor'],
+  [/bh1750/i,'BH1750.h','BH1750','the light sensor'],
+  [/ina219/i,'Adafruit_INA219.h','Adafruit INA219','the current sensor'],
+  [/ds3231|rtc/i,'RTClib.h','RTClib','the clock module'],
+  [/vl53l0x/i,'Adafruit_VL53L0X.h','Adafruit VL53L0X','the distance sensor'],
+  [/lcd.*i2c|i2c.*lcd|1602|2004/i,'LiquidCrystal_I2C.h','LiquidCrystal I2C','the LCD screen'],
+  [/dht ?11|dht ?2[12]|am230[12]|\bdht\b/i,'DHT.h','DHT sensor library','the temperature / humidity sensor'],
+  [/ds18b20|dallas/i,'DallasTemperature.h','DallasTemperature (and OneWire)','the temperature probe'],
+  [/ws281|neopixel|sk6812/i,'Adafruit_NeoPixel.h','Adafruit NeoPixel','the coloured lights'],
+  [/servo|sg90|mg90/i,'ESP32Servo.h','ESP32Servo (on an Arduino: Servo)','the servo']
+];
+function starterSketch(P,pf){
+  const A=(intentNow()||{}).analysis||{},name=esphForm().name||A.name||'My project',py=pf==='raspberrypi';
+  const parts=P.insts.filter(i=>i!==P.ctrl&&i.pins.length);
+  const libsFor=i=>STARTER_LIBS.filter(l=>l[0].test(i.part.name+' '+(i.part.notes||'').slice(0,200)));
+  const pinsOf_=i=>P.assigned.filter(a=>a.inst===i);
+  const gpio=a=>a.c.g!==undefined?a.c.g:a.c.n;
+  const what=i=>{const k=sigKind(i),pins=pinsOf_(i);
+    if(pins.some(a=>a.role==='sda'))return 'I2C';
+    if(k==='button'||k==='touch'||k==='motion')return 'in';
+    if(k==='buzzer'||k==='led'||k==='relay')return 'out';
+    if(pins.some(a=>a.role==='trig'))return 'sonar';
+    return k||'other';};
+  const ideas={in:'read it with digitalRead() - HIGH or LOW',out:'switch it on and off with digitalWrite(pin, HIGH) / digitalWrite(pin, LOW)',
+    sonar:'send a 10 µs pulse on TRIG, then time the pulse on ECHO with pulseIn()',I2C:'start it with its library in setup(), then read or write it in loop()',
+    dht:'read it with its library (dht.readTemperature())',ds18b20:'read it with its library',pixel:'set colours with its library',other:'see its datasheet or the library example'};
+  if(py){
+    let t=`# ${name} - starter program made by EvenUCan (no AI)\n# Board: ${P.ctrl.label}. The pins below match your wiring diagram.\n# This is only a starting point: add your own code where it says TODO.\n\nimport time\nfrom gpiozero import DigitalOutputDevice, Button\n\n`;
+    for(const a of P.assigned)if(!['sda','scl'].includes(a.role)||!a.shared)t+=`${inoName(a)} = ${String(gpio(a)).replace(/\D/g,'')||gpio(a)}  # ${a.inst.label} ${a.pin?a.pin.n:a.role.toUpperCase()}\n`;
+    t+='\n';
+    for(const i of parts)t+=`# ${i.label}: ${what(i)==='I2C'?'on the I2C pins (SDA = GPIO2, SCL = GPIO3); turn on I2C in the Raspberry Pi settings':ideas[what(i)]}\n`;
+    t+='\nprint("Hello from your Raspberry Pi")\nwhile True:\n    # TODO: what your gadget does over and over\n    time.sleep(1)\n';
+    return t;
+  }
+  const esp=pf==='esp32ide',i2c=P.assigned.find(a=>a.role==='sda'),scl=P.assigned.find(a=>a.role==='scl');
+  const libs=[...new Map(parts.flatMap(libsFor).map(l=>[l[1],l])).values()];
+  let t=`// ${name} - starter sketch made by EvenUCan (no AI)\n// Board: ${P.ctrl.label}\n// The pins below match your wiring diagram. This sketch compiles and runs, but it is only a\n// starting point: add your own code where it says TODO. Open the Serial Monitor at 115200 baud to see messages.\n\n#include <Arduino.h>\n`;
+  if(i2c)t+='#include <Wire.h>\n';
+  if(libs.length){t+='// Libraries for your parts - install them in the Arduino IDE (Tools > Manage Libraries...),\n// then remove the // in front of each line:\n';for(const l of libs)t+=`// #include <${l[1]}>   // "${l[2]}" for ${l[3]}\n`;}
+  t+='\n'+P.code.arduino.replace(/^\/\/.*\n/,'// Pins (from the wiring diagram)\n');
+  t+='\nvoid setup() {\n  Serial.begin(115200);\n  Serial.println("Hello from '+name.replace(/["\\]/g,'')+'");\n';
+  if(i2c&&scl)t+=esp?`  Wire.begin(${inoName(i2c)}, ${inoName(scl)});  // the I2C bus: SDA, SCL\n`:'  Wire.begin();  // the I2C bus (A4 = SDA, A5 = SCL)\n';
+  for(const i of parts){
+    const w=what(i),pins=pinsOf_(i);
+    t+=`\n  // ${i.label}: ${ideas[w]}\n`;
+    for(const a of pins){
+      if(['sda','scl'].includes(a.role))continue;
+      const n=inoName(a);
+      if(w==='in')t+=`  pinMode(${n}, INPUT_PULLUP);\n`;
+      else if(w==='out'||a.role==='trig')t+=`  pinMode(${n}, OUTPUT);\n  digitalWrite(${n}, LOW);\n`;
+      else if(a.role==='echo')t+=`  pinMode(${n}, INPUT);\n`;
+      else if(/^(sig|uart_tx|uart_rx)$/.test(a.role))t+=`  // ${n} is wired to ${a.pin?a.pin.n:a.role} on this part\n`;
+    }
+    if(w==='I2C')t+=`  // TODO: start ${i.label} here (see the example that comes with its library)\n`;
+  }
+  t+='}\n\nvoid loop() {\n  // TODO: what your gadget does over and over. Some ideas for your parts:\n';
+  for(const i of parts){
+    const w=what(i),pins=pinsOf_(i).filter(a=>!['sda','scl'].includes(a.role)),n=pins[0]&&inoName(pins[0]);
+    if(w==='out'&&n)t+=`  // ${i.label}:\n  //   digitalWrite(${n}, HIGH); delay(200); digitalWrite(${n}, LOW);\n`;
+    else if(w==='in'&&n)t+=`  // ${i.label}:\n  //   if (digitalRead(${n}) == LOW) Serial.println("${i.label.replace(/["\\]/g,'')} pressed");\n`;
+    else t+=`  // ${i.label}: ${ideas[w]}\n`;
+  }
+  t+='  delay(1000);\n}\n';
+  return t;
+}
+function makeStarter(){
+  const P=wr&&wr.plan;if(!P||P.error)return;
+  const pf=pfOfPlan(P);if(pf==='esphome')return;
+  pfCode={pf,sig:planSig(P),code:starterSketch(P,pf),notes:'A starter '+(pf==='raspberrypi'?'program':'sketch')+' made by EvenUCan without AI: the pins match your wiring, and setup() and loop() have a note for each part. Add your own code where it says TODO.',warn:[],bad:[],starter:true};
+  pfMsg='';renderWiringSide();drawGuide();
+}
 async function generateArduinoCode(){return platformCodeAI('arduino');}
 async function generatePiCode(){return platformCodeAI('raspberrypi');}
 async function pfGenerate(){
   const P=wr&&wr.plan;if(!P||P.error||pfBusy)return;
   const pf=pfOfPlan(P);if(pf==='esphome')return;
   if(planIssues(P).some(c=>c.block)){renderWiringSide();return WF.flash('First choose how to fix the problem shown in red.',6000);}// (wizard-r2) checked again before the code
-  if(!aiKey()){await askKey();if(!aiKey())return WF.flash('Set up a key for this AI first: click "'+keyLabel()+'" next to the AI menu.',6000);}
+  if(!aiKey()){await askKey();if(!aiKey())return WF.flash('No AI key set up, so nothing was sent. Click "'+keyLabel()+'" to set one up, or click "Make a starter (no AI)".',7000);}
   pfBusy=true;pfMsg='';renderWiringSide();
   try{const r=await platformCodeAI(pf);pfCode=Object.assign(r,{pf,sig:planSig(P)});}
   catch(e){console.error('EvenUCan: could not write the '+PLATFORMS[pf].code,e);
@@ -8247,9 +8496,9 @@ async function pfGenerate(){
 function platformCodePanel(pf){
   const P=wr.plan,PF=PLATFORMS[pf],c=pfCode&&pfCode.pf===pf?pfCode:null,canAI=!!aiKey(),ext=isIno(pf)?'.ino':'.py';
   const issues=planIssues(P),blocked=issues.some(x=>x.block);
-  let h=`<h4>${esc(PF.code)} for ${esc(P.ctrl.label)}</h4>`+capHtml(issues)+`<div class="ewNote" style="margin-bottom:6px">Your AI writes the whole program from your idea and this wiring, with the pin numbers filled in. EvenUCan can't test AI-written code: ${isIno(pf)?'click ✓ Verify in the Arduino IDE before you upload it':'run it on the Pi and read any error it prints'}.</div>
+  let h=`<h4>${esc(PF.code)} for ${esc(P.ctrl.label)}</h4>`+capHtml(issues)+`<div class="ewNote" style="margin-bottom:6px">Two ways to get the ${isIno(pf)?'sketch':'program'}: your AI writes the whole thing from your idea and this wiring (needs a key and the internet), or EvenUCan makes a <b>starter</b> without AI, with the pins filled in and a note for each part, for you to finish. EvenUCan can't test the code: ${isIno(pf)?'click ✓ Verify in the Arduino IDE before you upload it':'run it on the Pi and read any error it prints'}.</div>
 <div class="ewRow"><label>AI <select id="wrProv">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${aiProv()===k?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></label><button id="wrKey">${keyLabel()}</button></div>
-<div class="ewRow"><button id="wrPfGen" class="primary"${pfBusy||!canAI||blocked?' disabled':''}>${pfBusy?'Writing... please wait':c?'Write it again':'Write the code with AI'}</button>${canAI?'':'<span class="ewNote">Needs a key for this AI: click <b>'+esc(keyLabel())+'</b> above.</span>'}</div>`;
+<div class="ewRow" style="flex-wrap:wrap"><button id="wrPfGen"${canAI?' class="primary"':''}${pfBusy||!canAI||blocked?' disabled':''}>${pfBusy?'Writing... please wait':c&&!c.starter?'Write it again with AI':'Write the code with AI'}</button><button id="wrPfStarter"${canAI?' class="sec"':' class="primary"'}${pfBusy||blocked?' disabled':''}>${c&&c.starter?'Make the starter again':'Make a starter '+(isIno(pf)?'sketch':'program')+' (no AI)'}</button></div>${canAI?'':'<div class="ewNote">Writing it with AI needs a key: click <b>'+esc(keyLabel())+'</b> above. Or make a starter without AI.</div>'}`;
   if(pfBusy)h+=`<div class="ewNote">Asking your AI (${esc(PROVIDERS[aiProv()].name)})... this usually takes 10–60 seconds.</div>`;
   if(pfMsg)h+=`<div class="bad" style="margin:6px 0">${esc(pfMsg)}</div>`;
   if(c){
@@ -8354,7 +8603,7 @@ async function chatAsk(msgs){
       const {status,j,msg}=await nvChat(key,mdl,content,1500);
       if(status===401||status===403)throw new Error('NVIDIA didn\'t accept the key. Click "Change NVIDIA key…" and paste it again.');
       if(status===429||status>=500){last=msg;continue;}
-      if(status===404||(status===400&&/model|not found|not supported|unknown/i.test(msg))){last=msg;continue;}
+      if(status===404||status===410||(status===400&&/model|not found|not supported|unknown/i.test(msg))){last=msg;continue;}
       if(status!==200)throw new Error('NVIDIA said: '+(msg||'HTTP '+status));
       const c=j.choices&&j.choices[0];return String((c&&c.message&&c.message.content)||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim()||'(no reply)';
     }
@@ -8420,11 +8669,16 @@ function wiringText(){
 }
 $('wrSide').addEventListener('click',e=>{
   const el=e.target;
+  if(el.dataset.done!==undefined){wr.done[el.dataset.done]=el.checked;return;}
+  if(el.dataset.netfocus!==undefined){const k=+el.dataset.netfocus;wrSetFocus(wr.focus&&wr.focus.type==='net'&&wr.focus.k===k?null:{type:'net',k});return;}
+  const lk=el.closest&&el.closest('[data-link]');
+  if(lk){const [k,j]=lk.dataset.link.split('-').map(Number);wrSetFocus({type:'link',k,j});return;}
   if(el.dataset.wrtab){if(el.dataset.wrtab==='esphome'&&!hasParts())WF.flash(NEED_PARTS,5000);wr.tab=el.dataset.wrtab;renderWiringSide();return;}
   if(el.dataset.copy){const ta=$(el.dataset.copy);ta.select();navigator.clipboard.writeText(ta.value).then(()=>WF.flash('Copied'),()=>{document.execCommand('copy');WF.flash('Copied');});return;}
   if(el.id==='wrToWiz'){closeWiring();openWizard();}
   if(el.id==='wrAi'){esphWithAI();return;}
   if(el.id==='wrPfGen'){pfGenerate();return;}
+  if(el.id==='wrPfStarter'){makeStarter();return;}
   if(el.id==='wrPfIde'){openInIde();return;}
   if(el.dataset.capfix){capFixLater(el.dataset.capfix);return;}
   if(el.id==='wrPfSave'){if(pfCode){const ext=isIno(pfCode.pf)?'.ino':'.py',n=esphSlug(esphForm().name).replace(/-/g,'_')+ext;WF.download(n,pfCode.code,'text/plain');WF.flash('Saved '+n);}return;}
@@ -8465,24 +8719,82 @@ $('wrSide').addEventListener('change',e=>{
 $('wrSide').addEventListener('keydown',e=>{
   if(e.target.id==='wrcIn'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();chatSend();}
 });
-$('wrSide').addEventListener('mouseover',e=>{const r=e.target.closest('.wrNet');const k=r?+r.dataset.net:-1;if(k!==wr.hi){wr.hi=k;drawWiring();}});
+$('wrSide').addEventListener('mouseover',e=>{if(wr.focus)return;const r=e.target.closest('.wrNet');const k=r?+r.dataset.net:-1;if(k!==wr.hi){wr.hi=k;drawWiring();}});
 $('wrSide').addEventListener('mouseleave',()=>{if(wr.hi!==-1){wr.hi=-1;drawWiring();}});
-const wrCv=$('wrCanvas');let wrDrag=null;
+// picture: drag a board to move it, drag the background to move about, wheel or pinch to zoom,
+// click a part or a wire to see just that one, click the background to show everything again
+const wrCv=$('wrCanvas');let wrDrag=null;const wrPts=new Map();
 const wrMM=e=>{const r=wrCv.getBoundingClientRect();return [(e.clientX-r.left-wr.view.ox)/wr.view.s,(e.clientY-r.top-wr.view.oy)/wr.view.s];};
+const wrPartAt=(x,y)=>[...wr.plan.insts].reverse().find(i=>{const p=wr.pos[i.key];return p&&x>=p[0]&&x<=p[0]+i.part.w&&y>=p[1]-6&&y<=p[1]+i.part.d;});
+function wrWireAt(sx,sy){
+  let best=null;
+  for(const h of wr.hit||[])for(let q=1;q<h.pts.length;q++){
+    const [ax,ay]=h.pts[q-1],[bx,by]=h.pts[q],dx=bx-ax,dy=by-ay,L=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((sx-ax)*dx+(sy-ay)*dy)/L));
+    const d=Math.hypot(ax+t*dx-sx,ay+t*dy-sy);if(d<8&&(!best||d<best.d))best={k:h.k,j:h.j,d};
+  }
+  return best;
+}
 wrCv.addEventListener('pointerdown',e=>{
-  if(!wr||wr.plan.error||!wr.view||e.button!==0)return;
-  const [x,y]=wrMM(e),i=[...wr.plan.insts].reverse().find(i=>{const p=wr.pos[i.key];return p&&x>=p[0]&&x<=p[0]+i.part.w&&y>=p[1]-6&&y<=p[1]+i.part.d;});
-  if(i){wrDrag={i,x,y,p:[...wr.pos[i.key]],view:{...wr.view}};wrCv.setPointerCapture(e.pointerId);}
+  if(!wr||wr.plan.error||!wr.view)return;
+  wrPts.set(e.pointerId,[e.clientX,e.clientY]);wrCv.setPointerCapture(e.pointerId);
+  if(wrPts.size===2){// pinch
+    const [a,b]=[...wrPts.values()];wrDrag={pinch:true,d:Math.hypot(a[0]-b[0],a[1]-b[1]),auto:wrDrag&&wrDrag.auto};return;
+  }
+  if(e.button!==0)return;
+  const [x,y]=wrMM(e),i=wrPartAt(x,y),auto=!wr.userView;
+  wr.userView=wr.userView||{...wr.view};// hold the view still while dragging
+  wrDrag={i,x,y,cx:e.clientX,cy:e.clientY,p:i?[...wr.pos[i.key]]:null,v:{...wr.userView},moved:false,auto};
 });
 wrCv.addEventListener('pointermove',e=>{
-  if(!wrDrag){if(wr&&wr.view&&!wr.plan.error){const [x,y]=wrMM(e);wrCv.style.cursor=wr.plan.insts.some(i=>{const p=wr.pos[i.key];return p&&x>=p[0]&&x<=p[0]+i.part.w&&y>=p[1]-6&&y<=p[1]+i.part.d;})?'move':'default';}return;}
-  const r=wrCv.getBoundingClientRect(),v=wrDrag.view,x=(e.clientX-r.left-v.ox)/v.s,y=(e.clientY-r.top-v.oy)/v.s;
-  wr.pos[wrDrag.i.key]=[wrDrag.p[0]+x-wrDrag.x,wrDrag.p[1]+y-wrDrag.y];drawWiring();
+  if(wrPts.has(e.pointerId))wrPts.set(e.pointerId,[e.clientX,e.clientY]);
+  if(!wrDrag){if(wr&&wr.view&&!wr.plan.error){const [x,y]=wrMM(e),r=wrCv.getBoundingClientRect();wrCv.style.cursor=wrPartAt(x,y)?'move':wrWireAt(e.clientX-r.left,e.clientY-r.top)?'pointer':'grab';}return;}
+  if(wrDrag.pinch){
+    if(wrPts.size<2)return;const [a,b]=[...wrPts.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),r=wrCv.getBoundingClientRect();
+    if(wrDrag.d>0)wrZoom(d/wrDrag.d,(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top);wrDrag.d=d;return;
+  }
+  const mx=e.clientX-wrDrag.cx,my=e.clientY-wrDrag.cy;
+  if(!wrDrag.moved&&Math.hypot(mx,my)<4)return;
+  wrDrag.moved=true;
+  if(wrDrag.i){const v=wrDrag.v;wr.pos[wrDrag.i.key]=[wrDrag.p[0]+mx/v.s,wrDrag.p[1]+my/v.s];}
+  else{wr.userView={s:wrDrag.v.s,ox:wrDrag.v.ox+mx,oy:wrDrag.v.oy+my};wrCv.style.cursor='grabbing';}
+  drawWiring();
 });
-wrCv.addEventListener('pointerup',()=>{if(wrDrag){wrDrag=null;linkNets();renderWiringSide();drawWiring();}});
+const wrUp=e=>{
+  wrPts.delete(e.pointerId);
+  if(!wrDrag)return;const d=wrDrag;
+  if(d.pinch){if(wrPts.size===0)wrDrag=null;return;}
+  wrDrag=null;
+  if(d.i&&d.moved){if(d.auto)wr.userView=null;linkNets();renderWiringSide();drawWiring();return;}
+  if(d.moved)return;// a pan: keep the new view
+  if(d.auto)wr.userView=null;
+  if(e.type==='pointercancel')return;
+  const r=wrCv.getBoundingClientRect(),w=wrWireAt(e.clientX-r.left,e.clientY-r.top);
+  if(d.i&&!(w&&w.d<3))wrSetFocus(wr.focus&&wr.focus.type==='inst'&&wr.focus.key===d.i.key?null:{type:'inst',key:d.i.key});
+  else if(w)wrSetFocus({type:'link',k:w.k,j:w.j});
+  else if(d.i)wrSetFocus(wr.focus&&wr.focus.type==='inst'&&wr.focus.key===d.i.key?null:{type:'inst',key:d.i.key});
+  else if(wr.focus)wrSetFocus(null);
+  else drawWiring();
+};
+wrCv.addEventListener('pointerup',wrUp);wrCv.addEventListener('pointercancel',wrUp);
+wrCv.addEventListener('wheel',e=>{if(!wr||wr.plan.error||!wr.view)return;e.preventDefault();const r=wrCv.getBoundingClientRect();wrZoom(Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015)),e.clientX-r.left,e.clientY-r.top);},{passive:false});
+wrCv.addEventListener('keydown',e=>{
+  if(!wr||wr.plan.error)return;
+  if(e.key==='ArrowRight'&&wr.step>=0){e.preventDefault();wrGoStep(wr.step+1);}
+  else if(e.key==='ArrowLeft'&&wr.step>=0){e.preventDefault();wrGoStep(wr.step-1);}
+  else if(e.key==='+'||e.key==='='){wrZoom(1.25);}else if(e.key==='-'){wrZoom(0.8);}
+});
+$('wrTools').addEventListener('click',e=>{
+  const id=e.target.id;if(!wr||wr.plan.error)return;
+  if(id==='wrFit'){wr.userView=null;drawWiring();}
+  else if(id==='wrZin')wrZoom(1.25);else if(id==='wrZout')wrZoom(0.8);
+  else if(id==='wrStep')wrGoStep(0);
+  else if(id==='wrNext')wrGoStep(wr.step+1);else if(id==='wrPrev')wrGoStep(wr.step-1);
+  else if(id==='wrShowAll')wrSetFocus(null);
+  if(id)wrCv.focus();
+});
 new ResizeObserver(()=>{if(wrBack.style.display==='grid')drawWiring();}).observe(wrCv.parentElement);
 // ---- Fritzing parts → pins (names, roles, positions), board size and picture.
-// The desktop app reads the Fritzing install on this computer; a .fzpz file (or .fzp + .svg) works anywhere.
+// A .fzpz file (or .fzp + .svg) works in the desktop app and in a web browser.
 // Fritzing's part graphics and data are © Fritzing contributors, CC BY-SA 3.0 (noted on the imported part).
 document.body.insertAdjacentHTML('beforeend','<input type="file" id="plFzIn" accept=".fzpz,.fzp,.svg" multiple style="display:none">');
 function guessRole(name,desc,title){
@@ -8662,8 +8974,8 @@ function searchParts(list,q,kind){
   }
   return out.sort((a,b)=>b[0]-a[0]||a[1].title.localeCompare(b[1].title)).map(x=>x[1]);
 }
-// ---- Where ready-made parts come from: the desktop app (its parts library, or Fritzing if installed), or in a
-// web browser the parts-library.json file the user picks once, kept in the browser's own storage (IndexedDB).
+// ---- Where ready-made parts come from: the desktop app reads its own copy of parts-library.json; in a
+// web browser it's the parts-library.json file the user picks once, kept in the browser's own storage (IndexedDB).
 const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('evenucan',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});
 async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('files').objectStore('files').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
 async function idbSet(k,v){const d=await idb();return new Promise((res,rej)=>{const tx=d.transaction('files','readwrite');tx.objectStore('files').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
@@ -8841,7 +9153,7 @@ $('plFzIn').addEventListener('change',async e=>{
 $('wrX').onclick=$('wrClose').onclick=closeWiring;
 $('wrRedo').onclick=openWiring;
 $('wrTxt').onclick=()=>{if(wr)WF.download('Wiring list.txt',wiringText(),'text/plain');};
-$('wrPng').onclick=()=>{const cv=$('wrCanvas');cv.toBlob(b=>WF.downloadBlob('Wiring diagram.png',b));};
+$('wrPng').onclick=wrSavePicture;
 
 // ---------------------------------------------------------------- Project Intent Wizard (r2): intentWizard
 // "💡 What do I want to build?": the user says in plain words what the gadget should do. Their AI picks the kinds
@@ -9144,6 +9456,8 @@ const COMMON_MODS=[
     pins:cmPins([['5V','5v'],['GND','gnd'],['DIN','sig']],1.5,2.5),features:[{t:'led',x:5,y:5,dia:5}]}},
   {re:/buzzer|beep|piezo|alarm sound/i,part:{id:'p-cm-buzzer',name:'Active buzzer module',type:'other',w:18.5,d:15,pcb:1.6,h:12,below:2.5,mount:'floor',
     pins:cmPins([['VCC','3v3'],['I/O','sig'],['GND','gnd']],1.5,6.7),features:[{t:'led',x:9.25,y:8.5,dia:4}]}},
+  {re:/mpu-?6050|gy-?521|accelerometer|gyro|\btilt\b|\blevel (sensor|checker)\b/i,part:{id:'p-cm-mpu6050',name:'MPU6050 tilt and motion sensor (GY-521, I2C)',type:'sensor',w:21.2,d:16.4,pcb:1.6,h:3,below:2.5,mount:'floor',
+    pins:cmPins([['VCC','3v3'],['GND','gnd'],['SCL','scl'],['SDA','sda'],['XDA','nc'],['XCL','nc'],['AD0','nc'],['INT','nc']],1.5,1.71),features:[{t:'hole',x:3,y:13.6,dia:3},{t:'hole',x:18.2,y:13.6,dia:3}]}},
   {re:/relay/i,part:{id:'p-cm-relay',name:'1-channel 5 V relay module',type:'other',w:50,d:26,pcb:1.6,h:19,below:2.5,mount:'floor',
     pins:cmPins([['VCC','5v'],['GND','gnd'],['IN','sig']],13,2),features:[{t:'wire',side:'xmax',u:13,dia:6},{t:'hole',x:3,y:3,dia:3},{t:'hole',x:47,y:3,dia:3},{t:'hole',x:3,y:23,dia:3},{t:'hole',x:47,y:23,dia:3}]}}
 ];
@@ -9239,7 +9553,7 @@ document.body.insertAdjacentHTML('beforeend',`<div id="iwBack" class="ewBack"><d
 const iwBack=$('iwBack');
 const IW_STEPS=['Thinking about your idea…','Finding matching parts…','Setting up the enclosure…','Generating code…'];
 let iw={step:'ask',desc:'',prog:0,analysis:null,base:null,matches:null,pf:'esphome',override:false,missingAdded:[],vals:{},err:'',raw:'',busy:false,
-  welcome:false,w:{text:'',does:[],pf:'auto',noShow:false},userPf:null};// (r4) welcome: opened by the Welcome window; w: its answers
+  welcome:false,w:{text:'',does:[],pf:'auto',noShow:false},userPf:null,noai:{parts:[],pf:'esphome'},nokeyFrom:''};// (r4) welcome: opened by the Welcome window; w: its answers
 function renderIntent(){
   const b=$('iwBody'),f=$('iwFoot');
   updateStrip();
@@ -9249,7 +9563,7 @@ function renderIntent(){
     b.innerHTML=`<label for="iwDesc" style="font-weight:600;display:block;margin-bottom:6px">Describe what you want your device to do:</label>
 <textarea id="iwDesc" rows="7" style="width:100%;box-sizing:border-box;font-size:14px;line-height:1.45;resize:vertical" placeholder="e.g. A weather station that shows the current weather and a 7-day forecast on a small screen, and sends me a daily summary by message.">${esc(iw.desc)}</textarea>
 <div class="ewRow" style="margin-top:6px;flex-wrap:wrap;gap:6px"><span class="ewNote">Try an example:</span>${Object.keys(EXAMPLES).map(k=>`<button data-ex="${esc(k)}" style="border-radius:14px;padding:2px 10px">${esc(k)}</button>`).join('')}</div>
-<div class="ewNote" style="margin-top:6px">Plain words are fine: what it should show, measure, switch or tell you. Your AI (${esc(PROVIDERS[aiProv()].name)}) reads it${has?'.':' — <span class="warn">it needs a key first:</span> <button id="iwKey">'+esc(keyLabel())+'</button>'}</div>
+<div class="ewNote" style="margin-top:6px">Plain words are fine: what it should show, measure, switch or tell you. Your AI (${esc(PROVIDERS[aiProv()].name)}) reads it${has?'.':' — <span class="warn">it needs a free key first:</span> <button id="iwKey">'+esc(keyLabel())+'</button> or <button id="wcNoAi">Carry on without AI</button>'}</div>
 ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
     f.innerHTML='<button id="iwGo" class="primary">Figure it out for me →</button><button id="iwCancel">Close</button>';
     setTimeout(()=>{const t=$('iwDesc');if(t)t.focus();},0);
@@ -9319,7 +9633,6 @@ function openIntent(){
   if((iw.step==='error'||WC_STEPS.includes(iw.step))&&!iw.busy)iw.step='ask';
   if(!iw.desc){const it=intentNow();if(it&&it.desc)iw.desc=it.desc;}
   renderIntent();
-  if(!aiKey())askKey().then(()=>{if(iwBack.style.display==='grid'&&iw.step==='ask')renderIntent();});
 }
 function closeIntent(){
   if(iw.welcome)WF.store.set('welcome_seen',iw.w.noShow?'1':'0');// (r4) "Don't show this when I open a new file"
@@ -9330,7 +9643,7 @@ async function intentAnalyse(){
   const t=$('iwDesc'),desc=(t?t.value:iw.desc).trim();
   iw.desc=desc;iw.err='';
   if(desc.length<8){iw.err='Tell me a little more about what it should do (a sentence or two is plenty).';return renderIntent();}
-  if(!aiKey()){await askKey();if(!aiKey()){iw.err='Your AI needs a key first: click "'+keyLabel()+'".';return renderIntent();}}
+  if(!aiKey()){iw.nokeyFrom='ask';iw.welcome=true;iw.step='nokey';return renderIntent();}// (1.9.37) a choice, not a dead end
   if(iw.busy)return;
   await ensureLibraryReady();// (r4 fix) get the parts library ready now, while this click is still fresh - see its comment
   iw.busy=true;iw.step='busy';iw.prog=0;renderIntent();
@@ -9420,6 +9733,7 @@ const WC_PF={
 const WC_EX=[['🚐 RV level checker','RV level checker',['screen','sound']],['🌤 Weather station','Weather station',['screen','phone']],
   ['🌱 Plant watering','Plant watering reminder',['led','phone']],['🚨 Motion alarm','Motion alarm',['sound','phone']],['🐾 Pet feeder','Pet feeder timer',['control']]];
 const WC_STEPS=['welcome','w1','w2','w3','w4'];
+const WC_MORE=['noai','nokey'];// (1.9.37) carry on without AI; no key yet: choose
 // (wizard-r1) Step 4: the free program each board needs on this computer. id is what wfNative.checkTool() is asked about.
 const WC_TOOL={
   esphome:{id:'esphome',name:'ESPHome Device Builder',url:'https://esphome.io/install/',btn:'Get ESPHome Device Builder — it\'s free',why:'puts the settings file EvenUCan writes onto your ESP32 board',
@@ -9465,12 +9779,13 @@ function wcRender(){
   $('iwSub').textContent=welcome?'From idea to object: tell me about your gadget and I\'ll plan the parts, the box and the code.':'Say what your gadget should do. Your AI picks the parts; EvenUCan sets up the box, the wiring and the code.';
   win.style.width=welcome&&iw.step!=='result'?'min(620px,calc(100vw - 20px))':'min(780px,calc(100vw - 20px))';
   const f=$('iwFoot');f.style.display='';
-  if(!WC_STEPS.includes(iw.step))return false;
+  if(!WC_STEPS.includes(iw.step)&&!WC_MORE.includes(iw.step))return false;
   const b=$('iwBody'),w=iw.w;let focus=null;
   if(iw.step==='welcome'){
     b.innerHTML=`<div style="text-align:center;padding:6px 4px 2px"><div style="font-size:22px;font-weight:600;margin-bottom:4px">👋 Hello! Welcome to EvenUCan</div>
-<div style="font-size:15px;margin-bottom:16px">What would you like to do today?</div>
-<button id="wcIdea" class="primary wcBig"><span style="font-size:18px">💡 I have an idea for a gadget</span><br><span style="font-weight:400">Tell me what it should do and I'll figure out the rest</span></button>
+<div style="font-size:15px;margin-bottom:10px">What would you like to do today?</div></div>${aiHelperBox()}<div style="text-align:center;padding:2px 4px">
+<button id="wcIdea" class="primary wcBig"><span style="font-size:18px">💡 I have an idea for a gadget</span><br><span style="font-weight:400">Tell the AI helper what it should do: it picks the parts and writes the code</span></button>
+<button id="wcNoAi" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧰 Carry on without AI</span><br><span class="ewNote">Start from a ready-made example, or tick the parts you have</span></button>
 <div class="wcOr"><span>or</span></div>
 <button id="wcDraw" class="wcBig wcPlain"><span style="font-size:15px">✏️ I want to draw something myself</span><br><span class="ewNote">(close this and use the drawing canvas)</span></button>
 <label style="display:inline-flex;gap:6px;align-items:center;margin-top:16px"><input type="checkbox" id="wcNoShow"${w.noShow?' checked':''}> Don't show this when I open a new file</label>
@@ -9482,7 +9797,7 @@ function wcRender(){
 <textarea id="wcDesc" rows="6" style="width:100%;box-sizing:border-box;font-size:14px;line-height:1.45;resize:vertical" placeholder="e.g. I want to know when my RV is level and beep when it is. Or: a weather station that shows the forecast on a little screen. Just describe it in your own words — there are no wrong answers!">${esc(w.text)}</textarea>
 <div class="ewRow" style="margin-top:6px;flex-wrap:wrap;gap:6px"><span class="ewNote">Try an example:</span>${WC_EX.map(([l],k)=>`<button data-wex="${k}" style="border-radius:14px;padding:2px 10px">${esc(l)}</button>`).join('')}</div>
 ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`+
-      (aiKey()?'':`<div class="ewNote" style="margin-top:8px"><span class="warn">Your AI (${esc(PROVIDERS[aiProv()].name)}) needs a key before I can plan it:</span> <button id="iwKey">${esc(keyLabel())}</button></div>`);
+      (aiKey()?'':`<div class="ewNote" style="margin-top:8px"><span class="warn">The AI helper (${esc(PROVIDERS[aiProv()].name)}) needs a free key before it can plan this:</span> <button id="iwKey">${esc(keyLabel())}</button> or <button id="wcNoAi">Carry on without AI</button></div>`);
     f.innerHTML='<button id="wcBack1">← Back</button><button id="wcNext1" class="primary">Next →</button>';focus='wcDesc';
   }else if(iw.step==='w2'){
     b.innerHTML=wcProg(2)+`<fieldset style="border:none;padding:0;margin:0"><legend style="font-size:16px;font-weight:600;margin-bottom:8px;padding:0">What should it show or do when it's working?</legend>`+
@@ -9519,20 +9834,87 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`+
     f.innerHTML=`<button id="wcBack4">← Back</button><button id="wcSkip4">Skip for now →</button><button id="wcNext4" class="primary"${can?'':' disabled title="Install it first (or skip for now)"'}>Next →</button>`;
     focus=tc.st==='missing'?'wcRecheck4':tc.st==='web'?'wcHave4':can?'wcNext4':'wcSkip4';
   }
+  else if(iw.step==='noai'){
+    const ticked=iw.noai.parts,pf=iw.noai.pf;
+    b.innerHTML=`<div style="font-size:16px;font-weight:600;margin-bottom:2px">🧰 Carry on without AI</div>
+<div class="ewNote" style="margin-bottom:8px">Nothing is sent anywhere. You choose the parts; EvenUCan still designs the box, works out the wiring and writes the ESPHome code. For an Arduino board you get a starter sketch with the pins filled in, for you to finish.</div>
+<div style="font-weight:600;margin:6px 0 4px">Start from a ready-made example:</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px">${NOAI_EX.map((x,k)=>`<button data-noex="${k}" title="${esc(x.what)}" style="text-align:left">${esc(x.label)}<br><span class="ewNote">${esc(x.what)}</span></button>`).join('')}</div>
+<div style="font-weight:600;margin:12px 0 4px">Or tick the parts you want (from the built-in library):</div>
+<div style="columns:2;column-gap:14px">${noaiChoices().map(c=>`<label style="display:flex;gap:6px;align-items:flex-start;margin:3px 0;break-inside:avoid"><input type="checkbox" data-noai="${esc(c.v)}"${ticked.includes(c.v)?' checked':''}> <span>${esc(c.name)}</span></label>`).join('')}</div>
+<div class="ewNote">Not here? Add it later in <b>Tools → Parts library</b>.</div>
+<fieldset style="border:none;padding:0;margin:10px 0 0"><legend style="font-weight:600;padding:0;margin-bottom:4px">Which board?</legend>${Object.entries(PLATFORMS).map(([k,P])=>`<label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="radio" name="noaiPf" value="${k}"${pf===k?' checked':''}> ${P.icon} ${esc(P.name)} <span class="ewNote">(${esc(P.code)})</span></label>`).join('')}</fieldset>
+${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
+    f.innerHTML='<button id="wcNoAiBack">← Back</button><button id="wcNoAiGo" class="primary">Next: check the parts →</button>';focus='[data-noex]';
+  }else if(iw.step==='nokey'){
+    b.innerHTML=`<div style="font-size:16px;font-weight:600;margin-bottom:6px">The AI helper needs a key first</div>
+<div style="font-size:14px;margin-bottom:10px">To turn your idea into a parts list, EvenUCan asks a free online AI, and that needs a key (a kind of password from the AI company). Getting one takes about two minutes and costs nothing.</div>
+${aiHelperBox(true)}
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px"><button id="nkKey" class="primary wcBig"><span style="font-size:15px">🔑 Set up a free key now</span><br><span style="font-weight:400">then I'll carry on with your idea</span></button>
+<button id="wcNoAi" class="wcBig wcPlain"><span style="font-size:15px">🧰 Carry on without AI</span><br><span class="ewNote">pick a ready-made example or tick the parts yourself</span></button></div>`;
+    f.innerHTML='<button id="nkBack">← Back</button>';focus='nkKey';
+  }
   setTimeout(()=>{const el=focus&&(focus[0]==='['||focus.includes(':')?b.querySelector(focus):$(focus));if(el&&iwBack.style.display==='grid')el.focus();},0);
   return true;
+}
+// (1.9.37) "About the AI helper": honest about what is sent where, which keys work, and whether one is set up.
+function aiHelperBox(short){
+  const desk=!!(window.wfNative&&window.wfNative.aiPost),has=!!aiKey(),P=PROVIDERS[aiProv()];
+  return `<div class="aiHelp" style="border:1px solid #c9d7ea;background:#f4f8fd;border-radius:8px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.5">
+<div style="font-weight:600;font-size:14px">🤖 About the AI helper</div>
+${short?'':'<div>When you describe an idea, a free online AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: you use your own free key.</div>'}
+<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:6px 0"><button id="wcAiGem">Get a free Google Gemini key</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>Get a free NVIDIA key${desk?'':' (desktop app only)'}</button></div>
+<div class="ewNote">A paid Claude key (from Anthropic) works too.${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'}</div>
+<div style="margin-top:4px">${has?`<span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button>`:'<span class="warn">No AI key is set up yet.</span> You can set one up now or later.'}</div>
+<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA or Anthropic) to plan it. Free keys have limits (a number of requests a minute or a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
+}
+// (1.9.37) Carry on without AI: ready-made examples (common modules and built-in parts, no look-up needed)
+const NOAI_EX=[
+  {label:'🚐 Level checker',what:'Screen, beeper and tilt sensor; Arduino IDE on an ESP32',pf:'esp32ide',name:'level-checker',parts:['cm:p-cm-ssd1306','cm:p-cm-buzzer','cm:p-cm-mpu6050'],desc:'A level checker: shows the tilt on a small screen and beeps when it is level.'},
+  {label:'🌡 Room climate display',what:'Temperature, humidity and pressure on a small screen; ESPHome',pf:'esphome',name:'room-climate',parts:['cm:p-cm-bme280','cm:p-cm-ssd1306'],desc:'Shows the room temperature, humidity and pressure on a small screen and reports them to Home Assistant.'},
+  {label:'🚶 Motion alarm',what:'Motion sensor, beeper and a coloured light; ESPHome',pf:'esphome',name:'motion-alarm',parts:['cm:p-cm-pir','cm:p-cm-buzzer','cm:p-cm-ws2812'],desc:'Beeps and lights up when someone walks past.'},
+  {label:'💧 Leak alarm',what:'Water sensor and beeper; ESPHome',pf:'esphome',name:'leak-alarm',parts:['cm:p-cm-water','cm:p-cm-buzzer'],desc:'Beeps when the water sensor gets wet.'},
+  {label:'🗣 Voice assistant',what:'Microphone, amplifier and speaker; ESPHome',pf:'esphome',name:'voice-assistant',parts:['p:b-inmp441','p:b-max98357','p:b-spk3w'],desc:'A voice assistant for Home Assistant: wake word, microphone and speaker.'},
+  {label:'💡 Light-controlled lamp',what:'Light sensor, coloured light and a button; Arduino Nano',pf:'arduino',name:'night-light',parts:['cm:p-cm-bh1750','cm:p-cm-ws2812','cm:p-cm-button'],desc:'A night light that turns on when it gets dark, with a button to switch it.'}
+];
+// the parts to tick: the common modules, then the built-in parts that aren't boards or power
+function noaiChoices(){
+  const out=COMMON_MODS.map(m=>({v:'cm:'+m.part.id,name:m.part.name}));
+  for(const p of allParts())if(p.builtin&&!CTRL_IDS.includes(p.id)&&!p.mcu&&!/^p-cm-/.test(p.id)&&!['b-tp4056c','b-lipo1000','b-18650','b-ss12'].includes(p.id))out.push({v:'p:'+p.id,name:p.name});
+  return out;
+}
+function noaiPart(v){
+  if(v.startsWith('cm:')){const m=COMMON_MODS.find(m=>m.part.id===v.slice(3));return m?commonPart(m):null;}
+  return partById(v.slice(2));
+}
+// Sets the wizard up exactly as if the AI had answered, from the parts chosen here (then: check the parts → box → wiring → code).
+function noaiPlan(vals,pf,name,desc){
+  const parts=vals.map(noaiPart).filter(Boolean);
+  if(!parts.length){iw.err='Tick at least one part, or pick an example.';return renderIntent();}
+  iw.desc=desc||('My gadget with: '+parts.map(p=>p.name).join(', ')+'.');
+  iw.analysis=tidyIntent({name:name||'my-gadget',summary:'Parts picked without AI.',platform:pf,parts:[]},iw.desc);iw.analysis.noAI=true;
+  iw.pf=pfOk(pf);iw.override=false;iw.missingAdded=[];iw.vals={};iw.userPf=null;
+  iw.base=parts.map(part=>({spec:{category:'added',function:'picked by you',search:part.name,required:true},part,from:'your choice',note:''}));
+  iw.matches=pfMatches(iw.base,iw.pf);iw.power='usb';iw.dropped=[];iw.edit=false;iw.err='';iw.step='result';
+  renderIntent();
+}
+function noaiKeep(){
+  const b=$('iwBody');if(!b.querySelector('[data-noai]'))return;
+  iw.noai.parts=[...b.querySelectorAll('[data-noai]:checked')].map(e=>e.dataset.noai);
+  const r=b.querySelector('input[name="noaiPf"]:checked');if(r)iw.noai.pf=r.value;
 }
 // auto: only on a fresh, empty drawing, and not if the user asked for it not to show again
 function openWelcome(auto){
   if(auto&&(wcSeen()||!WF.docEmpty||[ewBack,plBack,wrBack,iwBack].some(x=>x.style.display==='grid')))return;
   if(iw.step==='result'&&!iw.busy)iw.w={text:'',does:[],pf:'auto',noShow:false};// a finished idea: start the next one afresh
+  if(iw.step==='nokey'&&!iw.busy)iw.step='welcome';
   iw.welcome=true;iw.w.noShow=wcSeen();iw.err='';
   if(!iw.busy)iw.step='welcome';
   iwBack.style.display='grid';renderIntent();
 }
 async function wcGo(){
   wcKeep();iw.err='';
-  if(!aiKey()){await askKey();if(!aiKey()){iw.err='Your AI needs a key first: go back to Step 1 and click "'+keyLabel()+'".';return renderIntent();}}
+  if(!aiKey()){iw.nokeyFrom='wc';iw.step='nokey';return renderIntent();}// (1.9.37) a choice, not a dead end
   iw.desc=wcDesc();iw.userPf=iw.w.pf==='auto'?null:iw.w.pf;
   await intentAnalyse();
 }
@@ -9540,11 +9922,20 @@ iwBack.addEventListener('click',e=>{
   const el=e.target.closest('button');if(!el||!iwBack.contains(el))return;
   const go=s=>{wcKeep();iw.err='';iw.step=s;renderIntent();};
   const run=()=>wcGo().catch(err=>{console.error('EvenUCan: the welcome idea could not be planned',err);iw.step='error';iw.err='Something went wrong: '+(err.message||err);renderIntent();});
+  if(el.dataset.noex!==undefined){const x=NOAI_EX[+el.dataset.noex];if(x){iw.noai={parts:[...x.parts],pf:x.pf};noaiPlan(x.parts,x.pf,x.name,x.desc);}return;}
   if(el.dataset.wex!==undefined){const x=WC_EX[+el.dataset.wex];if(!x)return;wcKeep();iw.w.text=EXAMPLES[x[1]]||'';iw.w.does=[...x[2]];
     const t=$('wcDesc');if(t){t.value=iw.w.text;t.focus();}WF.flash('Filled in the example, and ticked what it does in Step 2',3500);return;}
   switch(el.id){
     case 'wcIdea':go('w1');break;
     case 'wcDraw':wcKeep();closeIntent();break;
+    case 'wcNoAi':wcKeep();iw.welcome=true;iw.err='';iw.step='noai';renderIntent();break;
+    case 'wcNoAiBack':noaiKeep();go('welcome');break;
+    case 'wcNoAiGo':noaiKeep();iw.err='';noaiPlan(iw.noai.parts,iw.noai.pf,'','');break;
+    case 'wcAiGem':askKey('gemini').then(renderIntent);break;
+    case 'wcAiNv':askKey('nvidia').then(renderIntent);break;
+    case 'wcAiTest':askKey(aiProv()).then(renderIntent);break;
+    case 'nkKey':askKey().then(()=>{if(!aiKey())return renderIntent();if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';intentAnalyse();}else run();});break;
+    case 'nkBack':iw.err='';if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';renderIntent();}else go('w3');break;
     case 'wcBack1':go('welcome');break;
     case 'wcNext1':wcKeep();if(iw.w.text.trim().length<8){iw.err='Tell me a little about what it should do first (a sentence or two is plenty), or pick an example.';renderIntent();}else go('w2');break;
     case 'wcBack2':go('w1');break;
@@ -9583,7 +9974,7 @@ $('iwFoot').addEventListener('click',e=>{
   const id=e.target.id;
   if(id==='iwGo'||id==='iwRetry')intentAnalyse();
   else if(id==='iwCancel')closeIntent();
-  else if(id==='iwEdit'){iw.step=iw.welcome?'w1':'ask';iw.err='';renderIntent();}
+  else if(id==='iwEdit'){iw.step=iw.analysis&&iw.analysis.noAI?'noai':iw.welcome?'w1':'ask';if(iw.step==='noai')iw.welcome=true;iw.err='';renderIntent();}
   else if(id==='iwAgain'){iwKeepVals();iw.edit=!iw.edit;renderIntent();if(iw.edit){const h=$('iwEditor');if(h)h.scrollIntoView({block:'nearest'});const sel=$('iwAddSel');if(sel)sel.focus();}}// (wizard-r2) change the parts, not the idea
   else if(id==='iwRestart')guideRestart();
   else if(id==='iwApply')intentApply().catch(err=>{console.error('EvenUCan: could not set up the project idea',err);iw.step='error';iw.err='Could not set up the enclosure: '+(err.message||err);iw.raw='';renderIntent();});

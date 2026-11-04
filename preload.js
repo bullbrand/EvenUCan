@@ -18,5 +18,14 @@ contextBridge.exposeInMainWorld('wfNative', {
   // is ESPHome here and running? With a file, also check it like ESPHome's Validate -> {cli, dashboard, found, ok, out}
   esphomeCheck: (yaml, slug) => ipcRenderer.invoke('esphome-check', yaml == null ? '' : str(yaml), str(slug)),
   // let the user pick the ESPHome folder / Arduino sketchbook / Pi folder again -> {ok, dir}
-  chooseFolder: (kind) => ipcRenderer.invoke('choose-folder', str(kind))
+  chooseFolder: (kind) => ipcRenderer.invoke('choose-folder', str(kind)),
+  // internet requests the page can't make itself (made by the main process, see netbridge.js):
+  // send a request to an AI service (NVIDIA etc.) with the user's key -> {status, text}
+  aiPost: (url, key, body) => ipcRenderer.invoke('ai-post', str(url), str(key), str(body)),
+  // a web page -> {html, url}; a picture -> {mime, b64}; a PDF -> {mime, b64}
+  fetchPage: (url) => ipcRenderer.invoke('fetch-page', str(url)),
+  fetchImage: (url) => ipcRenderer.invoke('fetch-image', str(url)),
+  fetchPdf: (url) => ipcRenderer.invoke('fetch-pdf', str(url))
+  // Not exposed on purpose: fritzingList / fritzingLoad. Without them the page uses its built-in parts library
+  // (parts-library.json, read through the app:// address), which is the same library, so nothing is lost.
 });

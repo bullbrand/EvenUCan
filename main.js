@@ -8,6 +8,7 @@
 // land in the same folder, and localStorage / IndexedDB saves get their own stable origin.
 
 const { app, BrowserWindow, Menu, protocol, net, shell, dialog, ipcMain } = require('electron');
+const netbridge = require('./netbridge');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -339,6 +340,18 @@ const openWith = (appPath, file) =>
 const TOOL_NAMES = { arduino: 'Arduino IDE', pi: 'Thonny', esphome: 'ESPHome Device Builder' };
 
 ipcMain.handle('app-version', () => app.getVersion());
+
+// ---------------------------------------------------------------- internet requests for the page (netbridge.js)
+// NVIDIA's AI and most shop / datasheet sites refuse requests straight from a web page, so the main process makes
+// them. Only from the app's own page; http(s) only, with time and size limits; AI requests only to known AI hosts.
+const bridgeCall = (fn) => async (event, ...args) => {
+  if (!fromApp(event)) throw new Error('Not allowed.');
+  return fn(...args.map((a) => String(a == null ? '' : a)));
+};
+ipcMain.handle('ai-post', bridgeCall(netbridge.aiPost));
+ipcMain.handle('fetch-page', bridgeCall(netbridge.fetchPage));
+ipcMain.handle('fetch-image', bridgeCall(netbridge.fetchImage));
+ipcMain.handle('fetch-pdf', bridgeCall(netbridge.fetchPdf));
 
 ipcMain.handle('check-tool', async (event, pf) => {
   const key = toolKey(pf);

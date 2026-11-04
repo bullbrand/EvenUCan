@@ -1,9 +1,17 @@
-EvenUCan 1.9.36 - web-page version 
+EvenUCan 1.9.37 - web-page version 
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
 This is EvenUCan as a web page: nothing to install. It runs in Chrome or
-Edge on Windows, Mac or Linux, and works offline.
+Edge on Windows, Mac or Linux.
+
+The drawing, box design, wiring and ESPHome code all work offline. The
+wizard's AI helper (turning your idea into a parts list, and writing
+Arduino sketches) uses the internet with a free key from Google Gemini
+(or NVIDIA in the desktop program), or your own paid Claude key if you
+prefer - or you can choose "Carry on without AI": start from an example
+project or tick the parts you have, and the Code tab makes a starter
+sketch with your pins filled in.
 
 HOW TO START
   1. Unzip this folder (right-click > Extract All). Keep the files together.
@@ -22,8 +30,8 @@ WHAT'S DIFFERENT FROM THE DESKTOP PROGRAM
     - "Send to ESPHome" and "Check with ESPHome": in the web version use
       "Save .yaml" and add the file in ESPHome Device Builder yourself.
     - Downloading product photos during the AI look-up.
-    - NVIDIA (free) as the AI: it doesn't accept calls from a web page, so
-      this version uses Google Gemini or Claude instead.
+    - NVIDIA (free) as the AI: NVIDIA doesn't accept requests from a web
+      page, so in this version pick Google Gemini (free) or Claude.
   Your parts and drawings are kept in this browser only. To move parts to
   another browser or the desktop program, use Parts > Export... / Import....
 
