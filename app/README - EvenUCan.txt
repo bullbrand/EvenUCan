@@ -1,6 +1,6 @@
 EvenUCan  -  from idea to object 
-Version 1.9.33
-Â© 2026 David John Waugh. Free software under the GNU GPL v3 or later
+Version 1.9.36
+© 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
 Draw your own 3D parts, or let EvenUCan design a printable box
@@ -16,11 +16,11 @@ below).
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan-Portable-1.9.33.exe
+  EvenUCan-Portable-1.9.36.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan-Setup-1.9.33.exe
+  EvenUCan-Setup-1.9.36.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 
@@ -32,13 +32,30 @@ It needs Windows 10 or 11 (64-bit).
   "Run anyway". You only need to do this once.
 
 First thing to do:
-  Click the "Printer" button at the top and choose your printer, or
+  Choose File > Printer size... at the top and pick your printer, or
   type its build size (X, Y and Z in mm). The app then warns you if
   anything is too big to print.
 
-Press F1 (or click Help) at any time for a list of tools and shortcuts.
-Click "About" (top right) to see which version you have; it is also in
-the bottom-right corner of the 3D view.
+NEW in 1.9.36: Follow Me is easier. Click the shape (face), then click
+the line it should follow - every line joined end-to-end to it turns
+orange and is used. Or select the lines first, then choose Follow Me
+and click the shape. The pipe or bar gets neat corners where the path
+bends. Also fixed: the see-through outlines of the parts inside a box
+from the Box designer now move with the box. Before, moving the box
+left them behind as stray "ghost lines"; they also vanish now when you
+undo or delete the box.
+
+NEW in 1.9.35: the EvenUCan icon now sits at the top-left (click it for
+About), and the buttons and menus have bright, colourful icons in the
+same style as FreeCAD.
+
+NEW in 1.9.34: a simple menu bar like every other program - File, Edit,
+Draw, Modify, View, Tools and Help - instead of rows of buttons. The
+drawing tools you use most stay as one row of buttons below it, and
+"Start a project" (top right) starts the step-by-step guide.
+Press F1 (or choose Help > Quick guide) at any time for a list of tools
+and shortcuts. Choose Help > About EvenUCan to see which version you
+have; it is also in the bottom-right corner of the 3D view.
 Hover over any button to see its name, its shortcut key and what it does.
 Also new: the Tape Measure leaves a guide point to draw to (type a
 distance for an exact one; Shift+E deletes all guides), Shift+click with
@@ -53,10 +70,10 @@ Slice (X) cuts a solid in two with a flat plane, so you can move or
 delete either half (handy for printing a tall part in two pieces).
 Check Model now fails any piece left floating in mid-air, with a
 "Move down to rest" button to drop it onto what is below.
-Copy, Cut and Paste for shapes: Ctrl+C, Ctrl+X, Ctrl+V (also on the
-toolbar and the right-click menu). Drag toolbar buttons, or a group by
-its dotted grip, to put them in your own order; right-click the toolbar
-to reset it.
+Copy, Cut and Paste for shapes: Ctrl+C, Ctrl+X, Ctrl+V (also in the
+Edit menu and the right-click menu). Drag the tool buttons, or a group
+by its dotted grip, to put them in your own order; right-click the row
+of tool buttons to reset it.
 NEW: ESPHome device file. In the Wiring window, the "ESPHome device"
 tab writes the whole ESPHome YAML for your ESP32 board with the pins
 from the wiring: choose Sensor node or Voice assistant, answer a few
@@ -266,7 +283,7 @@ one, you show it a photo.
      knows exactly where everything on the board is.
      If the photo was taken the other way round (tall instead of wide),
      the app turns it to match. If it comes out upside down, click
-     "Turn photo 180Â°".
+     "Turn photo 180°".
 
   6. Mark the important bits. Click a button above the picture, then
      click on the photo:
@@ -284,7 +301,7 @@ one, you show it a photo.
                           two "eyes" of an ultrasonic distance sensor,
                           an IR sensor or a camera lens. Set the part to
                           "Face against a wall" and it looks out through
-                          the wall, held on standoffs. These have 45Â°
+                          the wall, held on standoffs. These have 45°
                           braces underneath, so they print without
                           supports.
        Button, LED,
@@ -477,7 +494,7 @@ IN ONE SENTENCE
   board's name plus "fzpz". Someone may already have made one, with
   all the pins, the size and a picture. Download it and drag it onto
   the part picture (or use "Import pins..." > "Use a .fzpz file..."). A board drawn standing up is turned so its
-  long side runs left to right. "Turn part 90Â°" (under the sizes in
+  long side runs left to right. "Turn part 90°" (under the sizes in
   Parts) turns any part a quarter turn, with its picture, features and
   pins.
 
@@ -518,7 +535,7 @@ IN ONE SENTENCE
 =====================================================================
 
   EvenUCan was created by David John Waugh.
-  Â© 2026 David John Waugh.
+  © 2026 David John Waugh.
 
   EvenUCan is free software: you can share it and change it under
   the terms of the GNU General Public License, version 3 or (at your
@@ -528,12 +545,23 @@ IN ONE SENTENCE
   https://github.com/bullbrand/EvenUCan
 
   The enclosure designer uses the Manifold geometry library
-  (Â© The Manifold Authors, Apache License 2.0), built into the program.
+  (© The Manifold Authors, Apache License 2.0), built into the program.
   The optional Claude look-up uses the Anthropic TypeScript SDK
-  (Â© Anthropic, Apache License 2.0), also built in.
+  (© Anthropic, Apache License 2.0), also built in.
   The parts library that comes with EvenUCan (over 2,000 parts with
   their pins and pictures) is made from the Fritzing parts library,
-  Â© Fritzing contributors, licensed under CC BY-SA 3.0
+  © Fritzing contributors, licensed under CC BY-SA 3.0
   (https://creativecommons.org/licenses/by-sa/3.0/). Parts made from it,
   or brought in with "Import pins...", keep that credit in their notes,
   and anyone sharing them must keep the credit and the same licence.
+
+  Credits for the icons: most of the colourful button and menu icons
+  come from FreeCAD (https://www.freecad.org,
+  https://github.com/FreeCAD/FreeCAD), licensed under the GNU LGPL 2.1
+  or later; a few of those files are marked CC BY-SA 4.0 or LGPL 3.0.
+  They were cleaned and shrunk to fit inside the program. The rest
+  (eraser, pan, zoom, lay all flat, box designer, parts library,
+  wiring, code, AI key, picture, start a project, help and website)
+  are original EvenUCan icons in the same style, under the GNU GPL v3
+  or later. The full list of every icon and where it came from is in
+  THIRD-PARTY-NOTICES.txt.

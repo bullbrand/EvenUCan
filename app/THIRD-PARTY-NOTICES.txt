@@ -1,0 +1,175 @@
+EvenUCan - Third-party notices and icon credits
+================================================
+
+EvenUCan itself is free software under the GNU General Public License,
+version 3 or later (see LICENSE.txt).
+
+1. Icons from FreeCAD
+---------------------
+Project:  FreeCAD - https://www.freecad.org
+Source:   https://github.com/FreeCAD/FreeCAD
+Commit:   0cafef1e58284d08a244f9eba85aee0002e3e350
+
+FreeCAD is licensed under the GNU Lesser General Public License,
+version 2.1 or later (https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).
+A few icon files carry their own licence in their metadata:
+  - CC BY-SA 4.0  https://creativecommons.org/licenses/by-sa/4.0/
+  - LGPL 3.0      https://www.gnu.org/licenses/lgpl-3.0.html
+These are shown against each icon below. All of these licences allow
+use in a GPL v3 program.
+
+Changes made: the SVG files were cleaned and shrunk for embedding
+(editor metadata removed, numbers rounded, gradient IDs renamed).
+The drawings themselves are unchanged.
+
+EvenUCan name -> FreeCAD file  |  licence  |  author(s)
+
+  undo       src/Gui/Icons/edit-undo.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  redo       src/Gui/Icons/edit-redo.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  copy       src/Gui/Icons/edit-copy.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  cut        src/Gui/Icons/edit-cut.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  paste      src/Gui/Icons/edit-paste.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  select     src/Gui/Icons/mouse_pointer.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  line       src/Mod/Draft/Resources/icons/Draft_Line.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  rect       src/Mod/Draft/Resources/icons/Draft_Rectangle.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  circle     src/Mod/Draft/Resources/icons/Draft_Circle.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  arc        src/Mod/Draft/Resources/icons/Draft_Arc.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  polygon    src/Mod/Draft/Resources/icons/Draft_Polygon.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  solid      src/Mod/Part/Gui/Resources/icons/create/Part_Primitives.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  text       src/Mod/Draft/Resources/icons/Draft_Text.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  push       src/Mod/PartDesign/Gui/Resources/icons/PartDesign_Pad.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  move       src/Mod/Draft/Resources/icons/Draft_Move.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  rotate     src/Mod/Draft/Resources/icons/Draft_Rotate.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  flip       src/Mod/Part/Gui/Resources/icons/tools/Part_Mirror.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  flat       src/Gui/Icons/Std_Alignment.svg
+             LGPL 2.1 or later (FreeCAD)  |  bitacovir
+  round      src/Mod/PartDesign/Gui/Resources/icons/PartDesign_Fillet.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  offset     src/Mod/Draft/Resources/icons/Draft_Offset.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  follow     src/Mod/Part/Gui/Resources/icons/tools/Part_Sweep.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  slice      src/Mod/Part/Gui/Resources/icons/booleans/Part_Slice.svg
+             LGPL 2.1 or later (FreeCAD)  |  DeepSOIC
+  shell      src/Mod/PartDesign/Gui/Resources/icons/PartDesign_Thickness.svg
+             LGPL 2.1 or later (FreeCAD)  |  Stefan Tröger
+  hole       src/Mod/PartDesign/Gui/Resources/icons/PartDesign_Hole.svg
+             LGPL 2.1 or later (FreeCAD)  |  jmaustpc
+  paint      src/Gui/Icons/colors.svg
+             CC BY-SA 4.0 (file metadata); FreeCAD LGPL 2.1+  |  FreeCAD contributors
+  tape       src/Gui/Icons/view-measurement.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  center     src/Mod/Draft/Resources/icons/Draft_Snap_Center.svg
+             LGPL 2.1 or later (FreeCAD)  |  Yorik van Havre
+  guides     src/Mod/Draft/Resources/icons/Draft_Wipe.svg
+             LGPL 2.1 or later (FreeCAD)  |  yorikvanhavre
+  orbit      src/Gui/Icons/view-rotate-left.svg
+             LGPL 3.0 (file metadata); FreeCAD LGPL 2.1+  |  wmayer
+  extents    src/Gui/Icons/zoom-all.svg
+             CC BY-SA 4.0 (file metadata); FreeCAD LGPL 2.1+  |  FreeCAD contributors
+  group      src/Gui/Icons/Group.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  ungroup    src/Mod/Part/Gui/Resources/icons/booleans/Part_ExplodeCompound.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  join       src/Mod/Part/Gui/Resources/icons/booleans/Part_Fuse.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  subtract   src/Mod/Part/Gui/Resources/icons/booleans/Part_Cut.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  intersect  src/Mod/Part/Gui/Resources/icons/booleans/Part_Common.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  hide       src/Gui/Icons/Std_HideSelection.svg
+             LGPL 2.1 or later (FreeCAD)  |  bitacovir
+  unhide     src/Gui/Icons/Std_ShowSelection.svg
+             LGPL 2.1 or later (FreeCAD)  |  bitacovir
+  check      src/Mod/Part/Gui/Resources/icons/booleans/Part_CheckGeometry.svg
+             LGPL 2.1 or later (FreeCAD)  |  tanderson
+  arrange    src/Mod/Draft/Resources/icons/Draft_Array.svg
+             LGPL 2.1 or later (FreeCAD)  |  yorikvanhavre
+  new        src/Gui/Icons/document-new.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  open       src/Gui/Icons/document-open.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  save       src/Gui/Icons/document-save.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  saveas     src/Gui/Icons/document-save-as.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  export     src/Gui/Icons/Std_Export.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  printer    src/Gui/Icons/document-print.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  delete     src/Gui/Icons/edit-delete.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  selall     src/Gui/Icons/edit-select-all.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  selnone    src/Gui/Icons/clear-selection.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  v-iso      src/Gui/Icons/view-isometric.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  v-top      src/Gui/Icons/view-top.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  v-front    src/Gui/Icons/view-front.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  v-right    src/Gui/Icons/view-right.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  v-back     src/Gui/Icons/view-rear.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  v-left     src/Gui/Icons/view-left.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  persp      src/Gui/Icons/view-perspective.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  ortho      src/Gui/Icons/view-axonometric.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+  resize     src/Mod/Part/Gui/Resources/icons/tools/Part_Scale.svg
+             LGPL 2.1 or later (FreeCAD)  |  wmayer
+  manual     src/Gui/Icons/Std_PrintPdf.svg
+             LGPL 2.1 or later (FreeCAD)  |  maxwxyz
+  about      src/Gui/Icons/info.svg
+             LGPL 2.1 or later (FreeCAD)  |  FreeCAD contributors
+
+(59 icons from FreeCAD)
+
+2. Original EvenUCan icons
+--------------------------
+These were drawn for EvenUCan in the same colourful style and are
+released under the GNU GPL v3 or later, like the rest of the app:
+
+  erase      EvenUCan_Eraser
+  pan        EvenUCan_Pan
+  zoom       EvenUCan_Zoom
+  layall     EvenUCan_LayAllFlat
+  enclosure  EvenUCan_Enclosure
+  parts      EvenUCan_Parts
+  png        EvenUCan_Picture
+  wizard     EvenUCan_Wizard
+  wiring     EvenUCan_Wiring
+  code       EvenUCan_Code
+  aikey      EvenUCan_AIKey
+  help       EvenUCan_Help
+  web        EvenUCan_Web
+
+Some of these replace Tango-style icons in FreeCAD that are licensed
+CC BY-SA 2.0, which is not compatible with the GPL v3.
+
+3. Other components
+-------------------
+Manifold geometry library - Apache License 2.0 - https://github.com/elalish/manifold
+Anthropic TypeScript SDK  - Apache License 2.0 - https://github.com/anthropics/anthropic-sdk-typescript
+Parts library (parts-library.json) - made from the Fritzing parts library,
+  (c) Fritzing contributors, CC BY-SA 3.0 - https://creativecommons.org/licenses/by-sa/3.0/

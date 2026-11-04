@@ -1,15 +1,16 @@
-EvenUCan 1.9.33 (web version)  -  SHA-256 checksums
+EvenUCan 1.9.36 (web version)  -  SHA-256 checksums
 © 2026 David John Waugh
 
 A checksum is a "fingerprint" of a file. If even one byte of the file is
 changed (by a virus, a hacker or a broken download), the fingerprint
 comes out completely different.
 
-af7a546ba5ce8670fd35f9f7f8aebb1f130df7e226cbbabecc58f4da287d0cf4  EvenUCan.html
+f45ad62c666fee5097a9af9167a51af2ed98fd1851c96ed3fc03771e654346c3  EvenUCan.html
 2fc09d93dee61c53b5175b16682904554420dc0ec5a2b902da6455a291fb3a76  parts-library.json
 247770d54a1c1aa52206481190ee300c7f4a6459d0f9e52d8199b365e2e1dfad  eagle-parts.json
 861f4c1a1ce2a98fd0383f5bc61e56501ed892706475d07ab009e108004d22bd  kicad-parts.json
 933e732d599d0a6692901e04cc0afe50f946f7d85fdd73844539a6f7ffa983c9  EvenUCan User Manual.pdf
+3dd17ee54dbbb868a56e3903377766b8a6d71a262396325770605a0c75a168e8  THIRD-PARTY-NOTICES.txt
 
 
 HOW TO CHECK YOUR COPY
