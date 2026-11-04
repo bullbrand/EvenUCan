@@ -621,7 +621,7 @@ function goToStep(k){
 }
 function undo(){if(!undoStack.length){if(tool.cancel)tool.cancel();return flash('Nothing to undo');}goToStep(undoStack.length-1);}
 function redo(){if(!redoStack.length){if(tool.cancel)tool.cancel();return flash('Nothing to redo');}goToStep(undoStack.length+1);}
-function commitChange(){markDirty();setDirty(true);scheduleAutosave();scheduleStats();if(check)scheduleCheck();}
+function commitChange(){markDirty();setDirty(true);scheduleAutosave();scheduleStats();if(check)scheduleCheck();if(model.faces.length&&window.cubeIntroOff)window.cubeIntroOff();}
 // (Perf-r1) A drag commits on every mouse move: the autosave (the whole model as JSON), the Print check and the
 // size readout wait until the edits pause. flushAutosave writes a waiting autosave at once (save, export, leaving).
 let _autosaveTimer=null,_checkTimer=null,_statsTimer=null;
@@ -3620,7 +3620,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.32';
+const APP_VERSION='1.9.33';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -4259,6 +4259,8 @@ function setWorkPlane(k){
   buildGrid();requestDraw();if(tool.move&&lastE)tool.move(lastE,lastM);
 }
 function cubeIntro(on){vcube.classList.toggle('center',on);requestDraw();}
+// Something has been made (e.g. the wizard built a box): the 'Which side?' question no longer applies.
+window.cubeIntroOff=()=>{if(vcube.classList.contains('center'))cubeIntro(false);};
 // Turn the camera smoothly to look along -d (d points from the model towards the eye).
 function turnTo(yaw,pitch){
   const y0=cam.yaw,p0=cam.pitch;let dy=yaw-y0;while(dy>Math.PI)dy-=2*Math.PI;while(dy<-Math.PI)dy+=2*Math.PI;

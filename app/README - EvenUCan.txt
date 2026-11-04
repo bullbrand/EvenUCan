@@ -1,5 +1,5 @@
 EvenUCan  -  from idea to object 
-Version 1.9.32
+Version 1.9.33
 Â© 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -16,11 +16,11 @@ below).
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan Portable 1.9.32.exe
+  EvenUCan-Portable-1.9.33.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan Setup 1.9.32.exe
+  EvenUCan-Setup-1.9.33.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 

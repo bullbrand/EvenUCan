@@ -8,11 +8,11 @@ From this one folder you get:
 
 | File | For |
 |---|---|
-| `EvenUCan-Setup-1.9.32.exe` | Windows installer |
-| `EvenUCan-Portable-1.9.32.exe` | Windows, no install: runs straight from a folder or USB stick |
-| `EvenUCan-1.9.32.dmg` | Mac (one file works on both Apple Silicon and older Intel Macs) |
-| `EvenUCan-1.9.32.AppImage` | Linux: runs on Ubuntu, Fedora, Mint and most others, nothing to install |
-| `EvenUCan-1.9.32.deb` | Linux: installer for Ubuntu, Debian and Mint |
+| `EvenUCan-Setup-1.9.33.exe` | Windows installer |
+| `EvenUCan-Portable-1.9.33.exe` | Windows, no install: runs straight from a folder or USB stick |
+| `EvenUCan-1.9.33.dmg` | Mac (one file works on both Apple Silicon and older Intel Macs) |
+| `EvenUCan-1.9.33.AppImage` | Linux: runs on Ubuntu, Fedora, Mint and most others, nothing to install |
+| `EvenUCan-1.9.33.deb` | Linux: installer for Ubuntu, Debian and Mint |
 
 ### What's in the folder
 
@@ -47,11 +47,11 @@ Each computer can only build its own kind of installer properly: a Windows PC ma
 
 ### Making a proper Release (a public download page)
 
-Add a **tag** that starts with `v`, for example `v1.9.32`:
+Add a **tag** that starts with `v`, for example `v1.9.33`:
 
-- **GitHub Desktop:** History → right-click the latest commit → *Create Tag…* → `v1.9.32` → then *Push origin*.
-- **On the GitHub website:** Releases → *Draft a new release* → *Choose a tag* → type `v1.9.32` → *Create new tag* → *Publish*.
-- **Command line:** `git tag v1.9.32` then `git push origin v1.9.32`.
+- **GitHub Desktop:** History → right-click the latest commit → *Create Tag…* → `v1.9.33` → then *Push origin*.
+- **On the GitHub website:** Releases → *Draft a new release* → *Choose a tag* → type `v1.9.33` → *Create new tag* → *Publish*.
+- **Command line:** `git tag v1.9.33` then `git push origin v1.9.33`.
 
 GitHub then builds everything and puts all the installers on a Release page that anyone can download from.
 
@@ -99,16 +99,16 @@ Then open the app as normal.
 
 **AppImage** (works on almost any Linux):
 
-1. Download `EvenUCan-1.9.32.AppImage`.
+1. Download `EvenUCan-1.9.33.AppImage`.
 2. Make it runnable, either by right-clicking it → *Properties* → *Permissions* → tick *Allow executing file as program*, or in a terminal:
    ```
-   chmod +x EvenUCan-1.9.32.AppImage
+   chmod +x EvenUCan-1.9.33.AppImage
    ```
-3. Double-click it, or run `./EvenUCan-1.9.32.AppImage`.
+3. Double-click it, or run `./EvenUCan-1.9.33.AppImage`.
 
 On some newer Ubuntu versions an AppImage won't start until FUSE is installed: `sudo apt install libfuse2` (or `libfuse2t64` on Ubuntu 24.04).
 
-**.deb** (Ubuntu / Debian / Mint): double-click it to install with the Software app, or run `sudo apt install ./EvenUCan-1.9.32.deb`. EvenUCan then appears in the applications menu.
+**.deb** (Ubuntu / Debian / Mint): double-click it to install with the Software app, or run `sudo apt install ./EvenUCan-1.9.33.deb`. EvenUCan then appears in the applications menu.
 
 ## Notes
 

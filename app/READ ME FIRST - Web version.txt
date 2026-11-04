@@ -1,4 +1,4 @@
-EvenUCan 1.9.32 - web-page version 
+EvenUCan 1.9.33 - web-page version 
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
