@@ -8038,6 +8038,15 @@ function esphomeYaml(P,f){
   // (wizard-r2) a planned idea that messages the phone: movement sends an ntfy.sh message at once, and sounds the buzzer
   const topic=wx?'':intentTopic(),planned=!!intentNow(),buzz=planned?sigs.find(x=>x.kind==='buzzer'):null;
   let ntfyUsed=false;
+  // every switch gets a stable id, so "Make it with AI" (and anyone editing the file) can turn it
+  // on/off by id instead of declaring a second, duplicate component for hardware already wired here.
+  const switchIds=new Set(buzz?['buzzer_1']:[]),switchId=nm=>{
+    let s=String(nm||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,24)||'switch';
+    if(/^[0-9]/.test(s))s='sw_'+s;// ESPHome ids must start with a letter, not a digit
+    let id=s,n=2;
+    while(switchIds.has(id))id=s+'_'+(n++);
+    switchIds.add(id);return id;
+  };
   for(const {a,kind} of sigs){
     const nm=a.inst.label,pin=g(a);
     if(kind==='dht'){
@@ -8063,7 +8072,7 @@ function esphomeYaml(P,f){
     }
     else if(kind==='pixel'){pixelN++;lights.push(`  - platform: esp32_rmt_led_strip\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    pin: ${pin}\n    num_leds: 1  # change to the number of LEDs on the strip\n    rgb_order: GRB\n    chipset: ws2812`);}
     else if(kind==='led'){outputs.push(`  - platform: gpio\n    id: led_out_${ledN+1}\n    pin: ${pin}`);lights.push(`  - platform: binary\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    output: led_out_${ledN}`);}
-    else if(kind==='relay'||kind==='buzzer')switches.push(`  - platform: gpio\n`+(buzz&&buzz.a===a?'    id: buzzer_1\n':'')+`    name: ${yq(nm)}\n    pin: ${pin}`);
+    else if(kind==='relay'||kind==='buzzer')switches.push(`  - platform: gpio\n    id: ${buzz&&buzz.a===a?'buzzer_1':switchId(nm)}\n    name: ${yq(nm)}\n    pin: ${pin}`);
     else unk(a.inst,a);
   }
   if(statusLed)lights.unshift(`  - platform: esp32_rmt_led_strip\n    id: status_led\n    name: "Status light"\n    pin: GPIO${brd.led}\n    num_leds: 1\n    rgb_order: GRB\n    chipset: ws2812`);
@@ -8947,7 +8956,8 @@ const ESPH_AI_PROMPT=`You write ESPHome device configuration (ESPHome version 20
 Change the file so the device does what the user describes. Rules:
 - Keep every existing section, pin, id, board, framework, psram, wifi, api, ota, logger and captive_portal setting exactly as it is. Do not change pins or invent new wiring: only the parts already in the file exist.
 - Add behaviour with ESPHome's built-in automations (on_value, on_press, interval, if/then/else, lambda conditions, light.turn_on with red/green/blue percentages, switch.turn_on, delay, script). No external_components, no custom C++ files, no new secrets.
-- Refer to readings and lights by the ids already in the file.
+- Every switch, sensor and binary_sensor already in the file has its own id: use that id in your automations. NEVER declare a second switch/sensor/binary_sensor for hardware that already has one in the file (e.g. if a relay or buzzer is already declared with an id, turn that id on/off - don't add a new one on a different, unwired pin). This applies just as much to a part you yourself add under "Every part listed as not in the file yet" below: once you've declared its sensor/binary_sensor, your own automations must read that same id, not a separate pin you make up to match it.
+- If you use http_request.post or http_request.get anywhere in your automations, you MUST also add a top-level http_request:\n  timeout: 10s\n  verify_ssl: false section (ESPHome fails to compile without it).
 - Every part listed as not in the file yet must get its own working section (sensor, binary_sensor, output, light, switch, uart, display… as the module needs), with a clear friendly name.
 - You MUST make the device do EVERY requirement in the user's description. Never silently leave one out or replace it with a comment. If one truly cannot be done with these parts, return {"refuse":true,"reason":"<one plain-English sentence: which requirement, and why>"} instead of a file.
 Return ONLY a JSON object: {"yaml": "<the complete new file>", "notes": "<one to three short plain-English sentences on what you added, or what you couldn't do>"}.`;
