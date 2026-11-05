@@ -1,5 +1,5 @@
 EvenUCan  -  from idea to object 
-Version 1.9.37
+Version 1.9.38
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -19,11 +19,11 @@ if you prefer - or you can carry on without AI. "Fill in automatically"
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan-Portable-1.9.37.exe
+  EvenUCan-Portable-1.9.38.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan-Setup-1.9.37.exe
+  EvenUCan-Setup-1.9.38.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 
@@ -39,6 +39,11 @@ First thing to do:
   type its build size (X, Y and Z in mm). The app then warns you if
   anything is too big to print.
 
+NEW in 1.9.38: the web version can now be installed like an app (a
+manifest, icons and an offline service worker) - "Install" or "Add to
+Home screen" in your browser puts EvenUCan on your desktop or phone
+with its own icon and window. The built-in parts library was also
+updated.
 NEW in 1.9.37: the wizard is upfront about the AI helper. Its first
 screen ("About the AI helper") says what the AI does, which free keys
 work (Google Gemini, or NVIDIA in the desktop program), what is sent to

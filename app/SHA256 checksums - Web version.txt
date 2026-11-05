@@ -1,4 +1,4 @@
-EvenUCan 1.9.37 (web version)  -  SHA-256 checksums
+EvenUCan 1.9.38 (web version)  -  SHA-256 checksums
 © 2026 David John Waugh
 
 A checksum is a "fingerprint" of a file. If even one byte of the file is
