@@ -1,5 +1,5 @@
 EvenUCan  -  from idea to object 
-Version 1.9.39
+Version 1.9.40
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -46,11 +46,11 @@ has to reach the internet.
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan-Portable-1.9.39.exe
+  EvenUCan-Portable-1.9.40.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan-Setup-1.9.39.exe
+  EvenUCan-Setup-1.9.40.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 
@@ -66,6 +66,10 @@ First thing to do:
   type its build size (X, Y and Z in mm). The app then warns you if
   anything is too big to print.
 
+NEW in 1.9.40: a new manual page and clearer wording throughout make
+it explicit that "Tell it your idea" needs a free (or paid) AI key to
+turn your words into a parts list - it's the one step that needs the
+internet; everything after that (the box, wiring and code) is offline.
 Fixed in 1.9.39: "Make it with AI" (in Wiring) could leave the buzzer,
 relay, button or motion sensor it wrote silently unconnected - the
 switch or sensor it just declared in the file had no name of its own
