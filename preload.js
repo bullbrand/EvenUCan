@@ -7,8 +7,12 @@ const str = (v) => String(v == null ? '' : v);
 contextBridge.exposeInMainWorld('wfNative', {
   // the app's version (shown bottom right and in About)
   version: () => ipcRenderer.invoke('app-version'),
-  // is the program a board needs installed? pf: 'arduino' | 'esphome' | 'pi' -> {found, path, version}
+  // is the program a board needs installed? pf: 'arduino' | 'esphome' | 'pi' | 'ollama' -> {found, path, version}
   checkTool: (pf) => ipcRenderer.invoke('check-tool', str(pf)),
+  // is Ollama running right now, and what models does it have? -> {running, models:[{name,vision}]}
+  checkOllama: () => ipcRenderer.invoke('ollama-status'),
+  // start Ollama (if it's installed but not running) -> {ok, err}
+  launchOllama: () => ipcRenderer.invoke('ollama-launch'),
   // save the sketch / program where the Arduino IDE / Thonny finds it and start that program with it
   //   -> {ok, file, dir, launched: 'ide' | 'default' | '', err}
   openInIde: (pf, code, filename) => ipcRenderer.invoke('open-in-ide', str(pf), str(code), str(filename)),

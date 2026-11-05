@@ -5,6 +5,9 @@
 'use strict';
 
 const AI_HOSTS = new Set(['integrate.api.nvidia.com', 'generativelanguage.googleapis.com', 'api.anthropic.com']);
+// Ollama: a model running on this same computer, not the internet - http (not https) on its default
+// port only, so this never becomes an open door to some other local service.
+const isOllama = (u) => u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1') && u.port === '11434';
 const MB = 1024 * 1024;
 const LIMITS = {
   ai: { ms: 180000, bytes: 8 * MB, body: 4 * MB },
@@ -52,13 +55,15 @@ async function limitedFetch(url, opts, lim) {
 // POST a JSON body to an AI service with the user's key -> {status, text}
 async function aiPost(url, key, body) {
   const u = checkUrl(url);
-  if (u.protocol !== 'https:' || !AI_HOSTS.has(u.hostname)) throw new Error('That AI address isn\'t allowed.');
+  const local = isOllama(u);
+  if (!local && (u.protocol !== 'https:' || !AI_HOSTS.has(u.hostname))) throw new Error('That AI address isn\'t allowed.');
   const b = String(body == null ? '' : body);
   if (Buffer.byteLength(b) > LIMITS.ai.body) throw new Error('The request is too big.');
   const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
   const k = String(key || '').trim();
-  if (!k) return { status: 401, text: JSON.stringify({ detail: 'No key was given.' }) };
-  if (u.hostname === 'api.anthropic.com') { headers['x-api-key'] = k; headers['anthropic-version'] = '2023-06-01'; }
+  if (!local && !k) return { status: 401, text: JSON.stringify({ detail: 'No key was given.' }) };
+  if (local) { /* Ollama, on this computer: no key needed */ }
+  else if (u.hostname === 'api.anthropic.com') { headers['x-api-key'] = k; headers['anthropic-version'] = '2023-06-01'; }
   else if (u.hostname === 'generativelanguage.googleapis.com') headers['x-goog-api-key'] = k;
   else headers.Authorization = 'Bearer ' + k;// NVIDIA: OpenAI-style "Bearer nvapi-..."
   const { res, buf } = await limitedFetch(u.href, { method: 'POST', headers, body: b }, LIMITS.ai);
@@ -92,4 +97,20 @@ async function fetchPdf(url) {
   return { mime: 'application/pdf', b64: buf.toString('base64') };
 }
 
-module.exports = { aiPost, fetchPage, fetchImage, fetchPdf, checkUrl, AI_HOSTS, LIMITS };
+// Is Ollama running on this computer right now, and which models does it have? -> {running, models:[{name,vision}]}
+async function ollamaStatus() {
+  try {
+    const { res, buf } = await limitedFetch('http://localhost:11434/api/tags', {}, { ms: 3000, bytes: 1 * MB });
+    if (!res.ok) return { running: false, models: [] };
+    const j = JSON.parse(buf.toString('utf8'));
+    const models = (Array.isArray(j.models) ? j.models : []).map((m) => ({
+      name: String(m.name || m.model || ''),
+      vision: Array.isArray(m.capabilities) && m.capabilities.includes('vision')
+    })).filter((m) => m.name);
+    return { running: true, models };
+  } catch (e) {
+    return { running: false, models: [] };
+  }
+}
+
+module.exports = { aiPost, fetchPage, fetchImage, fetchPdf, ollamaStatus, checkUrl, AI_HOSTS, LIMITS };

@@ -7173,10 +7173,10 @@ function finishSide(pins){
 // The key is kept on this computer only and is never exported with parts.
 const AI_MODELS=['gemini-2.5-flash','gemini-3.6-flash','gemini-3.8-flash','gemini-3-flash-preview','gemini-2.5-flash-lite'];
 // Which AI does the reading: Google Gemini, NVIDIA, Groq or OpenRouter (free keys) or Claude (paid key). Each keeps its own key.
-const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'}};
+const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'},ollama:{name:'Ollama (local, offline)',short:'Ollama',key:'ollamaModel',noKey:true}};
 const aiProv=()=>PROVIDERS[WF.store.get('aiProvider')]?WF.store.get('aiProvider'):'gemini';
 const aiKey=p=>WF.store.get(PROVIDERS[p||aiProv()].key);
-const keyLabel=()=>(aiKey()?'Change ':'Set up ')+PROVIDERS[aiProv()].short+' key…';
+const keyLabel=()=>(aiKey()?'Change ':'Set up ')+PROVIDERS[aiProv()].short+(PROVIDERS[aiProv()].noKey?'…':' key…');
 let refDraw=null,aiNote='',aiBusy=false;
 function clearRef(){if(refDraw&&refDraw.url)URL.revokeObjectURL(refDraw.url);refDraw=null;aiNote='';aiPics=null;}
 // ---- product photos found by the look-up: downloaded, shown as thumbnails, then lined up by clicking corners
@@ -7370,21 +7370,24 @@ const KEY_HELP={
     steps:['Click <b>Open OpenRouter</b> below. It opens in your web browser.','Sign up free and log in.','Find <b>API Keys</b> (under your account menu at the top right) and click <b>Create</b> (or <b>Create API Key</b>).','If it asks for a tier or credit limit, pick any: it\'s free, and you won\'t be billed because you haven\'t entered a payment method. Copy the key (it starts with <code>sk-or-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']},
   claude:{site:'https://console.anthropic.com/settings/keys',open:'Open the Anthropic Console',
     about:'Paid per use from credit you add: roughly US$0.10–0.40 per web look-up, a few cents for the rest. The most reliable, and rarely busy.',
-    steps:['Click <b>Open the Anthropic Console</b> below and sign in or sign up.','Add some credit under <b>Billing</b>.','Go to <b>Settings › API Keys</b> and click <b>Create Key</b>.','Copy the key (it starts with <code>sk-ant-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']}
+    steps:['Click <b>Open the Anthropic Console</b> below and sign in or sign up.','Add some credit under <b>Billing</b>.','Go to <b>Settings › API Keys</b> and click <b>Create Key</b>.','Copy the key (it starts with <code>sk-ant-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']},
+  ollama:{site:'https://ollama.com/download',open:'Download Ollama',
+    about:'Completely free and offline: a small AI runs on this computer, no account and nothing sent over the internet once it\'s set up. Best for the parts-list wizard and ESPHome code; most small local models can\'t read a picture of a drawing, so those stay on Gemini or Claude.',
+    steps:['Click <b>Download Ollama</b> below, install it, and open it (it runs quietly in the background).','Open a terminal (Command Prompt, PowerShell or Terminal) and run: <code>ollama pull gemma:2b</code> (or any small model you\'d rather use, e.g. <code>llama3.2</code> or <code>qwen2.5:7b</code> - bigger models need a more powerful computer).','Type the exact model name below, the same as you pulled it (run <code>ollama list</code> if you forget it).','Click <b>Test</b> to check EvenUCan can reach it.']}
 };
 // Send a tiny "hello" with this key and return the AI's reply (or throw, saying what is wrong in plain words).
 async function aiTest(p,key){
   const ask='Reply with just the word: hello';
   if(OA[p]){
     const A=OA[p];let last='';
-    for(const m of oaOrder(p)){
+    for(const m of oaOrder(p,A.local?key:null)){
       const {status,j,msg}=await oaChat(p,key,m,ask,A.testTokens||20);
-      if(status===401||status===403)throw new Error(A.name+' didn\'t accept this key. Check you copied all of it (it starts with '+A.starts+').');
+      if(status===401||status===403)throw new Error(A.local?'Ollama said no model name was given. Type the exact model name (e.g. gemma:2b) and test again.':A.name+' didn\'t accept this key. Check you copied all of it (it starts with '+A.starts+').');
       if(status===429)throw new Error('The key looks fine, but '+A.name+' is busy or the free limit ('+A.limit+') was reached. Wait a minute (or until tomorrow for a daily limit) and test again.');
       if(status===200){const c=j.choices&&j.choices[0];return String((c&&c.message&&c.message.content)||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim()||'(an empty reply)';}
       last=msg||'HTTP '+status;// busy or renamed model: try the next
     }
-    throw new Error(A.name+' didn\'t answer ('+last+'). The key may still be fine: test again in a minute.');
+    throw new Error(A.local?'Ollama didn\'t answer ('+last+'). Check the model name is exactly what "ollama list" shows, and that you pulled it.':A.name+' didn\'t answer ('+last+'). The key may still be fine: test again in a minute.');
   }
   if(p==='claude'){
     const SDK=window.AnthropicSDK;if(!SDK)throw new Error('The Claude add-on is missing from this copy of the app.');
@@ -7416,45 +7419,86 @@ function aiChanged(){
   if(plBack.style.display==='grid'&&ed)renderEditor();
   if(wrBack.style.display==='grid')renderWiringSide();
 }
+// Is Ollama running right now, and what models does it have? Desktop: asks the main process (no CORS
+// limit there). Web: asks the page's own origin can usually reach localhost even cross-origin for a
+// plain GET, so this is tried directly; it simply shows "not running" if the browser blocks it.
+async function ollamaStatus(){
+  if(window.wfNative&&window.wfNative.checkOllama){try{return await window.wfNative.checkOllama();}catch(e){return {running:false,models:[]};}}
+  try{
+    const r=await fetch('http://localhost:11434/api/tags',{signal:AbortSignal.timeout(3000)});
+    if(!r.ok)return {running:false,models:[]};
+    const j=await r.json();
+    return {running:true,models:(Array.isArray(j.models)?j.models:[]).map(m=>({name:String(m.name||m.model||''),vision:Array.isArray(m.capabilities)&&m.capabilities.includes('vision')})).filter(m=>m.name)};
+  }catch(e){return {running:false,models:[]};}
+}
 function askKey(prov){
   return new Promise(res=>{
     const back=document.createElement('div');back.id='askBack';// (while it is open, keys belong to it)
     back.innerHTML='<div id="askBox" class="keyBox"></div>';
     const box=back.querySelector('#askBox');
-    let p=PROVIDERS[prov]?prov:aiProv(),busy=false;
+    let p=PROVIDERS[prov]?prov:aiProv(),busy=false,ollStatus=null,ollChecking=false;
+    const checkOllama=()=>{
+      if(p!=='ollama'||ollChecking)return;
+      ollChecking=true;ollamaStatus().then(s=>{ollChecking=false;ollStatus=s;if(p==='ollama')drawOllamaStatus();});
+    };
+    const drawOllamaStatus=()=>{
+      const el=box.querySelector('#ollStatus');if(!el)return;
+      const desk=!!(window.wfNative&&window.wfNative.checkTool);
+      if(ollChecking){el.innerHTML='<div class="ewNote">Checking whether Ollama is running…</div>';return;}
+      if(!ollStatus){el.innerHTML='';return;}
+      if(ollStatus.running){
+        el.innerHTML=`<div class="ok">✓ Ollama is running${ollStatus.models.length?', with '+ollStatus.models.length+' model'+(ollStatus.models.length===1?'':'s')+' ready:':'. '+(ollStatus.models.length===0?'No models yet - pull one first (see step 2 above).':'')}</div>`+
+          (ollStatus.models.length?`<div class="btns" style="flex-wrap:wrap">${ollStatus.models.map(m=>`<button data-k="pick" data-m="${esc(m.name)}">${esc(m.name)}${m.vision?' 📷':''}</button>`).join('')}</div>`:'');
+      }else if(desk){
+        el.innerHTML='<div class="warn">Ollama doesn\'t seem to be running.</div><div class="btns"><button data-k="startOll">Start Ollama</button></div>';
+      }else{
+        el.innerHTML='<div class="warn">Couldn\'t reach Ollama at localhost:11434. Start it on this computer (or open the desktop app, which can start it for you), then click Test again.</div>';
+      }
+    };
     const draw=()=>{
-      const h=KEY_HELP[p],has=!!aiKey(p);
-      box.innerHTML=`<div class="kHead"><b>AI key for</b> <select data-k="prov">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${k===p?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></div>
-<div class="ewNote">${h.about}</div>${OA[p]&&OA[p].deskOnly&&!(window.wfNative&&window.wfNative.aiPost)?'<div class="warn">This is the web version: NVIDIA only works in the EvenUCan desktop app. Here, pick Google Gemini (free) or Claude.</div>':''}${has?'<div class="ok">✓ A key is saved for this AI. Paste a new one to replace it.</div>':''}
+      const h=KEY_HELP[p],has=!!aiKey(p),noKey=!!PROVIDERS[p].noKey,word=noKey?'model name':'key';
+      box.innerHTML=`<div class="kHead"><b>AI ${word} for</b> <select data-k="prov">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${k===p?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></div>
+<div class="ewNote">${h.about}</div>${OA[p]&&OA[p].deskOnly&&!(window.wfNative&&window.wfNative.aiPost)?'<div class="warn">This is the web version: NVIDIA only works in the EvenUCan desktop app. Here, pick Google Gemini (free) or Claude.</div>':''}${has?'<div class="ok">✓ A '+word+' is saved for this AI. '+(noKey?'Change it below if you\'re using a different model.':'Paste a new one to replace it.')+'</div>':''}
 <ol>${h.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
 <div class="btns kOpen"><button data-k="open">${esc(h.open)}</button></div>
-<input data-k="key" autocomplete="off" spellcheck="false" placeholder="Paste your ${esc(PROVIDERS[p].short)} key here" value="${esc(has?aiKey(p):'')}">
+${noKey?'<div id="ollStatus"></div>':''}
+<input data-k="key" autocomplete="off" spellcheck="false" placeholder="${noKey?'Type the Ollama model name here, e.g. gemma:2b':'Paste your '+esc(PROVIDERS[p].short)+' key here'}" value="${esc(has?aiKey(p):'')}">
 <div class="kTest"></div>
-<div class="btns">${has?'<button data-k="remove">Remove key</button>':''}<button data-k="test">Test</button><button data-ok>Save</button><button data-cancel>Cancel</button></div>
-<div class="ewNote" style="margin-top:6px">The key stays on this computer only.</div>`;
+<div class="btns">${has?`<button data-k="remove">Remove ${word}</button>`:''}<button data-k="test">Test</button><button data-ok>Save</button><button data-cancel>Cancel</button></div>
+<div class="ewNote" style="margin-top:6px">${noKey?'The model name stays on this computer only, and nothing is ever sent anywhere else.':'The key stays on this computer only.'}</div>`;
       box.querySelector('input').focus();
+      if(noKey){checkOllama();drawOllamaStatus();}
     };
     const done=()=>{back.remove();aiChanged();res();};
     const save=()=>{
-      const v=box.querySelector('input').value.trim();
-      if(v){WF.store.set(PROVIDERS[p].key,v);WF.store.set('aiProvider',p);WF.flash(PROVIDERS[p].short+' key saved on this computer. EvenUCan now uses '+PROVIDERS[p].name+'.',5000);}
+      const v=box.querySelector('input').value.trim(),word=PROVIDERS[p].noKey?'model name':'key';
+      if(v){WF.store.set(PROVIDERS[p].key,v);WF.store.set('aiProvider',p);WF.flash(PROVIDERS[p].short+' '+word+' saved on this computer. EvenUCan now uses '+PROVIDERS[p].name+'.',5000);}
       done();
     };
     const test=async()=>{
-      const v=box.querySelector('input').value.trim(),out=box.querySelector('.kTest');
-      if(!v){out.innerHTML='<span class="bad">Paste a key in the box first.</span>';return;}
+      const v=box.querySelector('input').value.trim(),out=box.querySelector('.kTest'),word=PROVIDERS[p].noKey?'model name':'key';
+      if(!v){out.innerHTML='<span class="bad">Type the '+word+' in the box first.</span>';return;}
       busy=true;box.querySelectorAll('button').forEach(b=>b.disabled=true);
       out.innerHTML='<span class="ewNote">Sending "hello" to '+esc(PROVIDERS[p].short)+'…</span>';
-      try{const reply=await aiTest(p,v);out.innerHTML='<span class="ok">✓ Key works. '+esc(PROVIDERS[p].short)+' replied: "'+esc(reply.slice(0,80))+'". Click Save to use it.</span>';}
+      try{const reply=await aiTest(p,v);out.innerHTML='<span class="ok">✓ It works. '+esc(PROVIDERS[p].short)+' replied: "'+esc(reply.slice(0,80))+'". Click Save to use it.</span>';}
       catch(e){out.innerHTML='<span class="bad">✗ '+esc(e.message||String(e))+'</span>';}
       busy=false;box.querySelectorAll('button').forEach(b=>b.disabled=false);
     };
-    box.addEventListener('change',e=>{if(e.target.dataset.k==='prov'){p=e.target.value;draw();}});
+    box.addEventListener('change',e=>{if(e.target.dataset.k==='prov'){p=e.target.value;ollStatus=null;draw();}});
     box.addEventListener('click',e=>{
       const k=e.target.dataset.k;if(busy)return;
       if(k==='open')openWeb(KEY_HELP[p].site);
       else if(k==='test')test();
-      else if(k==='remove'){localStorage.removeItem('opensketch.'+PROVIDERS[p].key);WF.flash(PROVIDERS[p].short+' key removed');draw();}
+      else if(k==='remove'){localStorage.removeItem('opensketch.'+PROVIDERS[p].key);WF.flash(PROVIDERS[p].short+' '+(PROVIDERS[p].noKey?'model name':'key')+' removed');draw();}
+      else if(k==='pick'){const inp=box.querySelector('input');inp.value=e.target.dataset.m;inp.focus();}
+      else if(k==='startOll'){
+        if(!(window.wfNative&&window.wfNative.launchOllama))return;
+        e.target.disabled=true;e.target.textContent='Starting…';
+        window.wfNative.launchOllama().then(r=>{
+          if(!r.ok){WF.flash(r.err==='not-installed'?'Ollama isn\'t installed here - click "Download Ollama" above.':'Couldn\'t start Ollama.',6000);drawOllamaStatus();return;}
+          setTimeout(()=>{ollStatus=null;checkOllama();drawOllamaStatus();},2000);// give it a moment to come up
+        });
+      }
       else if(e.target.hasAttribute('data-ok'))save();
       else if(e.target.hasAttribute('data-cancel'))done();
     });
@@ -7599,10 +7643,14 @@ const OA={
   openrouter:{name:'OpenRouter',starts:'sk-or-',url:'https://openrouter.ai/api/v1/chat/completions',
     text:['openrouter/free','nvidia/nemotron-3-ultra-550b-a55b:free','google/gemma-4-31b-it:free'],
     vision:['openrouter/free','google/gemma-4-31b-it:free','nvidia/nemotron-3.5-super-vl:free'],limit:'about 50 requests a day',testTokens:200,
-    headers:{'X-Title':'EvenUCan'}}
+    headers:{'X-Title':'EvenUCan'}},
+  // (1.9.41) a model on this computer, not the internet. No key: the "key" box holds the model's exact
+  // name instead (e.g. "gemma:2b"), the same name "ollama list" shows. No picture-reading: most small
+  // local models can't do it reliably, so vision is left empty on purpose.
+  ollama:{name:'Ollama',url:'http://localhost:11434/v1/chat/completions',text:[],vision:[],local:true,limit:'whatever your computer can manage',testTokens:60}
 };
 const isOA=p=>!!OA[p||aiProv()];
-const oaOrder=p=>[WF.store.get(p+'Model'),...OA[p].text].filter((m,i,a)=>m&&a.indexOf(m)===i);
+const oaOrder=(p,extra)=>[extra,WF.store.get(p+'Model'),...OA[p].text].filter((m,i,a)=>m&&a.indexOf(m)===i);
 // One request. The desktop app passes it on (its allow-list has all three hosts); the web version fetches directly.
 async function oaChat(p,key,model,content,maxTokens){
   const A=OA[p],post=window.wfNative&&window.wfNative.aiPost;
@@ -7610,11 +7658,11 @@ async function oaChat(p,key,model,content,maxTokens){
   let status,raw;
   if(post){
     try{const r=await post(A.url,key,body);status=r.status;raw=r.text;}
-    catch(e){throw new Error('Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+    catch(e){throw new Error(A.local?'Couldn\'t reach Ollama on this computer. Make sure it\'s running (ollama serve, or just open the Ollama app) and that you pulled the model you typed.':'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
   }else{
     if(A.deskOnly)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini, Groq or OpenRouter (all free) or Claude instead.');
-    try{const r=await fetch(A.url,{method:'POST',headers:Object.assign({'Content-Type':'application/json',Authorization:'Bearer '+key},A.headers||{}),body});status=r.status;raw=await r.text();}
-    catch(e){throw new Error('Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+    try{const r=await fetch(A.url,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},A.local?{}:{Authorization:'Bearer '+key},A.headers||{}),body});status=r.status;raw=await r.text();}
+    catch(e){throw new Error(A.local?'Couldn\'t reach Ollama on this computer. Make sure it\'s running, and that your browser can reach http://localhost:11434 (if not, set OLLAMA_ORIGINS or use the desktop app instead).':'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
   }
   let j={};try{j=JSON.parse(raw);}catch(e){/* intentional: handled below as an empty answer */}
   return {status,j,msg:String(j.detail||j.title||(j.error&&(j.error.message||j.error))||'')};
@@ -10297,11 +10345,11 @@ function aiHelperBox(short){
   const desk=!!(window.wfNative&&window.wfNative.aiPost),has=!!aiKey(),P=PROVIDERS[aiProv()];
   return `<div class="aiHelp" style="border:1px solid #c9d7ea;background:#f4f8fd;border-radius:8px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.5">
 <div style="font-weight:600;font-size:14px">🤖 About the AI helper</div>
-${short?'':'<div>When you describe an idea, a free online AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: you use your own free key.</div>'}
-<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:6px 0"><button id="wcAiGem">Get a free Google Gemini key</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>Get a free NVIDIA key${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">Get a free Groq key</button><button id="wcAiOr">Get a free OpenRouter key</button></div>
+${short?'':'<div>When you describe an idea, an AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: use a free key, a paid key, or a model running on this computer with Ollama if you\'d rather stay fully offline.</div>'}
+<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:6px 0"><button id="wcAiGem">Get a free Google Gemini key</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>Get a free NVIDIA key${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">Get a free Groq key</button><button id="wcAiOr">Get a free OpenRouter key</button><button id="wcAiOllama">Use Ollama (local, offline)</button></div>
 <div class="ewNote">A paid Claude key (from Anthropic) works too.${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'}</div>
 <div style="margin-top:4px">${has?`<span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button>`:'<span class="warn">No AI key is set up yet.</span> You can set one up now or later.'}</div>
-<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
+<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it - except Ollama, which runs on this computer and sends nothing anywhere. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
 }
 // (1.9.37) Carry on without AI: ready-made examples (common modules and built-in parts, no look-up needed)
 const NOAI_EX=[
@@ -10370,6 +10418,7 @@ iwBack.addEventListener('click',e=>{
     case 'wcAiNv':askKey('nvidia').then(renderIntent);break;
     case 'wcAiGroq':askKey('groq').then(renderIntent);break;
     case 'wcAiOr':askKey('openrouter').then(renderIntent);break;
+    case 'wcAiOllama':askKey('ollama').then(renderIntent);break;
     case 'wcAiTest':askKey(aiProv()).then(renderIntent);break;
     case 'nkKey':askKey().then(()=>{if(!aiKey())return renderIntent();if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';intentAnalyse();}else run();});break;
     case 'nkBack':iw.err='';if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';renderIntent();}else go('w3');break;

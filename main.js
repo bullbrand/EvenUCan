@@ -269,6 +269,13 @@ const TOOL_PATHS = {
     win32: ['%LOCALAPPDATA%\\Programs\\Microsoft VS Code\\Code.exe', '%PROGRAMFILES%\\Microsoft VS Code\\Code.exe'],
     darwin: ['/Applications/Visual Studio Code.app'],
     linux: ['/usr/bin/code', '/usr/local/bin/code', '/snap/bin/code']
+  },
+  // the background app (keeps its server running) is tried before the bare CLI, which just prints help
+  // and exits if launched with no arguments - see ollamaLaunchArgs() below.
+  ollama: {
+    win32: ['%LOCALAPPDATA%\\Programs\\Ollama\\ollama app.exe', '%LOCALAPPDATA%\\Programs\\Ollama\\ollama.exe'],
+    darwin: ['/Applications/Ollama.app', '/usr/local/bin/ollama', '/opt/homebrew/bin/ollama'],
+    linux: ['/usr/local/bin/ollama', '/usr/bin/ollama', '~/.ollama/bin/ollama']
   }
 };
 const TOOL_ALIAS = { raspberrypi: 'pi', thonny: 'pi', 'arduino-ide': 'arduino' };
@@ -352,6 +359,25 @@ ipcMain.handle('ai-post', bridgeCall(netbridge.aiPost));
 ipcMain.handle('fetch-page', bridgeCall(netbridge.fetchPage));
 ipcMain.handle('fetch-image', bridgeCall(netbridge.fetchImage));
 ipcMain.handle('fetch-pdf', bridgeCall(netbridge.fetchPdf));
+
+// Ollama: is it running right now, and what models does it have? -> {running, models:[{name,vision}]}
+ipcMain.handle('ollama-status', async (event) => {
+  if (!fromApp(event)) return { running: false, models: [] };
+  return netbridge.ollamaStatus();
+});
+// "ollama" (the bare CLI) just prints help and exits with no arguments, so it needs "serve"; the
+// background app (and the Mac .app bundle) starts the server itself when opened.
+function ollamaLaunchArgs(toolPath) {
+  const base = path.basename(toolPath).toLowerCase();
+  return (base === 'ollama.exe' || base === 'ollama') ? ['serve'] : [];
+}
+ipcMain.handle('ollama-launch', async (event) => {
+  if (!fromApp(event)) return { ok: false, err: 'Not allowed.' };
+  const found = findTool('ollama');
+  if (!found) return { ok: false, err: 'not-installed' };
+  if (process.platform === 'darwin' && found.endsWith('.app')) return launch('open', ['-a', found]);
+  return launch(found, ollamaLaunchArgs(found));
+});
 
 ipcMain.handle('check-tool', async (event, pf) => {
   const key = toolKey(pf);
