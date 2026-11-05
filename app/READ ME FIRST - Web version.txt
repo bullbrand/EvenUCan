@@ -1,4 +1,4 @@
-EvenUCan 1.9.40 - web-page version
+EvenUCan 1.9.41 - web-page version
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -17,12 +17,19 @@ IMPORTANT: A FREE AI KEY IS NEEDED TO START A NEW PROJECT
   "Describe your idea" - the wizard that turns a plain-English
   description into a parts list, a box and code - needs an AI to do
   that one translation: it is the only part of the whole program that
-  has to reach the internet. Five AIs work: Google Gemini, Groq and
-  OpenRouter (all free, no card needed), NVIDIA (free, desktop program
-  only), or your own paid Anthropic Claude key. Your key is kept in
-  this browser only, never uploaded anywhere except the AI company you
-  chose. Once the AI has turned your idea into a parts list, the box
-  designer, the wiring diagram and the ESPHome code all run entirely
+  has to reach the internet (or your own computer, for Ollama).
+  Google Gemini, Groq and OpenRouter (all free, no card
+  needed), NVIDIA (free, desktop program only), or your own paid
+  Anthropic Claude key all work. Your key is kept in this browser
+  only, never uploaded anywhere except the AI company you chose.
+  For a fully offline option, choose Ollama instead: a small AI
+  running on this computer. This page can reach it directly at
+  localhost - no key, nothing sent anywhere. It lists the models
+  you've already pulled so you can click one; starting Ollama itself
+  needs the desktop program, since a web page can't start a program
+  on your computer. Once the AI has turned your idea into a parts
+  list, the box designer, the wiring diagram and the ESPHome code all
+  run entirely
   on your own computer - no AI or internet needed again for that
   project. Don't want to use AI at all? Click "Carry on without AI"
   instead of describing your idea.

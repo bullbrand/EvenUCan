@@ -8,11 +8,11 @@ From this one folder you get:
 
 | File | For |
 |---|---|
-| `EvenUCan-Setup-1.9.39.exe` | Windows installer |
-| `EvenUCan-Portable-1.9.39.exe` | Windows, no install: runs straight from a folder or USB stick |
-| `EvenUCan-1.9.39.dmg` | Mac (one file works on both Apple Silicon and older Intel Macs) |
-| `EvenUCan-1.9.39.AppImage` | Linux: runs on Ubuntu, Fedora, Mint and most others, nothing to install |
-| `EvenUCan-1.9.39.deb` | Linux: installer for Ubuntu, Debian and Mint |
+| `EvenUCan-Setup-1.9.41.exe` | Windows installer |
+| `EvenUCan-Portable-1.9.41.exe` | Windows, no install: runs straight from a folder or USB stick |
+| `EvenUCan-1.9.41.dmg` | Mac (one file works on both Apple Silicon and older Intel Macs) |
+| `EvenUCan-1.9.41.AppImage` | Linux: runs on Ubuntu, Fedora, Mint and most others, nothing to install |
+| `EvenUCan-1.9.41.deb` | Linux: installer for Ubuntu, Debian and Mint |
 
 ### What's in the folder
 
@@ -51,11 +51,11 @@ Each computer can only build its own kind of installer properly: a Windows PC ma
 
 ### Making a proper Release (a public download page)
 
-Add a **tag** that starts with `v`, for example `v1.9.39`:
+Add a **tag** that starts with `v`, for example `v1.9.41`:
 
-- **GitHub Desktop:** History → right-click the latest commit → *Create Tag…* → `v1.9.39` → then *Push origin*.
-- **On the GitHub website:** Releases → *Draft a new release* → *Choose a tag* → type `v1.9.39` → *Create new tag* → *Publish*.
-- **Command line:** `git tag v1.9.39` then `git push origin v1.9.39`.
+- **GitHub Desktop:** History → right-click the latest commit → *Create Tag…* → `v1.9.41` → then *Push origin*.
+- **On the GitHub website:** Releases → *Draft a new release* → *Choose a tag* → type `v1.9.41` → *Create new tag* → *Publish*.
+- **Command line:** `git tag v1.9.41` then `git push origin v1.9.41`.
 
 GitHub then builds everything and puts all the installers on a Release page that anyone can download from.
 
@@ -76,8 +76,8 @@ The icons in `build/` are temporary: a dark blue square with "W3D" on it. To use
 ## 5. Releasing a new version of EvenUCan
 
 1. Copy the new files into the `app/` folder, replacing the old ones: `EvenUCan.html`, the three `.json` files, and the manual / readme / licence if they've changed. Keep the same file names.
-2. Open `package.json` and change the `"version"` line, e.g. `"version": "1.9.39",`. This number goes into the installer names and the About box.
-3. Push to GitHub, then add a tag such as `v1.9.39` for a Release (section 3).
+2. Open `package.json` and change the `"version"` line, e.g. `"version": "1.9.41",`. This number goes into the installer names and the About box.
+3. Push to GitHub, then add a tag such as `v1.9.41` for a Release (section 3).
 
 You don't need to change anything in your HTML for the desktop app. The small adjustment it needs, so that the parts library loads automatically, is made by `main.js` as the page opens. Your file on disk is never altered.
 
@@ -103,16 +103,16 @@ Then open the app as normal.
 
 **AppImage** (works on almost any Linux):
 
-1. Download `EvenUCan-1.9.39.AppImage`.
+1. Download `EvenUCan-1.9.41.AppImage`.
 2. Make it runnable, either by right-clicking it → *Properties* → *Permissions* → tick *Allow executing file as program*, or in a terminal:
    ```
-   chmod +x EvenUCan-1.9.39.AppImage
+   chmod +x EvenUCan-1.9.41.AppImage
    ```
-3. Double-click it, or run `./EvenUCan-1.9.39.AppImage`.
+3. Double-click it, or run `./EvenUCan-1.9.41.AppImage`.
 
 On some newer Ubuntu versions an AppImage won't start until FUSE is installed: `sudo apt install libfuse2` (or `libfuse2t64` on Ubuntu 24.04).
 
-**.deb** (Ubuntu / Debian / Mint): double-click it to install with the Software app, or run `sudo apt install ./EvenUCan-1.9.39.deb`. EvenUCan then appears in the applications menu.
+**.deb** (Ubuntu / Debian / Mint): double-click it to install with the Software app, or run `sudo apt install ./EvenUCan-1.9.41.deb`. EvenUCan then appears in the applications menu.
 
 ## Notes
 

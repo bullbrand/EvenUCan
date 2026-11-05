@@ -1,5 +1,5 @@
 EvenUCan  -  from idea to object 
-Version 1.9.40
+Version 1.9.41
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -9,8 +9,10 @@ computer. The drawing, box design, wiring and ESPHome code all work
 offline. The wizard's AI helper (turning your idea into a parts list,
 and writing Arduino sketches) uses the internet with a free key from
 Google Gemini or NVIDIA (desktop program), or your own paid Claude key
-if you prefer - or you can carry on without AI. "Fill in automatically"
-(looking up a part's sizes online) uses the same AI key.
+if you prefer. For a fully offline option, Ollama runs a small AI on
+this computer instead - no key, no internet, once it's set up. Or you
+can carry on without AI altogether. "Fill in automatically" (looking
+up a part's sizes online) uses the same AI key.
 
 
 =====================================================================
@@ -22,10 +24,14 @@ description into a parts list, a box and code - needs an AI to do
 that one translation. It is the only part of the whole program that
 has to reach the internet.
 
-  Bring your own free key. Five AIs work: Google Gemini, Groq and
-  OpenRouter (all free, no card needed), NVIDIA (free, desktop program
-  only), or your own paid Anthropic Claude key. Set one up on the
-  wizard's first screen, or under "AI key" on the toolbar.
+  Bring your own free key, or go fully offline. Google Gemini, Groq
+  and OpenRouter (all free, no card needed), NVIDIA (free, desktop
+  program only), and your own paid Anthropic Claude key all work. Or
+  choose Ollama: a small AI running on this computer, no key and no
+  internet needed once it's set up - EvenUCan can tell you whether it's
+  running, list the models you've already pulled, and start it for you
+  if it's installed but not running. Set one up on the wizard's first
+  screen, or under "AI key" on the toolbar.
 
   Kept on your own computer only. Your key is saved in EvenUCan's own
   settings (never uploaded anywhere except the AI company you chose).
@@ -46,11 +52,11 @@ has to reach the internet.
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan-Portable-1.9.40.exe
+  EvenUCan-Portable-1.9.41.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan-Setup-1.9.40.exe
+  EvenUCan-Setup-1.9.41.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 
@@ -66,6 +72,15 @@ First thing to do:
   type its build size (X, Y and Z in mm). The app then warns you if
   anything is too big to print.
 
+NEW in 1.9.41: a sixth AI option - Ollama, a small AI running on this
+computer instead of the internet. Click "Use Ollama (local, offline)"
+on the wizard's first screen (or "AI key" > Ollama): EvenUCan tells you
+whether it's running, lists the models you've already pulled so you
+can click one instead of typing it, and - in the desktop program - can
+start Ollama for you if it's installed but not running. If it isn't
+installed at all, there's a link to download it. Picture-reading
+(Read a drawing) still needs Gemini or Claude: most small local models
+can't do that reliably.
 NEW in 1.9.40: a new manual page and clearer wording throughout make
 it explicit that "Tell it your idea" needs a free (or paid) AI key to
 turn your words into a parts list - it's the one step that needs the

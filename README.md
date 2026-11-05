@@ -16,7 +16,7 @@ The drawing, box design, wiring and ESPHome code all work offline. The wizard's 
 
 **"Tell it your idea"** — the wizard step that turns a plain-English description into a parts list, a box and code — needs an AI to do that one translation. It's the only part of the whole program that has to reach the internet.
 
-- **Bring your own free key.** Five AI gateways work: Google Gemini, Groq and OpenRouter (all free, no card needed), NVIDIA (free, desktop app only), or your own paid Anthropic Claude key. Set one up from the wizard's first screen.
+- **Bring your own free key, or go fully offline.** Google Gemini, Groq and OpenRouter (all free, no card needed), NVIDIA (free, desktop app only), and your own paid Anthropic Claude key all work. Or choose **Ollama**: a small AI running on this computer, no key and no internet needed once it's set up. Set one up from the wizard's first screen.
 - **Kept on your own device only.** Your key is saved in the app's own local settings (or this browser's storage for the web version) and is never sent anywhere except the AI company you chose.
 - **Everything after that is offline.** Once the AI has turned your idea into a parts list, the 3D box designer, the wiring diagram and the ESPHome/Arduino/Pi code all run entirely on your own computer — no AI, no internet, needed again for that project.
 - **Don't want AI at all?** Click **Carry on without AI** instead of describing your idea: start from one of six ready-made examples, or tick the parts you have, and the rest of the app works exactly the same way.
@@ -27,11 +27,11 @@ Go to the **[Releases page](https://github.com/bullbrand/EvenUCan/releases/lates
 
 | You have | Download | How to start it |
 |---|---|---|
-| Any computer with Chrome or Edge | `EvenUCan_1.9.39_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
-| Windows, and you want it installed | `EvenUCan-Setup-1.9.39.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
-| Windows, without installing | `EvenUCan-Portable-1.9.39.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
-| Mac | `EvenUCan-1.9.39.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
-| Linux | `EvenUCan-1.9.39.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
+| Any computer with Chrome or Edge | `EvenUCan_1.9.41_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
+| Windows, and you want it installed | `EvenUCan-Setup-1.9.41.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
+| Windows, without installing | `EvenUCan-Portable-1.9.41.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
+| Mac | `EvenUCan-1.9.41.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
+| Linux | `EvenUCan-1.9.41.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
 
 ### "Windows protected your PC"
 
@@ -39,7 +39,15 @@ The programs aren't signed by a big company, so the first time you run one, Wind
 
 ### Checking a download is genuine
 
-The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.39.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.41.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+
+## New in 1.9.41
+
+- **Ollama: a fully offline AI option.** Click **Use Ollama (local, offline)** on the wizard's first screen (or **AI key** → Ollama): EvenUCan checks whether it's running, lists the models you've already pulled as clickable buttons instead of making you type the name, and flags which ones can read pictures. In the desktop app, if Ollama is installed but not running, a **Start Ollama** button launches it; if it isn't installed, there's a link to download it. No key, nothing sent anywhere - it talks to `localhost:11434` only. Picture-reading still needs Gemini or Claude, since most small local models can't do it reliably.
+
+## New in 1.9.40
+
+- **A new manual page and clearer wording** throughout make it explicit that "Tell it your idea" needs an AI key to do that one translation step, and that everything afterwards (the box, wiring and code) runs fully offline.
 
 ## New in 1.9.39
 
