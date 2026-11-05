@@ -17,7 +17,17 @@ HOW TO START
   1. Unzip this folder (right-click > Extract All). Keep the files together.
   2. Double-click EvenUCan.html. It opens in your web browser.
 
-THE PARTS LIBRARY (over 2,300 ready-made parts)
+INSTALLING IT AS AN APP (when it is on a website)
+  Where EvenUCan is served from a website over https (for example GitHub
+  Pages), Chrome and Edge offer "Install EvenUCan" in the address bar (or
+  Menu > Apps > Install EvenUCan). It then opens in its own window with its
+  own icon, and keeps working with no internet connection: the first visit
+  online fills an offline copy, including the parts library.
+  Opened straight from a folder (double-click), everything still works, but
+  a browser cannot install a page from a folder, so that button only appears
+  when the page is on a website.
+
+THE PARTS LIBRARY (over 2,200 ready-made parts)
   The first time you click Parts > "Browse parts...", it asks for a file:
   choose parts-library.json, eagle-parts.json and kicad-parts.json together
   (all three are in this folder; select them all at once in the file

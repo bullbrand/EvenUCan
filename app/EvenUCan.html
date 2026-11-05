@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>EvenUCan</title>
+<!-- PWA (web version): lets the browser offer "Install EvenUCan" and remember it for offline use. -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e5af0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="EvenUCan">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAADAFBMVEUICXETBYotAq8CCFcAAANHAdNuAvaTl7OoprcrB478xwmtmK06AcVXAeYFAzH1lwOFibL4pwUrC3b91wcHEHf7uAd6hrWKAvwwFGn95wTtigP89gv8+U78+zDSeAbWx9KzWAf8+XH95y9OCnlICI7MlaZVJFMQEYPHaQT91yj9+5H++9aSRAn8+exoKUhyeq7ahwf9+7G4ZglFGldvNEaLRjbm1dJtB3TqyY9KGWeHOwvKi6TsqCj+52zz5tR6NhSkTQfrhpLmycjr5ucUFzQyM01oKRFsZ7mwi6irrMPb1uLtyrL72G/21a88FVxFBKp7i8KJBnCZUzKGlcSwBWfRhyvzuDH1xlMwCFVzeJCFR0OwZyy4tsXSCATXlzPSlEvMubXwuXP2yHfjy+r81k/91o0kAy14Oj2DVtKdobW5srnDeCnWh57YpEfrZ2vofQHsmKXlqEf6yy3m1egoKEdQE4JYKcZTMrVuBFNnZXiEOTaHfZSxRFOnVyisd0mvhdWxlorGh07Upm3Fu8T+6EP75o8hEIg7Q3NHFcVQSmZRQ7tJUnZQWpRXWa5eaqBpGHZ2I3VhK8lqZ4SQPEqYRnqVUUiRWrKIZ4WOeXiGeMiShHyLiJGVh8aobU2zcRO6dTPPYWzVkgzVqT3JqbLRrdbayuPsCVfne4fluIcfAqAdI0AiEDA4FbM/IWQ+SYZEAChAHTxNJ4hWNFNKQl9XU15XYIF2ADBqArN2A9BjH0RiGIFsKz9vL51jK7R/Qz9xT21vTcthXbl7aMp3dH98dMB/gJp/kceNADyHKU2CJWWCXHeCerO2BlijA/+wEhWhO2ijSySuUmyseGuteZayjeu8kj6sltfcCF/VB2LaFw3FXADKZyHAekjPf2vZfYzVopDPr+jZsSbXuvXexbnuGArwIAT1Mxj9UQD9agDnjSbijaLgnyj/qG7hqZPnt6L96bAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOtlkgAAABAHRSTlP///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAArf1l5wAAB5ZJREFUeNp9l/Vb49gax1NaNiWwjZEuDWmatFDaUqO0DFJ8YGCAYYYZ3AYZ23HZcZe7vnfd3a+sXHd3d3f3e/+F+56TtE1o2O8PfZ48T7+f9/u+OTnJIRyadtd8/BbQTVg3g0pBFaCSvMrKbAURLt1I4F/Xx27RlAeU6gCDvcxEyCEwIGCy5/2leX9ZTkaCzZ4D1HzHsj4AcvaamppAjTUBANw69XN+cN/27u/95+GaoiYQgXC4THZDfuweBXvNJ+8/3xz5QaAIQNgQYPSd2h/F5b9xfjly43yLBcDuIFw3meym8tgfuP/h3yxH1OWHLAAE4SBq8uEtp/fpR9v+u0sFHf16gFtDQAA7UVrkr6jQAKOfefTSyz0jI8PtqqSqS78rv40zAQhNFuXBPvrA3ksvr/T09Aw1L4NfktT2i5cHEIBb4yeKyldUnNx76fcrx1d8Pl/P0NAu7JfU1auXez/AYREGuw7IT6+idO+P/7hy/PgrPl/B7/V6JXV4ZGSE4aqQOMIozZ0r/8BKrPxBn27vGRrZNYz9Xsl/bOJf2UWupSWebjEDbjb67/ipL3aub24z2Juamoaah4/5sd8rUcmUQl/kWuIHV+NVRYB893uZwVivbzPI96fmyWOUQIG/urrae51OKfJEsCUYHz9YBCjNP7onmW8NNsV6N/t2LmVZ+oWkyErIDoCwKIeEnzQGg/F4cM0QSgv+iieYBOnreH1xPCmnFCUkCrq/2kuJssjPxNMz6cYqK4C2c3yeSSSYy/8IRaOtrdGULLJ+5Pd4PNVegRapP5zNZBZmtqD7sAag71x3PO12M4n9of7+zqiS83s8GEAJgkdWlO+fDTZWtZgTVFTkdr4vkm7G/Tjd2tkZ7VLAH9b9PCJ4JWl1cmLxkSDIAoD8J7ejAAupfrCnQkmawn5eEzDQKKRfx9PxFvNdyG+cT5AMBGA7O5WJrCzTgheV5/PCrQiZPelg1RqAvm+eAj+TeDHV36msHkMD0MpTmjCiOvyrTAbdBhMgt23fhQI8KbR2tnaFDot0OBeAyiM8HvHC2J5gsHFLlRXg/QxDJl58tlVWutAK8Hp4mDxLi39nBRAieGjlQiYe/MSVZ6asACWbSPeTbH+0ffKXCMBTUFugD/9N5AUsyiOEZsf2xONX2h/hLAGnyMTBZ/ujsjoRCsk0K8CDQLEs6xfgB1LwlLx/NpP+1PjkQ9YtlJRsfYqNwhIS27OHRTGZTMoiLdJ+P4tF8bS8/0Jmz3ML8S1V1glK7jpIp2TwyatyNKrILE0LLCUJNIgVeFZMLhydHZsNNq5ZygVAyQ+zCy/IqWi/koUnSYiEITgEwAAeOkkeVWfTwSA8DBxnDSg5tTiuKNHWaIgOyazEQ254imhRpCmPRwqL4/szabSOgs80rgN4+sak0hrtgidBhqXEC5Tfj/2Ch6L86vD4WOazceggvWgEvMcA+LLvf8NdrUpWlJMiTVN8WBJEEBuGNUHx6o0rY5mxGSBMGYdgsxUAm/b56pujSnsExg+D90MAqE+H/RR1Ha7Vhqtnn7sIM6gkTABbWWEtkUBQQpMq/B1SSxTY6bDkh3UEvQhSQ/NM4xtmPwLYDIDypvrmrhB7naLCvF9CSXhVggQ0LbMsHW7o+OaUCWDHgFyGTSRDOoGQkulwGF4mYWiEjwAgTNFyUqDlwxOR+nOcAWDXAbYCgMGEJCwhVaVgAUUaIg0QQaBZ2NJCoWxDjCEqiwEa4QtoT0CEpaTA+iMRivJE6hsaIqofnqzs0auvj3T09vb6CIsEuA/bvRgAhNgyjD6i8tWRWAwIEKKhvh69MOYGyWmybh2AzXbvdrdG6IgNh6WI5I3E6pE6Opp815zOcpIk9/X1kYV3s90AQJf3oH1VJ+CaMWTd+dJLteWaAHDmKbLwdjcA0JXrdgBohGuxWO9x37VboSyoFqT5SdLpZGx1xQnwhcuVQATEIJ07nV+CPzsRobb2yBFMIDHBbQYQ+c8lu8ux0b01D/iw49xczt/9fDciaIAEUVfwmwEux3sxwO0GwPQZrX5525FDv5j/brcBUFlpTEAQRkLfVh1w69xcroHX5v+9NH8oD9gEAB2hAwh9qphw+1d1gD4AIDw/v2vpz91tAzrgvjzAngPkEJhwN2RIGAFtv53/y18P/XNgAPvJwTetAEbCPVtRAmcBcOC1Q93dB3KAj9gtAUS+C4fjPkhQXgAMtB0AP4yAmX7wzhMbXXbjCOzGjSF/MxNukiwAymvb2tp+9NidfRtdoEJ9HWBowkDAgH0agnnscx98e/du8MJ/KyvNfhfhIiwIJ7aTzsHBQSf5lTMfOvG+3W999GunTwfQRy5h8OsAh3l70wl90ww5fTcOPTV1+tuvvrpjQwB97tvqbCa/HR15zDukTnAhL2TmuMCGbTt+9nME0D72TX4XOnTZiaIQ2ngqK+vKuAAC7NixbQM6ttlMWwEKgAAuwl4UAvVaV1f3LjizIMK2bTiA8StfD4DPjS7CvjaFDdkxAGfYgCbA2Yhiv3ZyXUtAQn60UcLsA4GAdgss/Lmzs90CoYvTZe3XARhBrIcg1tiJgr0AQAjz0l5PdqPd4fg/vTST7xWIVmsAAAAASUVORK5CYII=">
 <style>
 :root{--bg:#ececec;--panel:#f6f6f6;--line:#c9c9c9;--text:#222;--accent:#1e5af0;--muted:#666}
@@ -59,6 +66,27 @@ svg.fi{width:24px;height:24px;fill:#000;stroke:none;stroke-width:1;stroke-lineca
 /* button groups: drag a button or a group's grip to rearrange */
 #toolbar .tbg{display:flex;align-items:center;gap:1px;padding:0 3px 0 0;margin-right:2px;border-right:1px solid var(--line)}
 #toolbar .tbg:last-child{border-right:none}
+/* (1.9.38) Grouped toolbar: every useful menu command has a button, in labelled groups. Click a group's name to fold it. */
+#toolbar.ribbon{flex-wrap:wrap;align-items:stretch;overflow:visible;row-gap:3px;padding:2px 4px}
+#toolbar.ribbon .tbg{flex:none;flex-direction:column;align-items:stretch;gap:1px;padding:0 5px;margin:0;border-right:1px solid var(--line)}
+#toolbar .tgh{width:auto;height:15px;display:flex;align-items:center;justify-content:flex-start;gap:3px;padding:0 3px;border:none;border-radius:3px;background:none;font:600 10.5px "Segoe UI",sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+#toolbar .tgh:hover{background:#e6ecfa;color:var(--text)}
+#toolbar .tgh .ar{display:inline-block;font-size:9px;transition:transform .15s}
+#toolbar .tbg.shut .tgh .ar{transform:rotate(-90deg)}
+#toolbar .tbg.shut .tgb{display:none}
+#toolbar .tgb{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,28px);grid-auto-columns:28px;gap:1px}
+#toolbar.ribbon .tgb button{width:28px;height:28px;position:relative}
+#toolbar.ribbon .tgb svg.fi{width:22px;height:22px}
+#toolbar .tgb .tl{display:none}
+#toolbar .tgb .bd{position:absolute;right:-1px;bottom:0;font:700 7.5px/1 "Segoe UI",sans-serif;background:#fff;color:#1d3d75;border:1px solid #9fb1d6;border-radius:3px;padding:1px 2px;pointer-events:none}
+#toolbar button.off{opacity:.35;filter:grayscale(1);cursor:default}
+#toolbar button.off:hover{background:none}
+#toolbar.names .tgb{grid-template-rows:repeat(2,42px);grid-auto-columns:54px}
+#toolbar.names .tgb button{width:54px;height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+#toolbar.names .tgb .tl{display:block;font:10px/11px "Segoe UI",sans-serif;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
+#toolbar.names .tgb .bd{bottom:auto;top:2px;right:2px}
+@media (max-width:1000px){#toolbar.ribbon{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}}/* small windows: slide the toolbar sideways */
+#toolbar .tgn{flex:none;width:auto;height:22px;align-self:center;padding:0 8px;margin-left:4px;border:1px solid var(--line);background:#fff;font:11px "Segoe UI",sans-serif;color:var(--text)}
 #toolbar .grip{flex:none;width:6px;height:22px;margin:0 2px 0 1px;cursor:grab;border-radius:2px;opacity:.35;background:radial-gradient(circle,#667 1px,transparent 1.4px) 0 0/3.5px 4px}
 #toolbar .grip:hover{opacity:.9;background-color:#e6ecfa}
 #toolbar.arranging,#toolbar.arranging *{cursor:grabbing!important}
@@ -140,11 +168,14 @@ svg.fi{width:24px;height:24px;fill:#000;stroke:none;stroke-width:1;stroke-lineca
 #palette .sw.on{box-shadow:0 0 0 3px var(--accent)}
 #palette .name{margin:6px 0 4px;color:var(--muted)}
 #textPanel,#holePanel{width:220px}
-#holePanel label{display:block;margin:5px 0;font-size:12.5px;color:#333}
-#holePanel select,#holePanel input[type=number]{display:block;width:100%;box-sizing:border-box;margin-top:2px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px}
-#holePanel label.chk{display:flex;align-items:center;gap:6px;margin:4px 0}
-#holePanel .sizes{margin-top:6px;padding:6px 8px;background:#f1f5fb;border-radius:5px;font-size:12px;color:#1a3fa0;line-height:1.35}
-#holePanel .note{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.35}
+#standoffPanel,#boardPanel{width:250px;max-height:calc(100% - 24px);overflow:auto;box-sizing:border-box}
+#holePanel label,#standoffPanel label,#boardPanel label{display:block;margin:5px 0;font-size:12.5px;color:#333}
+#holePanel select,#holePanel input[type=number],#standoffPanel select,#standoffPanel input[type=number],#boardPanel select,#boardPanel input[type=number]{display:block;width:100%;box-sizing:border-box;margin-top:2px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px}
+#holePanel label.chk,#standoffPanel label.chk,#boardPanel label.chk{display:flex;align-items:center;gap:6px;margin:4px 0}
+#standoffPanel .warn{margin-top:6px;padding:6px 8px;background:#fff4e5;border:1px solid #f0b46a;border-radius:5px;font-size:12px;color:#8a4b00;line-height:1.35}
+#standoffPanel button,#boardPanel button{margin-top:6px;font:inherit;font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:4px;background:#f4f6fb;cursor:pointer}
+#holePanel .sizes,#standoffPanel .sizes,#boardPanel .sizes{margin-top:6px;padding:6px 8px;background:#f1f5fb;border-radius:5px;font-size:12px;color:#1a3fa0;line-height:1.35}
+#holePanel .note,#standoffPanel .note,#boardPanel .note{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.35}
 #textPanel label{display:block;margin:5px 0;font-size:12.5px;color:#333}
 #textPanel label input:not([type=checkbox]):not([type=radio]),#textPanel select{display:block;width:100%;box-sizing:border-box;margin-top:2px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px}
 #textPanel .row2{display:flex;gap:8px}#textPanel .row2 label{flex:1}#textPanel .row2 input{width:100%!important}
@@ -1470,7 +1501,7 @@ function drawLines(B,M,pull){
 }
 let pending=false,dirtyGeom=true,hoverIdx=-10;
 const preview={lines:[]};
-function requestDraw(){if(!pending){pending=true;requestAnimationFrame(draw);}}
+function requestDraw(){if(!pending){pending=true;requestAnimationFrame(draw);}if(window.EvenUCanRibbonRefresh)window.EvenUCanRibbonRefresh();}
 let geomVer=0;
 function markDirty(){dirtyGeom=true;compCache=null;sceneBoxCache=undefined;geomVer++;requestDraw();if(window.wfUpdateStrip)window.wfUpdateStrip();}
 // Bounding box of everything drawn (cached until the model changes); used for the camera's near cut-off.
@@ -2816,12 +2847,15 @@ function setTool(name){
   endOp();setHover(null);
   toolName=name;tool=tools[name]();
   document.querySelectorAll('#toolbar button[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===name));
+  if(window.EvenUCanRibbonRefresh)window.EvenUCanRibbonRefresh();
   $('vcbLabel').textContent=tool.label||'';vcbEl.value='';
   setHint(tool.hint);
   $('palette').style.display=name==='paint'?'block':'none';
   if(name!=='solid')$('shapes').style.display='none';
   const tp=document.getElementById('textPanel');if(tp&&name!=='text')tp.style.display='none';
   const hp=document.getElementById('holePanel');if(hp&&name!=='hole')hp.style.display='none';
+  const sp=document.getElementById('standoffPanel');if(sp&&name!=='standoff')sp.style.display='none';
+  const bp=document.getElementById('boardPanel');if(bp&&name!=='boardmount')bp.style.display='none';
   cv.style.cursor=tool.nav?(tool.nav==='orbit'||tool.nav==='pan'?'grab':'ns-resize'):(name==='select'?'default':'crosshair');
 }
 function cancelOp(){
@@ -2883,6 +2917,8 @@ const ICONS={
   unhide:'<path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   check:'<path d="M12 2.5l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10v-6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
   enclosure:'<path d="M3 8l9-4 9 4v9l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v9"/><path d="M5.5 12.5l4 1.8v3.4l-4-1.8z"/>',
+  standoff:'<path d="M2 21h20"/><path d="M7 21V9h10v12"/><ellipse cx="12" cy="9" rx="5" ry="1.6"/><path d="M10.4 9V4h3.2v5" stroke-dasharray="1.6 1.2"/>',
+  boardmount:'<path d="M2 21h20"/><rect x="3" y="9" width="18" height="3" rx=".5"/><path d="M5.5 12v9M18.5 12v9"/><rect x="8" y="5" width="6" height="4"/><path d="M16 7h3"/>',
   parts:'<rect x="6" y="6" width="12" height="12" rx="1"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/>'
 };
 const TOOLS=[['select','Select','Space'],null,['line','Line','L'],['rect','Rectangle','R'],['circle','Circle','C'],['arc','Arc','A'],['polygon','Polygon','N'],['solid','3D Shapes','D'],null,['push','Push/Pull','P'],['move','Move / Copy','M'],['rotate','Rotate','Q'],['round','Round / Chamfer edge','J'],['offset','Offset','F'],['follow','Follow Me','W'],['slice','Slice','X'],null,['erase','Eraser','E'],['paint','Paint Bucket','B'],null,['tape','Tape Measure','T'],['center','Find Centre','K'],null,['orbit','Orbit','O'],['pan','Pan','H'],['zoom','Zoom','Z']];
@@ -2895,7 +2931,7 @@ const ICON_COL=(()=>{const c={},set=(col,...ns)=>ns.forEach(n=>c[n]=col);
   set('#4c5fd5','orbit','pan','zoom','extents');// view
   set('#444','select','undo','redo','copy','cut','paste');
   set('#2b8a3e','group','ungroup','join','subtract','intersect','check');set('#d48806','hide','unhide');
-  set('#7048e8','enclosure','parts');
+  set('#7048e8','enclosure','parts','standoff','boardmount');
   return c;})();
 const TOOL_DESC={select:'click or drag a box to pick things; double-click picks a whole object',
   line:'draw straight lines; join back to the start to make a face',rect:'draw a rectangle on the ground or on a face',
@@ -2940,6 +2976,8 @@ mkBtn('extents','Zoom Extents (Shift+Z): fit everything in view',()=>zoomExtents
 mkBtn('flip','Flip / Mirror: turn the selection over left-right, front-back or upside down, or add a mirrored copy beside it',()=>{const r=TB_BTN.flip.getBoundingClientRect();if(r.width)flipMenu(r.left,r.bottom+4);else flipMenu(innerWidth/2-115,120);});
 mkBtn('text','3D Text: type a label, then click on the ground or on a face; raised, or engraved into the face',()=>setTool('text'),'text');
 mkBtn('hole','Hole: screw holes at printing sizes: clearance, tapped, heat-set insert, countersunk, counterbored or nut trap. Pick the size, then click a face',()=>setTool('hole'),'hole');
+mkBtn('standoff','Stand-off: a round post with the right hole for a heat-set insert (M2 to M5). Pick the size, then click the box floor',()=>setTool('standoff'),'standoff');
+mkBtn('boardmount','Board mount: pick your board (ESP32, Arduino, Raspberry Pi...) and click the box floor: the right stand-offs or cradle are made for it',()=>setTool('boardmount'),'boardmount');
 mkBtn('shell','Shell: hollow a solid out with walls of a set thickness; click the face to leave open (type a thickness first)',()=>setTool('shell'),'shell');
 mkBtn('flat','Lay flat: click a face, and its object turns over to lie flat on the bed on that face',()=>setTool('flat'),'flat');
 mkBtn('layall','Lay all flat: every separate piece turns over onto its own largest face, ready to print - handy after Generate makes several pieces at once',()=>layAllFlat());
@@ -2971,39 +3009,7 @@ function tbRender(){
   }
   if(typeof toolName!=='undefined')document.querySelectorAll('#toolbar button[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===toolName));
 }
-const tbSave=()=>store.set('toolbar2',JSON.stringify([...tb.querySelectorAll('.tbg')].map(g=>[...g.querySelectorAll('button')].map(b=>b.dataset.key)).filter(g=>g.length)));
-tbRender();
-{
-  let drag=null;
-  tb.addEventListener('pointerdown',e=>{
-    if(e.button!==0)return;
-    const grip=e.target.closest('.grip'),btn=!grip&&e.target.closest('button');
-    if(!grip&&!btn)return;
-    drag={el:grip?grip.parentElement:btn,group:!!grip,x:e.clientX,y:e.clientY,on:false,id:e.pointerId};
-    if(grip)e.preventDefault();
-  });
-  window.addEventListener('pointermove',e=>{
-    if(!drag)return;
-    if(!drag.on){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;drag.on=true;drag.el.classList.add('dragging');tb.classList.add('arranging');}
-    const under=document.elementFromPoint(e.clientX,e.clientY);if(!under||!tb.contains(under))return;
-    if(drag.group){
-      const g=under.closest('.tbg');if(!g||g===drag.el)return;
-      const r=g.getBoundingClientRect();tb.insertBefore(drag.el,e.clientX<r.left+r.width/2?g:g.nextSibling);
-    }else{
-      const b=under.closest('button'),g=under.closest('.tbg');
-      if(b&&b!==drag.el){const r=b.getBoundingClientRect();b.parentElement.insertBefore(drag.el,e.clientX<r.left+r.width/2?b:b.nextSibling);}
-      else if(!b&&g&&!g.contains(drag.el))g.appendChild(drag.el);
-    }
-  });
-  window.addEventListener('pointerup',()=>{
-    if(!drag)return;const was=drag.on;drag.el.classList.remove('dragging');tb.classList.remove('arranging');drag=null;
-    if(was){for(const g of [...tb.querySelectorAll('.tbg')])if(!g.querySelector('button'))g.remove();tbSave();tbDragged=true;setTimeout(()=>tbDragged=false,0);}
-  });
-  tb.addEventListener('contextmenu',e=>{
-    e.preventDefault();
-    if(confirm('Put the toolbar buttons back in their original order?')){try{localStorage.removeItem('opensketch.toolbar2');}catch(er){/* intentional */}tbRender();flash('Toolbar back to the original order');}
-  });
-}
+tbRender();// (1.9.38) replaced straight away by the grouped toolbar built with the menus (see buildRibbon)
 
 // ---- Copy, Cut and Paste. A paste goes beside the original (or back in place after a Cut) and is selected, ready to Move.
 let clip=null,pasteN=0;
@@ -3681,7 +3687,7 @@ function toggleHelp(){
   if(h.style.display==='block'){h.style.display='none';return;}
   h.innerHTML=`<h3>EvenUCan – quick guide</h3>
 <p><b>EvenUCan</b>${appVersion?' version '+appVersion:''}: from idea to object.<br>Created by David John Waugh. © 2026 David John Waugh. Free software under the GNU General Public License v3 (or later), with no warranty.</p>
-<p>Everything runs inside this one file. The drawing, box design, wiring and ESPHome code all work offline. Only the AI helper needs the internet: the wizard's <b>I have an idea for a gadget</b> (your idea into a parts list), <b>Write the code with AI</b> for Arduino sketches, <b>Make it with AI</b> and the <b>Fill in automatically</b> look-up in the Parts Library. It uses a free key from Google Gemini or NVIDIA (NVIDIA in the desktop app only), or your own paid Claude key. No key? Choose <b>Carry on without AI</b> in the wizard: start from an example project or tick the parts you have, and the <b>Code</b> tab makes a starter sketch with your pins filled in.</p>
+<p>Everything runs inside this one file. The drawing, box design, wiring and ESPHome code all work offline. Only the AI helper needs the internet: the wizard's <b>I have an idea for a gadget</b> (your idea into a parts list), <b>Write the code with AI</b> for Arduino sketches, <b>Make it with AI</b> and the <b>Fill in automatically</b> look-up in the Parts Library. It uses a free key from Google Gemini, NVIDIA (desktop app only), Groq or OpenRouter, or your own paid Claude key (set it up in <b>Tools → AI helper key</b>). Groq, OpenRouter and NVIDIA can't search the web or read PDFs, so <b>Look up online</b> uses what they already know. OpenRouter's free tier allows about 50 requests a day, and some of its free models may keep what you send. No key? Choose <b>Carry on without AI</b> in the wizard: start from an example project or tick the parts you have, and the <b>Code</b> tab makes a starter sketch with your pins filled in.</p>
 <table>
 <tr><td><kbd>R</kbd> Rectangle</td><td>Click two corners on the ground or on any face. Type <b>3, 4</b> + Enter for exact sizes.</td></tr>
 <tr><td><kbd>P</kbd> Push/Pull</td><td>Click a face and move the mouse to extrude it into 3D. Type a distance + Enter. Double-click repeats. Push a shape drawn on a wall right through to cut an opening. <b>Several faces at once:</b> Shift+click them first (e.g. the strips of a rectangle split by lines), then click one of them and pull: they all move together, as one solid with no walls between them.</td></tr>
@@ -3725,6 +3731,8 @@ function toggleHelp(){
 <tr><td>Arrange on bed</td><td>Spreads every separate piece out sideways so none overlap, without changing how high up each one sits. Also in the right-click menu.</td></tr>
 <tr><td>3D Text</td><td>Choose <b>3D Text</b> (the T icon), type your text in the panel, pick a font, letter height and depth, and <b>Raised</b> or <b>Engraved</b>. The outline follows the mouse: click where it starts, on the ground or on a face. Raised text is its own object (select it and the shape and press <kbd>U</kbd> to join them); engraved text is cut into the face you click. Uses the fonts on this computer.</td></tr>
 <tr><td>Hole</td><td>Screw holes sized for 3D printing. Choose <b>Hole</b> (the target icon), pick the screw size (<b>M2 to M12</b>) and the kind: <b>Clearance</b> (the screw slides through), <b>Threaded</b> (a real thread, below), <b>Tapped</b> (a smaller pilot hole the screw cuts its own thread into), <b>Heat-set insert</b> (the right hole and depth for the usual brass inserts), <b>Countersunk</b> (flat-head screws sit flush), <b>Counterbored</b> (cap-head screws sit below the surface) or <b>Nut trap</b> (a hex pocket for the nut, plus the hole). The panel shows the exact sizes. Then click on a face: the hole is drilled straight in, right through or to the depth you set (type a depth and Enter; 0 = right through). Snap to a guide point or midpoint to place it exactly.</td></tr>
+<tr><td>Stand-off</td><td>A round post for a <b>heat-set insert</b>, so a screw can hold a board or lid. Choose <b>Stand-off</b> (Tools menu, or the Electronics group on the toolbar), pick the screw size (<b>M2 to M5</b>), the insert length and the height, then click a face such as the floor of your box. The post is joined to that part, with the right hole in its top: for example <i>M3 insert: hole 4.1 mm, 6.7 mm deep, stand-off 8.5 mm wide</i>. The hole is the insert length plus 1 mm deep (plus 1.5 mm for M4 and M5). If you make it too thin (the wall round the hole must be at least half the hole wide) or too short for the insert, the panel says so and <b>Fix it</b> puts it right.</td></tr>
+<tr><td>Board mount</td><td>Choose <b>Board mount</b>, pick your board from the list (ESP32-S3-DevKitC-1, ESP32 DevKitC, ESP32-C3 SuperMini, XIAO, Arduino Uno and Nano, Raspberry Pi Pico, 4, 5 and Zero 2 W, Wemos D1 mini, or a board from your Parts Library), then click the floor of your box where the middle of the board goes. Boards with mounting holes get insert stand-offs exactly under the holes, tall enough to clear the pins; boards without holes get a <b>cradle</b>: a base with side rails and a 0.3 mm gap all round. The panel tells you which edge has the USB socket (orange in the see-through outline) and can cut the opening in the box wall when the mount is joined to the box. <b>Turn 90°</b> turns the board. It is made as one object that moves as one piece; tick <b>Join</b> to make it part of the box straight away.</td></tr>
 <tr><td>Threaded hole</td><td>In the Hole panel choose <b>Threaded</b>: a real metric thread (standard coarse pitch, e.g. M8 × 1.25) is cut into the hole, 0.3 mm roomier so a printed thread takes the screw, with a small cone at the mouth to start it. M6 and up print well; for M2 to M5 a heat-set insert or a tapped hole is stronger.</td></tr>
 <tr><td>Shell</td><td>Hollow a solid out: choose <b>Shell</b>, type a wall thickness and Enter (2 mm to start), then click the face to leave open, e.g. the top of a box for a tray. Shift+click to pick more faces to leave open first; Ctrl+click hollows it with no opening. Works on box-like shapes (boxes, cylinders, prisms).</td></tr>
 <tr><td>Hide / Unhide</td><td>Select faces and click <b>Hide</b> (the crossed-out eye icon, or <kbd>Shift+H</kbd>) to see and work on what's behind or inside them. Hidden faces show as a faint grey outline and can't be clicked. <b>Unhide All</b> (the eye icon, or <kbd>Shift+U</kbd>) brings them back. Hidden faces are still saved and exported.</td></tr>
@@ -4286,6 +4294,272 @@ tools.hole=()=>{
   };
   return t;
 };
+// ---- (1.9.38) Box helpers: stand-offs for heat-set inserts, and ready-made mounts for common boards. All sizes in mm.
+// Insert sizes: hole near the top of the usual range (printed holes come out a little small), depth = insert length + 1.0
+// (M2-M3) or + 1.5 (M4-M5). Solid Wall rule: the wall round the hole is at least the hole's radius, so the stand-off is at
+// least twice the hole wide.
+const INSERTS={
+  M2:    {hole:3.25,boss:6.5, add:1.0,lens:[3,4],       len:4,  range:[6.2,6.5]},
+  'M2.5':{hole:3.7, boss:7.5, add:1.0,lens:[3.5,4,5.7], len:4,  range:[7.0,7.5]},
+  M3:    {hole:4.1, boss:8.5, add:1.0,lens:[3,4,5,5.7,6],len:5.7,range:[8.0,9.0]},
+  M4:    {hole:5.5, boss:11,  add:1.5,lens:[4,6,8.1],   len:8.1,range:[10.5,11.5]},
+  M5:    {hole:6.5, boss:13,  add:1.5,lens:[6,8,9.5],   len:9.5,range:[12.5,13.5]}
+};
+const BOARD_INSERT_LEN={M2:3,'M2.5':4,M3:4,M4:6,M5:6};// short inserts keep board stand-offs low
+const insertDepth=(s,len)=>+(len+INSERTS[s].add).toFixed(2);
+const boardInsertDepth=s=>insertDepth(s,BOARD_INSERT_LEN[s]);
+const minBoss=s=>+(2*INSERTS[s].hole).toFixed(2);
+// a board's mounting hole -> the screw (and insert) it takes; holes under 1.95 mm are too small for any insert
+const screwForHole=d=>!(d>=1.95)?null:d<2.45?'M2':d<2.95?'M2.5':d<3.7?'M3':d<4.7?'M4':'M5';
+// Boards: L along x (the length), W along y, origin at the bottom-left corner. holes [x,y,dia]. Ports: side (xmin/xmax/ymin/ymax),
+// u = centre along that side, pw x ph = the opening to cut, zc = its centre above the top of the board (the app's port sizes).
+const BOARDS=[
+  {id:'esp32s3',name:'ESP32-S3-DevKitC-1',L:62.74,W:25.4,pcb:1.6,below:8.5,holes:[],lib:'b-esp32s3',
+    ports:[{kind:'2× USB-C',side:'xmin',u:12.7,pw:22,ph:8,zc:1.6}],src:'Espressif PCB drawing, ESP32-S3-DevKitC-1 v1.1 (no mounting holes)'},
+  {id:'devkitc',name:'ESP32 DevKitC V4 (WROOM-32)',L:48.26,W:27.94,pcb:1.6,below:8.5,holes:[],
+    ports:[{kind:'Micro-USB',side:'xmin',u:13.97,pw:10,ph:5,zc:1.5}],src:'Espressif ESP32-DevKitC V4 dimensions drawing (no mounting holes; the module\'s antenna sticks out 6 mm past the far end)'},
+  {id:'c3mini',name:'ESP32-C3 SuperMini',L:22.52,W:18,pcb:1.0,below:3,holes:[],
+    ports:[{kind:'USB-C',side:'xmin',u:9,pw:10,ph:4.5,zc:1.6}],src:'Maker\'s published drawing (NologoTech) - no official datasheet drawing; thickness not published'},
+  {id:'xiao',name:'Seeed Studio XIAO ESP32 (C3 / S3 / C6)',L:21,W:17.8,pcb:1.2,below:3,holes:[],
+    ports:[{kind:'USB-C',side:'xmin',u:8.9,pw:10,ph:4.5,zc:1.6}],src:'Seeed Studio wiki: 21 × 17.8 mm (thickness not published)'},
+  {id:'uno',name:'Arduino Uno R3',L:68.58,W:53.34,pcb:1.6,below:3,holes:[[13.97,2.54,3.2],[15.24,50.8,3.2],[66.04,7.62,3.2],[66.04,35.56,3.2]],
+    ports:[{kind:'USB-B',side:'xmin',u:38.1,pw:13.5,ph:12,zc:5.5,approx:true}],src:'Arduino Uno R3 board files (hole positions); USB position approximate'},
+  {id:'nano',name:'Arduino Nano',L:43.18,W:17.78,pcb:1.6,below:8.5,holes:[[1.27,1.27,1.8],[41.91,1.27,1.8],[1.27,16.51,1.8],[41.91,16.51,1.8]],lib:'p-cm-nano',
+    ports:[{kind:'Mini-USB',side:'xmin',u:8.89,pw:9,ph:5,zc:2}],src:'Arduino Nano PCB guide (docs.arduino.cc); 1.8 mm holes are too small for inserts, so it gets a cradle'},
+  {id:'pico',name:'Raspberry Pi Pico / Pico W',L:51,W:21,pcb:1.0,below:3,holes:[[2,4.8,2.1],[2,16.2,2.1],[49,4.8,2.1],[49,16.2,2.1]],
+    ports:[{kind:'Micro-USB',side:'xmin',u:10.5,pw:9,ph:4,zc:1.5}],src:'Raspberry Pi Pico datasheet (51 × 21 mm, 2.1 mm holes on 47 × 11.4 mm)'},
+  {id:'pi4',name:'Raspberry Pi 4 Model B',L:85,W:56,pcb:1.4,below:3,holes:[[3.5,3.5,2.7],[61.5,3.5,2.7],[3.5,52.5,2.7],[61.5,52.5,2.7]],lib:'p-cm-rpi4',
+    ports:[{kind:'USB-C power',side:'ymin',u:11.2,pw:10,ph:4.5,zc:2}],src:'Raspberry Pi 4 mechanical drawing (same holes and outline as the Pi 5)'},
+  {id:'pi5',name:'Raspberry Pi 5',L:85,W:56,pcb:1.4,below:3,holes:[[3.5,3.5,2.7],[61.5,3.5,2.7],[3.5,52.5,2.7],[61.5,52.5,2.7]],
+    ports:[{kind:'USB-C power',side:'ymin',u:11.2,pw:10,ph:4.5,zc:2}],src:'Raspberry Pi 5 mechanical drawing'},
+  {id:'zero2w',name:'Raspberry Pi Zero 2 W',L:65,W:30,pcb:1.4,below:3,holes:[[3.5,3.5,2.75],[61.5,3.5,2.75],[3.5,26.5,2.75],[61.5,26.5,2.75]],
+    ports:[{kind:'Micro-USB power',side:'ymin',u:54,pw:9,ph:4,zc:1.5}],src:'Raspberry Pi Zero 2 W mechanical drawing'},
+  {id:'d1mini',name:'Wemos / LOLIN D1 mini',L:34.2,W:25.6,pcb:1.0,below:8.5,holes:[],
+    ports:[{kind:'USB (Type-C on v4, Micro on older)',side:'xmin',u:12.8,pw:10,ph:5,zc:1.6,approx:true}],src:'wemos.cc: 34.2 × 25.6 mm (no mounting holes; USB position approximate)'}
+];
+// Boards in the Parts Library that aren't in the list above (your own boards too) can be mounted the same way.
+function allBoards(){
+  const out=BOARDS.slice(),have=new Set(BOARDS.map(b=>b.lib).filter(Boolean));
+  let lib=[];try{lib=window.WFEnclosure&&WFEnclosure.parts?WFEnclosure.parts():[];}catch(e){lib=[];}
+  for(const p of lib){
+    if(!p||p.type!=='board'||!(p.pcb>0)||have.has(p.id))continue;
+    const F=p.features||[];
+    out.push({id:'lib:'+p.id,name:p.name,L:+p.w,W:+p.d,pcb:+p.pcb,below:Math.max(+p.below||0,2),fromLib:true,
+      holes:F.filter(f=>f.t==='hole').map(f=>[+f.x,+f.y,+f.dia]),
+      ports:F.filter(f=>f.t==='port').map(f=>({kind:f.kind||'Port',side:f.side,u:+f.u,pw:+f.pw||10,ph:+f.ph||5,zc:+f.zc||2})),src:'Your Parts Library'});
+  }
+  return out;
+}
+const SIDE_WORD={xmin:'left short end',xmax:'right short end',ymin:'front long edge',ymax:'back long edge'};
+// The face's own frame: +Z out of the face, ex/ey along it (the same turn the solid engine gets), optionally turned 90°.
+function bhFrame(n,rot){
+  const th=Math.acos(clamp(n[2],-1,1)),ph=Math.atan2(n[1],n[0]);
+  let ex=[Math.cos(th)*Math.cos(ph),Math.cos(th)*Math.sin(ph),-Math.sin(th)],ey=[-Math.sin(ph),Math.cos(ph),0];
+  if(rot){const t=ex;ex=ey;ey=mul(t,-1);}
+  return {th:th*180/Math.PI,ph:ph*180/Math.PI,ex,ey,n,rot:!!rot};
+}
+const bhW=(F,p,a,b,z)=>add(p,mul(add(add(mul(F.ex,a),mul(F.ey,b)),mul(F.n,z||0)),0.001));
+// Adds what make() builds (in mm, face frame) to the part that was clicked (join) or as its own grouped object.
+async function bhCommit(face,p,make,undoName,o){
+  if(!window.WFEnclosure)return {err:'The solid engine is not available'};
+  const n=faceNormal(face),F=bhFrame(n,o.rot),S=1000,join=o.join!==false;
+  const ids=join?componentOf(face.id):new Set(),PF=model.faces.filter(f=>ids.has(f.id)),snapF=clone(model.faces);
+  const w=await WFEnclosure.engine(),M=w.Manifold,pool=[],K=x=>{pool.push(x);return x;};
+  try{
+    const L=make(M,K,join?-0.3:0);
+    const place=s=>{let q=s;if(F.rot)q=K(q.rotate([0,0,90]));return K(K(q.rotate([0,F.th,F.ph])).translate([p[0]*S,p[1]*S,p[2]*S]));};
+    let out=place(L.add);
+    if(join){const body=solidOf(w,K,PF);if(!body)return {err:'That shape isn\'t a closed solid, so nothing can be joined to it: Check Model shows the gaps'};out=K(body.add(out));}
+    if(L.sub)out=K(out.subtract(place(L.sub)));
+    if(L.cut&&join)out=K(out.subtract(place(L.cut)));
+    if(out.isEmpty())throw new Error('nothing would be left');
+    const col=join?((PF.find(f=>f.color)||{}).color||null):null,flat=join?flatPlanes(PF):[];
+    const ax={x:F.ex,y:F.ey,z:F.n};
+    for(const [a,s,v] of L.planes){const e=ax[a],d=dot(e,p)+v/1000;flat.push(s>0?{n:e,d,color:col}:{n:mul(e,-1),d:-d,color:col});}
+    const nf=facesOfSolid(out,flat,col,join?(face.g||null):nid());
+    model.faces=model.faces.filter(f=>!ids.has(f.id)).concat(nf);
+    pushUndo(snapshot(snapF,model.edges),undoName);selection.clear();selChanged();commitChange();
+    return {faces:nf,frame:F};
+  }catch(er){console.error('EvenUCan: '+undoName+' failed',er);model.faces=snapF;markDirty();return {err:er.message};}
+  finally{for(const x of pool)try{x.delete();}catch(e){/* intentional: freeing engine memory */}}
+}
+const boxPlanes=(x0,y0,x1,y1)=>[['x',1,x1],['x',-1,x0],['y',1,y1],['y',-1,y0]];
+// ---------- Stand-off tool
+let soSet=(()=>{const d={size:'M3',len:5.7,custom:false,h:8,boss:8.5};try{return Object.assign(d,JSON.parse(store.get('standoff')||'{}'));}catch(e){return d;}})();
+if(!INSERTS[soSet.size])soSet.size='M3';
+function soCheck(s=soSet){
+  const I=INSERTS[s.size],dep=insertDepth(s.size,s.len),wall=(s.boss-I.hole)/2,needBoss=minBoss(s.size),needH=+(dep+0.6).toFixed(1),probs=[];
+  if(wall<I.hole/2-1e-9)probs.push('The wall round the hole would be only '+(+wall.toFixed(2))+' mm thick. It should be at least '+(+(I.hole/2).toFixed(2))+' mm (half the hole), or the plastic can split when the hot insert goes in.');
+  if(s.h<needH-1e-9)probs.push('The insert hole is '+dep+' mm deep, so the stand-off needs to be at least '+needH+' mm tall.');
+  const info=s.size+' insert: hole '+I.hole+' mm, '+dep+' mm deep, stand-off '+(+s.boss.toFixed(2))+' mm wide, '+(+s.h.toFixed(2))+' mm tall';
+  const tip=(s.boss<I.range[0]||s.boss>I.range[1])&&!probs.length?'(The usual width for '+s.size+' is '+I.range[0]+' to '+I.range[1]+' mm.)':'';
+  return {I,dep,needBoss,needH,probs,info,tip};
+}
+const standoffPanel=document.createElement('div');standoffPanel.id='standoffPanel';standoffPanel.className='panel';$('view').appendChild(standoffPanel);
+standoffPanel.innerHTML=`<h3 style="margin:0 0 6px">Stand-off for a heat-set insert</h3>
+<label>Screw size<select data-s="size">${Object.keys(INSERTS).map(k=>`<option>${k}</option>`).join('')}</select></label>
+<label>Insert length<select data-s="len"></select></label>
+<label class="cus">Your insert length (mm)<input data-s="clen" type="number" min="1" max="30" step="0.1"></label>
+<label>Height above the face (mm)<input data-s="h" type="number" min="1" max="200" step="0.5"></label>
+<label>Stand-off width (mm)<input data-s="boss" type="number" min="2" max="60" step="0.1"></label>
+<div class="sizes"></div><div class="warn"></div><button type="button" class="fix">Fix it</button>
+<div class="note">Then click a face, such as the floor of your box: a round post with the insert hole in its top is joined to that part.</div>`;
+function syncStandoffPanel(){
+  const q=k=>standoffPanel.querySelector('[data-s='+k+']'),I=INSERTS[soSet.size];
+  q('size').value=soSet.size;
+  q('len').innerHTML=I.lens.map(l=>`<option value="${l}">${l} mm${l===I.len?' (usual)':''}</option>`).join('')+'<option value="c">Other length...</option>';
+  q('len').value=soSet.custom||!I.lens.includes(soSet.len)?'c':String(soSet.len);
+  standoffPanel.querySelector('.cus').style.display=q('len').value==='c'?'block':'none';q('clen').value=soSet.len;
+  q('h').value=soSet.h;q('boss').value=soSet.boss;
+  const c=soCheck();standoffPanel.querySelector('.sizes').textContent=c.info+(c.tip?' '+c.tip:'');
+  const wn=standoffPanel.querySelector('.warn'),fx=standoffPanel.querySelector('.fix');
+  wn.textContent=c.probs.join(' ');wn.style.display=c.probs.length?'block':'none';fx.style.display=c.probs.length?'block':'none';
+  fx.textContent='Fix it: '+[soSet.boss<c.needBoss-1e-9?'make it '+Math.max(c.needBoss,I.boss)+' mm wide':'',soSet.h<c.needH-1e-9?'make it '+c.needH+' mm tall':''].filter(Boolean).join(' and ');
+}
+function soFix(){const c=soCheck(),I=INSERTS[soSet.size];if(soSet.boss<c.needBoss-1e-9)soSet.boss=Math.max(c.needBoss,I.boss);if(soSet.h<c.needH-1e-9)soSet.h=c.needH;store.set('standoff',JSON.stringify(soSet));syncStandoffPanel();}
+standoffPanel.addEventListener('change',e=>{
+  const t=e.target,k=t.dataset.s;if(!k)return;
+  if(k==='size'){const I=INSERTS[t.value];soSet.size=t.value;soSet.len=I.len;soSet.custom=false;soSet.boss=I.boss;const need=+(insertDepth(t.value,I.len)+0.6).toFixed(1);if(soSet.h<need)soSet.h=Math.ceil(need);}
+  else if(k==='len'){if(t.value==='c')soSet.custom=true;else{soSet.custom=false;soSet.len=+t.value;}}
+  else{const x=parseFloat(t.value);if(x>0){if(k==='clen')soSet.len=x;else soSet[k]=x;}}
+  store.set('standoff',JSON.stringify(soSet));syncStandoffPanel();
+});
+standoffPanel.querySelector('.fix').onclick=soFix;
+standoffPanel.addEventListener('keydown',e=>e.stopPropagation());
+async function placeStandoff(face,p,s=soSet){
+  const c=soCheck(s);if(c.probs.length)return {err:'Fix the size first: '+c.probs[0]};
+  const r=s.boss/2,hr=c.I.hole/2,h=s.h,dep=c.dep;
+  const res=await bhCommit(face,p,(M,K,z0)=>({add:K(M.cylinder(h-z0,r,r,48).translate([0,0,z0])),
+    sub:K(M.cylinder(dep+0.3,hr,hr,48).translate([0,0,h-dep])),planes:[['z',1,h],['z',1,h-dep]]}),'Stand-off ('+s.size+' insert)',{join:true});
+  if(!res.err)res.info=c.info;
+  return res;
+}
+const bhRing=(F,p,a,b,z,r,col,N=32)=>{const R=[];for(let i=0;i<N;i++){const t=i/N*Math.PI*2;R.push(bhW(F,p,a+r*Math.cos(t),b+r*Math.sin(t),z));}return R.map((q,i)=>[q,R[(i+1)%N],col]);};
+tools.standoff=()=>{
+  let cur=null;standoffPanel.style.display='block';syncStandoffPanel();
+  return {label:'',hint:'Pick the screw size, insert length and height in the panel, then click a face (such as the box floor) where the stand-off goes',
+    move(e,m){cur=inferPoint(m.x,m.y);setMarker(cur);preview.lines=[];if(!cur||!cur.face)return;
+      const F=bhFrame(faceNormal(cur.face)),c=soCheck(),col=c.probs.length?[0.9,0.2,0.1]:[0.44,0.28,0.91];
+      preview.lines=[...bhRing(F,cur.p,0,0,0,soSet.boss/2,col),...bhRing(F,cur.p,0,0,soSet.h,soSet.boss/2,col),...bhRing(F,cur.p,0,0,soSet.h,c.I.hole/2,col),[cur.p,bhW(F,cur.p,0,0,soSet.h),col]];},
+    async down(){
+      if(!cur||!cur.face)return flash('Click on a face of your model, such as the floor of your box');
+      const face=cur.face,p=cur.p;preview.lines=[];flash('Adding the stand-off…',8000);
+      const r=await placeStandoff(face,p);
+      flash(r.err?'Could not add the stand-off: '+r.err:r.info+'. Added and joined to the part.',r.err?7000:5000);},
+    cancel(){preview.lines=[];return false;}};
+};
+// ---------- Board mount tool
+let bmSet=(()=>{const d={id:'esp32s3',below:null,join:false,ghost:true,port:false,rot:false};try{return Object.assign(d,JSON.parse(store.get('boardmount')||'{}'));}catch(e){return d;}})();
+const bmBoard=(id=bmSet.id)=>allBoards().find(b=>b.id===id)||BOARDS[0];
+// What gets built, in board terms (origin at the board's centre, mm). Plate 1.2 mm; the board sits zB above the face.
+function boardPlan(B,o={}){
+  const T=1.2,below=o.below!=null?o.below:B.below,holes=B.holes.map(([x,y,d])=>({x:x-B.L/2,y:y-B.W/2,d,s:screwForHole(d)})).filter(h=>h.s);
+  const kind=holes.length>=2?'standoffs':'cradle';let zB=T+below,raised=false;
+  if(kind==='standoffs'){const need=Math.max(...holes.map(h=>boardInsertDepth(h.s)))+0.6;if(zB<need){zB=+need.toFixed(2);raised=true;}}
+  return {T,below,holes,kind,zB:+zB.toFixed(2),raised,gap:0.3,rail:1.6};
+}
+function boardText(B,P){
+  const pt=B.ports[0],sizes=[...new Set(P.holes.map(h=>h.s))];
+  let t=B.L+' × '+B.W+' mm board, '+B.pcb+' mm thick. ';
+  if(P.kind==='standoffs')t+=P.holes.length+' stand-offs for '+sizes.join('/')+' heat-set inserts ('+sizes.map(s=>'hole '+INSERTS[s].hole+' mm, '+boardInsertDepth(s)+' mm deep, '+INSERTS[s].boss+' mm wide').join('; ')+') on a thin base. ';
+  else t+=(B.holes.length?'Its holes are too small for inserts, so it gets':'No mounting holes, so it gets')+' a cradle: a base with side rails, ledges under the ends and a 0.3 mm gap all round. ';
+  t+='The board sits '+P.zB+' mm above the face'+(P.raised?' (raised so the inserts fit)':'')+'. ';
+  if(pt)t+='USB: '+pt.kind+' on the '+SIDE_WORD[pt.side]+' (orange in the outline): that is where the cut-out goes'+(pt.approx?' (position approximate: check it against your board)':'')+'.';
+  return t;
+}
+const boardPanel=document.createElement('div');boardPanel.id='boardPanel';boardPanel.className='panel';$('view').appendChild(boardPanel);
+boardPanel.innerHTML=`<h3 style="margin:0 0 6px">Board mount</h3>
+<label>Board<select data-b="id"></select></label>
+<label>Room under the board for pins (mm)<input data-b="below" type="number" min="0" max="40" step="0.5"></label>
+<label class="chk"><input type="checkbox" data-b="join"> Join it to the part I click</label>
+<label class="chk"><input type="checkbox" data-b="ghost"> Show the board as a see-through outline</label>
+<label class="chk"><input type="checkbox" data-b="port"> Also cut the USB opening in the box wall</label>
+<button type="button" class="turn">Turn 90°</button>
+<div class="sizes"></div><div class="note src"></div>
+<div class="note">Then click the floor of your box where the middle of the board should go.</div>`;
+function syncBoardPanel(){
+  const q=k=>boardPanel.querySelector('[data-b='+k+']'),all=allBoards(),B=bmBoard();bmSet.id=B.id;
+  const own=all.filter(b=>!b.fromLib),lib=all.filter(b=>b.fromLib),opt=b=>`<option value="${b.id.replace(/"/g,'&quot;')}">${b.name.replace(/[&<]/g,c=>c==='&'?'&amp;':'&lt;')}</option>`;
+  q('id').innerHTML=`<optgroup label="Common boards">${own.map(opt).join('')}</optgroup>`+(lib.length?`<optgroup label="From your Parts Library">${lib.map(opt).join('')}</optgroup>`:'');
+  q('id').value=B.id;q('below').value=bmSet.below!=null?bmSet.below:B.below;
+  q('join').checked=!!bmSet.join;q('ghost').checked=!!bmSet.ghost;q('port').checked=!!bmSet.port;q('port').disabled=!bmSet.join||!B.ports.length;
+  boardPanel.querySelector('.sizes').textContent=boardText(B,boardPlan(B,{below:bmSet.below}));
+  boardPanel.querySelector('.src').textContent='Sizes from: '+B.src+'.'+(bmSet.join?'':' It is made as its own object that moves as one; tick "Join" (or press U later) to make it part of the box.');
+}
+boardPanel.addEventListener('change',e=>{
+  const t=e.target,k=t.dataset.b;if(!k)return;
+  if(k==='id'){bmSet.id=t.value;bmSet.below=null;}else if(k==='below'){const x=parseFloat(t.value);if(x>=0)bmSet.below=x;}else{bmSet[k]=t.checked;if(k==='join'&&!t.checked)bmSet.port=false;}
+  store.set('boardmount',JSON.stringify(bmSet));syncBoardPanel();
+});
+boardPanel.querySelector('.turn').onclick=()=>{bmSet.rot=!bmSet.rot;store.set('boardmount',JSON.stringify(bmSet));flash(bmSet.rot?'Board turned 90°':'Board turned back');};
+boardPanel.addEventListener('keydown',e=>e.stopPropagation());
+// Outline lines (world) for the preview and the see-through ghost.
+function boardLines(B,P,F,p,z){
+  const g=[0.12,0.62,0.3],o=[1,0.5,0],L2=B.L/2,W2=B.W/2,c=[[-L2,-W2],[L2,-W2],[L2,W2],[-L2,W2]],out=[];
+  for(const zz of z==null?[P.zB,P.zB+B.pcb]:[z])for(let i=0;i<4;i++)out.push([bhW(F,p,...c[i],zz),bhW(F,p,...c[(i+1)%4],zz),g]);
+  if(z==null)for(const q of c)out.push([bhW(F,p,...q,P.zB),bhW(F,p,...q,P.zB+B.pcb),g]);
+  const zt=z==null?P.zB+B.pcb:z;
+  for(const h of P.holes)out.push(...bhRing(F,p,h.x,h.y,zt,h.d/2,g,16));
+  const pt=B.ports[0];
+  if(pt){const s=pt.side,ax=s[0]==='x',sg=s.endsWith('max')?1:-1,u0=pt.u-pt.pw/2,u1=pt.u+pt.pw/2;
+    const at=uu=>ax?[sg*L2,uu-W2]:[uu-L2,sg*W2],a=at(u0),b=at(u1),m=at(pt.u),tip=ax?[m[0]+sg*6,m[1]]:[m[0],m[1]+sg*6];
+    out.push([bhW(F,p,...a,zt),bhW(F,p,...b,zt),o],[bhW(F,p,...m,zt),bhW(F,p,...tip,zt),o]);}
+  return out;
+}
+async function placeBoard(face,p,id=bmSet.id,o=bmSet){
+  const B=bmBoard(id),P=boardPlan(B,{below:o.below}),join=!!o.join,lines=[];
+  const res=await bhCommit(face,p,(M,K,z0)=>{
+    const box=(x0,y0,x1,y1,za,zb)=>K(M.cube([x1-x0,y1-y0,zb-za]).translate([x0,y0,za]));
+    const parts=[],planes=[['z',1,P.T]];let sub=null,cut=null;if(z0===0)planes.push(['z',-1,0]);
+    const L2=B.L/2,W2=B.W/2;
+    if(P.kind==='standoffs'){
+      const m=Math.max(...P.holes.map(h=>INSERTS[h.s].boss/2)),xs=P.holes.map(h=>h.x),ys=P.holes.map(h=>h.y);
+      const x0=Math.min(...xs)-m,x1=Math.max(...xs)+m,y0=Math.min(...ys)-m,y1=Math.max(...ys)+m;
+      parts.push(box(x0,y0,x1,y1,z0,P.T));planes.push(...boxPlanes(x0,y0,x1,y1),['z',1,P.zB]);
+      for(const h of P.holes){const I=INSERTS[h.s],dep=boardInsertDepth(h.s);
+        parts.push(K(M.cylinder(P.zB-z0,I.boss/2,I.boss/2,48).translate([h.x,h.y,z0])));
+        const c=K(M.cylinder(dep+0.3,I.hole/2,I.hole/2,48).translate([h.x,h.y,P.zB-dep]));sub=sub?K(sub.add(c)):c;planes.push(['z',1,P.zB-dep]);}
+    }else{
+      // rails along the long sides, short corner stubs at the ends (the USB end stays open), ledges under the two ends
+      const long=B.L>=B.W,g=P.gap,r=P.rail,top=P.zB+B.pcb+1,A=long?L2:W2,Bw=long?W2:L2;
+      const usbSide=B.ports[0]&&B.ports[0].side,endUsb=sg=>usbSide===(long?(sg>0?'xmax':'xmin'):(sg>0?'ymax':'ymin'));
+      const bx=(a0,b0,a1,b1,za,zb)=>{const [x0,y0,x1,y1]=long?[a0,b0,a1,b1]:[b0,a0,b1,a1];planes.push(...boxPlanes(x0,y0,x1,y1));return box(x0,y0,x1,y1,za,zb);};
+      const oa=A+g+r,ob=Bw+g+r;
+      parts.push(bx(-oa,-ob,oa,ob,z0,P.T));
+      for(const s of [-1,1])parts.push(bx(-oa,s>0?Bw+g:-ob,oa,s>0?ob:-Bw-g,z0,top));
+      for(const s of [-1,1]){const st=endUsb(s)?2.5:Math.min(4,Bw*0.4);
+        for(const t of [-1,1])parts.push(bx(s>0?A+g:-oa,t>0?Bw+g-st:-Bw-g,s>0?oa:-A-g,t>0?Bw+g:-Bw-g+st,z0,top));
+        const lw=Bw-3.5>2?Bw-3.5:2;parts.push(bx(s>0?A-2.5:-A,-lw,s>0?A:-A+2.5,lw,z0,P.zB));}
+      planes.push(['z',1,P.zB],['z',1,top]);
+    }
+    const pt=B.ports[0];
+    if(o.port&&join&&pt){const s=pt.side,ax=s[0]==='x',sg=s.endsWith('max')?1:-1,zc=P.zB+B.pcb+pt.zc,start=(ax?L2:W2)+P.gap+P.rail+0.2;
+      const uc=pt.u-(ax?W2:L2);
+      cut=ax?box(sg>0?start:-start-100,uc-pt.pw/2,sg>0?start+100:-start,uc+pt.pw/2,zc-pt.ph/2,zc+pt.ph/2)
+            :box(uc-pt.pw/2,sg>0?start:-start-100,uc+pt.pw/2,sg>0?start+100:-start,zc-pt.ph/2,zc+pt.ph/2);}
+    let add=parts[0];for(const q of parts.slice(1))add=K(add.add(q));
+    return {add,sub,cut,planes};
+  },'Board mount ('+B.name+')',{join,rot:o.rot});
+  if(!res.err){res.plan=P;res.board=B;if(o.ghost){lines.push(...boardLines(B,P,res.frame,p));setGhosts(lines,res.faces);}}
+  return res;
+}
+tools.boardmount=()=>{
+  let cur=null;boardPanel.style.display='block';syncBoardPanel();
+  return {label:'',hint:'Pick your board in the panel, then click the floor of your box where the middle of the board should go (Turn 90° in the panel turns it)',
+    move(e,m){cur=inferPoint(m.x,m.y);setMarker(cur);preview.lines=[];if(!cur||!cur.face)return;
+      const B=bmBoard(),P=boardPlan(B,{below:bmSet.below});preview.lines=boardLines(B,P,bhFrame(faceNormal(cur.face),bmSet.rot),cur.p,0);},
+    async down(){
+      if(!cur||!cur.face)return flash('Click on the floor of your box (or any flat face) where the board should go');
+      const face=cur.face,p=cur.p;preview.lines=[];flash('Making the board mount…',8000);
+      const r=await placeBoard(face,p);
+      flash(r.err?'Could not make the board mount: '+r.err:'Board mount for the '+r.board.name+' added. '+boardText(r.board,r.plan),r.err?7000:9000);},
+    cancel(){preview.lines=[];return false;}};
+};
+// (for tests, add-ons and the Enclosure Wizard)
+window.EvenUCanBoxHelpers={INSERTS,BOARDS,BOARD_INSERT_LEN,allBoards,insertDepth,boardInsertDepth,minBoss,screwForHole,soCheck,boardPlan,
+  get standoff(){return soSet;},get boardmount(){return bmSet;},
+  placeStandoff:(faceId,p,s)=>placeStandoff(model.faces.find(f=>f.id===faceId),p,Object.assign({},soSet,s||{})),
+  placeBoard:(faceId,p,id,o)=>placeBoard(model.faces.find(f=>f.id===faceId),p,id,Object.assign({},bmSet,{below:null},o||{}))};
 tools.flat=()=>({label:'',hint:'Click the face that should go down on the bed: its object turns over to lie flat on it, ready to print',
   move(e,m){const h=pickFace(screenRay(m.x,m.y));setHover(h?h.face:null);},
   down(e,m){const h=pickFace(screenRay(m.x,m.y));if(!h)return flash('Click a face of the object');setHover(null);layFlat(h.face);}
@@ -4322,7 +4596,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
 // (now hidden in #legacyBtns or not shown on the tool row), so every handler and id still works.
 {
   const mdrop=$('mdrop'),mbar=$('mbar'),tops=[...mbar.querySelectorAll('.mtop')];
-  const BTN=id=>()=>$(id).click(),TBK=k=>()=>TB_BTN[k].click(),EN=n=>()=>{const W=window.WFEnclosure;if(W&&W[n])W[n]();};
+  const BTN=id=>()=>$(id).click(),TBK=k=>{const f=()=>TB_BTN[k].click();f.tbKey=k;return f;},EN=n=>()=>{const W=window.WFEnclosure;if(W&&W[n])W[n]();};
   const hasSel=()=>selection.size>0;
   const tl=(k,lab)=>{const t=TOOLS.find(t=>t&&t[0]===k);return {label:lab||t[1],key:t[2]==='Space'?'Space':t[2],fn:TBK(k),checked:()=>toolName===k,ic:k};};
   const tt=(k,label)=>({label,fn:TBK(k),checked:()=>toolName===k,ic:k});
@@ -4356,6 +4630,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
       {head:'Units'},pick('units','mm','Millimetres'),pick('units','cm','Centimetres'),pick('units','m','Metres'),pick('units','in','Inches'),pick('units','ft','Feet & inches')],
     Tools:[{label:'Start a project (step by step)...',fn:BTN('bBuild')},null,
       {label:'Parts library...',fn:BTN('bParts')},{label:'Box designer (Enclosure)...',fn:BTN('bEnclosure')},
+      tt('standoff','Stand-off for a heat-set insert'),tt('boardmount','Board mount (platform for a board)'),
       {label:'Wiring...',fn:BTN('bWiring')},{label:'Code for your board...',fn:EN('openCodeGated')},null,
       {label:'AI helper key...',fn:EN('askKey')},null,{label:'Check model for printing',fn:BTN('bCheck'),checked:()=>!!check}],
     Help:[{label:'Quick guide and shortcuts',key:'F1',fn:BTN('bHelp')},{label:'User manual (PDF)',fn:()=>window.open('EvenUCan User Manual.pdf','_blank')},
@@ -4372,6 +4647,101 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
     'Quick guide and shortcuts':'help','User manual (PDF)':'manual','EvenUCan on GitHub':'web','About EvenUCan':'about'};
   for(const L of Object.values(MENUS))for(const it of L)if(it&&!it.head&&!it.ic)it.ic=MENU_IC[it.label]||(/^(Flip|Turn|Mirror)/.test(it.label)?'flip':'');
   window.EvenUCanMenus=MENUS;// (for tests and add-ons)
+  // (1.9.38) The grouped toolbar: every useful menu command also has a button on screen; the menus stay exactly as they are.
+  // A tool's button IS the toolbar button the menu clicks; every other button runs the menu item's own function.
+  // [menu, item label (or its icon key), short name, small badge]
+  const RIB=[
+    ['File',[['File','New','New'],['File','Open...','Open'],['File','Save','Save'],['File','Save As...','Save as'],
+      ['File','3MF for 3D printing...','3MF','3MF'],['File','STL for 3D printing...','STL','STL'],['File','OBJ (other 3D programs)...','OBJ','OBJ'],
+      ['File','Picture of the view (PNG)...','Picture'],['File','Printer size...','Printer'],['File','Check model for printing','Check']]],
+    ['Edit',[['Edit','Undo','Undo'],['Edit','Redo','Redo'],['Edit','Cut','Cut'],['Edit','Copy','Copy'],['Edit','Paste','Paste'],['Edit','Delete','Delete'],
+      ['Edit','Select all','Select all'],['Edit','Select none','Select none'],['Edit','Hide selected','Hide'],['Edit','Unhide all','Unhide'],['Edit','Delete guides','Guides']]],
+    ['Draw',[['Draw','select','Select'],['Draw','line','Line'],['Draw','rect','Rectangle'],['Draw','circle','Circle'],['Draw','arc','Arc'],
+      ['Draw','polygon','Polygon'],['Draw','solid','3D shapes'],['Draw','text','3D text'],['Draw','erase','Eraser'],['Draw','paint','Paint']]],
+    ['Change shape',[['Draw','push','Push/Pull'],['Draw','move','Move'],['Draw','rotate','Rotate'],['Draw','offset','Offset'],['Draw','follow','Follow Me'],
+      ['Draw','round','Round'],['Modify','slice','Slice'],['','flip','Flip'],['Modify','Resize to an exact size...','Resize']]],
+    ['Join & hollow',[['Modify','Join','Join'],['Modify','Subtract','Subtract'],['Modify','Intersect','Intersect'],['Modify','shell','Hollow'],
+      ['Modify','hole','Holes'],['Modify','Group','Group'],['Modify','Ungroup','Ungroup']]],
+    ['Measure',[['Draw','tape','Tape'],['Draw','center','Centre']]],
+    ['Print bed',[['Modify','flat','Lay flat'],['Modify','Lay all flat','All flat'],['Modify','Arrange on bed','Arrange']]],
+    ['View',[['View','v-iso','3D'],['View','v-top','Top'],['View','v-front','Front'],['View','v-right','Right'],['View','v-back','Back'],['View','v-left','Left'],
+      ['View','Zoom to fit everything','Fit all'],['View','orbit','Orbit'],['View','pan','Pan'],['View','zoom','Zoom'],
+      ['View','Perspective (natural)','Natural'],['View','Parallel (no perspective)','Parallel']]],
+    ['Electronics',[['Tools','Start a project (step by step)...','Project'],['Tools','Parts library...','Parts'],['Tools','Box designer (Enclosure)...','Box'],
+      ['Tools','standoff','Stand-off'],['Tools','boardmount','Board'],['Tools','Wiring...','Wiring'],['Tools','Code for your board...','Code'],['Tools','AI helper key...','AI key']]],
+    ['Help',[['Help','Quick guide and shortcuts','Guide'],['Help','User manual (PDF)','Manual']]]
+  ];
+  // What each button does, for the tooltip (tools keep their own toolbar tooltip).
+  const RIB_DESC={'New':'start a new, empty drawing','Open...':'open a .3mf or .stl file','Save':'save as .3mf: opens in Cura and other slicers, and stays editable here',
+    'Save As...':'save under a new name','3MF for 3D printing...':'export a 3MF file for your slicer (only the selection, if something is selected)',
+    'STL for 3D printing...':'export an STL file for any slicer (only the selection, if something is selected)','OBJ (other 3D programs)...':'export an OBJ file for other 3D programs',
+    'Picture of the view (PNG)...':'save a picture of what you see','Printer size...':'set the size of your printer\'s bed',
+    'Check model for printing':'is it ready to print? Gaps, inside-out faces, loose lines and bed size are marked on the model',
+    'Undo':'take back the last change','Redo':'put back what you took back','Delete':'delete the selection','Select all':'select everything',
+    'Select none':'clear the selection','Hide selected':'hide the selected faces so you can work behind or inside them','Unhide all':'show all hidden faces again',
+    'Group':'keep the selection together, so it selects and moves as one piece','Ungroup':'break the selected group back into loose shapes',
+    'Resize to an exact size...':'set an exact size, for example 40 mm wide','Standard 3D view':'look at the model from a corner, above',
+    'Top':'look straight down from above','Front':'look from the front','Right':'look from the right','Back':'look from the back','Left':'look from the left',
+    'Perspective (natural)':'far things look smaller, like real life','Parallel (no perspective)':'sizes stay equal however far away',
+    'Start a project (step by step)...':'describe your gadget and EvenUCan plans the parts, the box and the code, step by step',
+    'Parts library...':'your boards, sensors, speakers and batteries, with sizes','Box designer (Enclosure)...':'design a printable box around your electronics',
+    'Wiring...':'what wire goes where, with a diagram and a wiring list','Code for your board...':'the code for your board, ready to open in ESPHome or the Arduino IDE',
+    'AI helper key...':'add or change the key for the free AI helper','Quick guide and shortcuts':'how to use the tools, and the shortcut keys','User manual (PDF)':'open the full user manual'};
+  const rEsc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const ribFind=(m,k)=>{const L=MENUS[m]||[];return L.find(it=>it&&!it.head&&it.label===k)||L.find(it=>it&&!it.head&&it.ic===k)||null;};
+  const ribBtns=[];
+  let ribShut={};try{ribShut=JSON.parse(store.get('ribbonShut'))||{};}catch(e){/* intentional: every group open */}
+  function buildRibbon(){
+    tb.innerHTML='';tb.classList.add('ribbon');tb.classList.toggle('names',store.get('ribbonNames')==='1');ribBtns.length=0;
+    for(const [name,list] of RIB){
+      const g=document.createElement('div');g.className='tbg'+(ribShut[name]?' shut':'');g.setAttribute('role','group');g.setAttribute('aria-label',name);
+      const h=document.createElement('button');h.type='button';h.className='tgh';h.innerHTML='<span class="ar">▾</span>'+rEsc(name);
+      h.title=name+': click to fold this group away, or to open it again';h.setAttribute('aria-expanded',String(!ribShut[name]));
+      h.onclick=()=>{if(ribShut[name])delete ribShut[name];else ribShut[name]=1;store.set('ribbonShut',JSON.stringify(ribShut));
+        g.classList.toggle('shut',!!ribShut[name]);h.setAttribute('aria-expanded',String(!ribShut[name]));};
+      const box=document.createElement('div');box.className='tgb';
+      for(const [m,k,short,badge] of list){
+        const it=m?ribFind(m,k):null;
+        if(m&&!it){console.warn('EvenUCan toolbar: no menu item for',m,k);continue;}
+        const tk=it?it.fn&&it.fn.tbKey:k;let b;
+        if(tk&&TB_BTN[tk])b=TB_BTN[tk];
+        else{
+          b=document.createElement('button');b.type='button';b.innerHTML=icon(it.ic);
+          const d=RIB_DESC[it.label];b.title=it.label.replace(/\.\.\.$/,'')+(it.key&&it.key!=='Delete'?' ('+it.key+')':'')+(d?': '+d:'');
+          b.onclick=()=>{try{it.fn();}catch(er){console.error(er);}};
+        }
+        b.classList.add('rb');b.dataset.menu=m;b.dataset.label=it?it.label:k;b.setAttribute('aria-label',short);b._mi=it;
+        if(!b.querySelector('.tl'))b.insertAdjacentHTML('beforeend',(badge?'<span class="bd">'+rEsc(badge)+'</span>':'')+'<span class="tl">'+rEsc(short)+'</span>');
+        ribBtns.push(b);box.appendChild(b);
+      }
+      g.append(h,box);tb.appendChild(g);
+    }
+    const n=document.createElement('button');n.type='button';n.className='tgn';n.textContent='Names';
+    n.title='Names: show or hide the name under each button';n.classList.toggle('on',tb.classList.contains('names'));
+    n.onclick=()=>{const on=!tb.classList.contains('names');tb.classList.toggle('names',on);n.classList.toggle('on',on);store.set('ribbonNames',on?'1':'0');CB=null;requestDraw();};
+    tb.appendChild(n);ribRefresh();
+  }
+  // Greyed out when the menu item would be greyed out; highlighted when the menu would show a tick (the active tool too).
+  let ribPend=false;
+  function ribRefresh(){
+    ribPend=false;
+    for(const b of ribBtns){
+      const it=b._mi;if(!it)continue;let on=true,ck=false;
+      try{on=it.enabled?!!it.enabled():true;ck=it.checked?!!it.checked():false;}catch(e){/* intentional: shown enabled */}
+      if(b.classList.contains('off')===on){b.classList.toggle('off',!on);b.setAttribute('aria-disabled',String(!on));}
+      if(it.checked&&b.classList.contains('on')!==ck)b.classList.toggle('on',ck);
+    }
+  }
+  window.EvenUCanRibbonRefresh=()=>{if(!ribPend){ribPend=true;requestAnimationFrame(ribRefresh);}};
+  // A greyed button does nothing, like its greyed menu item (checked again here, in case it has only just changed).
+  tb.addEventListener('click',e=>{
+    const b=e.target.closest&&e.target.closest('button.rb');if(!b||!b._mi||!b._mi.enabled)return;
+    let on=true;try{on=!!b._mi.enabled();}catch(er){/* intentional: allowed */}
+    if(!on){e.stopImmediatePropagation();e.preventDefault();flash(b._mi.enabled===hasSel?b.getAttribute('aria-label')+': select something first':b.getAttribute('aria-label')+': nothing to do yet');}
+  },true);
+  tb.addEventListener('mousedown',e=>{if(e.target.closest&&e.target.closest('button'))e.preventDefault();});// keeps keyboard shortcuts working after a click
+  for(const ev of ['click','keyup','pointerup'])document.addEventListener(ev,()=>setTimeout(window.EvenUCanRibbonRefresh,0),true);
+  buildRibbon();
   let cur=null,byKeys=false;// (focus goes back to the heading on Esc only when the menu was opened from the keyboard)
   const items=()=>[...mdrop.querySelectorAll('.it:not(.off)')];
   const esc=t=>String(t).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -4431,8 +4801,10 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
 }
 new ResizeObserver(()=>{CB=null;requestDraw();}).observe(cv);
 window.addEventListener('blur',()=>{nav=null;});
-// Ask before closing with unsaved changes (the desktop app shows its own dialog for this).
-window.addEventListener('beforeunload',e=>{flushAutosave();if(docDirty){e.preventDefault();e.returnValue='';}});
+// Ask before closing with unsaved changes in a web browser. The desktop app autosaves on close
+// (see main.js), so it must not block the window's X or File > Quit: Electron shows no prompt for
+// beforeunload and the app would be impossible to close.
+window.addEventListener('beforeunload',e=>{flushAutosave();if(docDirty&&!window.wfNative){e.preventDefault();e.returnValue='';}});
 // (Perf-r1) a closed tab or one sent to the background keeps its last edits in the autosave
 window.addEventListener('pagehide',flushAutosave);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')flushAutosave();});
@@ -5109,7 +5481,10 @@ function prep(inst,st){
   const up=F.some(f=>f.t==='header'&&f.dir==='up'),down=F.some(f=>f.t==='header'&&f.dir==='down');
   // Screw posts need to be tall enough to actually hold a screw (or a heat-set insert): styles that ask for
   // this (st.postH) raise the board on taller posts, rather than leaving the default 2 mm clearance.
-  const minZb=(F.some(f=>f.t==='hole')&&st.postH)?st.postH:2;
+  let minZb=(F.some(f=>f.t==='hole')&&st.postH)?st.postH:2;
+  // (1.9.38) heat-set insert stand-offs (Box step): tall enough for the insert hole
+  const BHI=wiz.inserts&&window.EvenUCanBoxHelpers;
+  if(BHI&&o.pcb>0)for(const f of F)if(f.t==='hole'&&f.mount!=='peg'){const s=BHI.screwForHole(f.dia);if(s)minZb=Math.max(minZb,BHI.boardInsertDepth(s)+0.6);}
   o.zb=o.pcb>0?Math.max(o.below,minZb)+(down?st.headDown:0):o.below;
   o.top=o.zb+o.pcb+o.h+(up?st.headUp:0);
   o.portSides=[...new Set(F.filter(f=>(f.t==='port'||f.t==='switch'||f.t==='cutout')&&isEdge(f)).map(f=>f.side))];
@@ -5596,8 +5971,15 @@ async function buildSolids(L){
             // can be melted flat over the top afterwards to rivet the board down for good.
             adds.push(cylZ(x,y,-0.1,ph+o.pcb+PEG_POKE,Math.max(h.dia/2-PEG_CLEAR,0.9)));
           }else{
+            const BHI=wiz.inserts&&window.EvenUCanBoxHelpers,ss=BHI?BHI.screwForHole(h.dia):null;
+            if(ss){// (1.9.38) a stand-off sized for a heat-set insert, with the insert hole in its top
+              const I=BHI.INSERTS[ss],dep=BHI.boardInsertDepth(ss);
+              adds.push(cylZ(x,y,-0.1,ph,Math.max(I.boss/2,h.dia/2+1.5)));
+              subs.push(cylZ(x,y,Math.max(-f+0.8,ph-dep),ph+0.5,I.hole/2,32));
+            }else{
             adds.push(cylZ(x,y,-0.1,ph,Math.max(h.dia/2+1.5,2.4)));
             subs.push(cylZ(x,y,Math.max(-f+0.8,ph-8),ph+0.5,Math.max(0.6,h.dia*0.42),24));
+            }
           }
         }
         // fewer than 3 screws would let it rock: rests under the corners far from the holes, clear of pins
@@ -5972,7 +6354,9 @@ ${wiz.size!=='auto'?`<div class="ewRow"><label>W <input type="number" data-w="sW
 <h4>Fine tuning</h4>
 <div class="ewRow"><label>Wall thickness <input type="number" data-w="wallT" value="${esc(wiz.wallT)}" min="0.8" step="0.2" placeholder="${STYLES[st].wall}"> mm</label></div>
 <div class="ewRow"><label>Gap between parts <input type="number" data-w="gapOv" value="${esc(wiz.gapOv)}" min="0" step="0.5" placeholder="${STYLES[st].gap}"> mm</label></div>
-<div class="ewNote">Leave blank to use the style's own value.</div>`;
+<div class="ewNote">Leave blank to use the style's own value.</div>
+<div class="ewRow"><label><input type="checkbox" data-w="inserts"${wiz.inserts?' checked':''}> Heat-set insert stand-offs for boards with screw holes</label></div>
+<div class="ewNote">Boards with holes get posts sized for brass inserts (M2 to M5); boards without holes still sit on rails with end stops. For a board in a box you draw yourself, use <b>Board mount</b> on the toolbar.</div>`;
 }
 function wizChanged(rerender){saveWiz();if(rerender)renderSide();runAuto();}
 $('ewSide').addEventListener('change',e=>{
@@ -6226,7 +6610,8 @@ function renderEditor(){
 <div class="ewRow"><button id="plFindFz" title="Search the web for a ready-made part file (.fzpz): it brings the pins, the board size and a picture all at once">Search for a part file (.fzpz)…</button></div>
 <div class="ewRow"><button id="plKey">${keyLabel()}</button></div>
 ${aiProv()==='claude'?'<div class="ewNote">Claude is paid per use from your Anthropic credit: roughly US$0.10–0.40 per web look-up, a few cents to read a drawing (an estimate; it depends how much it reads).</div>':
-  aiProv()==='nvidia'?'<div class="ewNote">NVIDIA is free but can\'t search the web: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs) and works in the desktop app only.</div>':''}
+  aiProv()==='nvidia'?'<div class="ewNote">NVIDIA is free but can\'t search the web: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs) and works in the desktop app only.</div>':
+  isOA()?'<div class="ewNote">'+OA[aiProv()].name+' is free but can\'t search the web: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs).'+(aiProv()==='openrouter'?' The free tier allows about 50 requests a day.':'')+'</div>':''}
 <div class="ewNote"><b>Look up online</b>: type the part number and the AI finds the sizes and fills them in. Or save a dimension drawing and use <b>Read a drawing</b> (or drag it onto the picture, or Ctrl+V). Always check the draft before saving.</div></div>
 <label class="f"><span>Name</span><input type="text" data-p="name" value="${p.name==='New part'?'':esc(p.name)}" placeholder="New part: type its name"></label>
 <div class="ewRow"><label title="How far this part's sizes can be trusted. Fritzing pictures are drawn for wiring diagrams, so their outlines are often too small: measure the board and use Check size.">Sizes <select data-p="acc">${opt(ACC,accOf(p))}</select></label><button id="plCheck" title="Type the sizes you measured with calipers or a ruler: the outline changes, pins and features keep their spacing">Check size…</button></div>
@@ -6787,8 +7172,8 @@ function finishSide(pins){
 // Optional and the only part of the app that uses the internet (only when you ask it to read a drawing).
 // The key is kept on this computer only and is never exported with parts.
 const AI_MODELS=['gemini-2.5-flash','gemini-3.6-flash','gemini-3.8-flash','gemini-3-flash-preview','gemini-2.5-flash-lite'];
-// Which AI does the reading: Google Gemini (free key), NVIDIA (free key) or Claude (paid key). Each keeps its own key.
-const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'}};
+// Which AI does the reading: Google Gemini, NVIDIA, Groq or OpenRouter (free keys) or Claude (paid key). Each keeps its own key.
+const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'}};
 const aiProv=()=>PROVIDERS[WF.store.get('aiProvider')]?WF.store.get('aiProvider'):'gemini';
 const aiKey=p=>WF.store.get(PROVIDERS[p||aiProv()].key);
 const keyLabel=()=>(aiKey()?'Change ':'Set up ')+PROVIDERS[aiProv()].short+' key…';
@@ -6968,7 +7353,7 @@ async function findPartFile(){
   openWeb('https://www.google.com/search?q='+encodeURIComponent(q.trim()+' fzpz'));
   WF.flash('Your web browser is searching for part files. Download a .fzpz that matches your board, then drag it onto the part picture here (or click "Import pins…" and "Use a .fzpz file…").',10000);
 }
-// Setting up an AI key: what each AI is good for, steps to get a key (free for Gemini and NVIDIA), a button that
+// Setting up an AI key: what each AI is good for, steps to get a key (free for Gemini, NVIDIA, Groq and OpenRouter), a button that
 // opens the right web page, and a Test that sends "hello" to prove the key works before it is saved.
 const KEY_HELP={
   gemini:{site:'https://aistudio.google.com/apikey',open:'Open Google AI Studio',
@@ -6977,6 +7362,12 @@ const KEY_HELP={
   nvidia:{site:'https://build.nvidia.com/settings/api-keys',open:'Open NVIDIA Build',
     about:'Free (about 40 requests a minute), no card needed. Good for Make it with AI and reading pictures of drawings. It can\'t search the web, so Look up online uses what it already knows. Desktop app only.',
     steps:['Click <b>Open NVIDIA Build</b> below. It opens in your web browser.','Sign in, or make a free NVIDIA account with your email (no card needed).','Click <b>Generate API Key</b> (or the <b>Get API Key</b> button on any model page).','Copy the key (it starts with <code>nvapi-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']},
+  groq:{site:'https://console.groq.com/keys',open:'Open Groq',
+    about:'Free (about 30 requests a minute and 1,000 a day), no card needed. Very fast. Good for ideas, Ask AI and writing code. It can\'t search the web, so Look up online uses what it already knows. It can read pictures of drawings, but not PDFs. Works in the web version and the desktop app.',
+    steps:['Click <b>Open Groq</b> below. It opens in your web browser.','Sign up free (an email or Google account is fine, no card needed).','Go to the <b>Playground</b>, then click <b>API Keys</b> at the top right.','Click <b>Create API Key</b>, give it any name, and copy the key (it starts with <code>gsk_</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']},
+  openrouter:{site:'https://openrouter.ai/settings/keys',open:'Open OpenRouter',
+    about:'Free models, no card needed, but only about 50 requests a day (and 20 a minute), so it runs out sooner than the others. Some free models may keep what you send to improve their AI, so don\'t type anything private. It can\'t search the web, so Look up online uses what it already knows. It can read pictures of drawings, but not PDFs. Works in the web version and the desktop app.',
+    steps:['Click <b>Open OpenRouter</b> below. It opens in your web browser.','Sign up free and log in.','Find <b>API Keys</b> (under your account menu at the top right) and click <b>Create</b> (or <b>Create API Key</b>).','If it asks for a tier or credit limit, pick any: it\'s free, and you won\'t be billed because you haven\'t entered a payment method. Copy the key (it starts with <code>sk-or-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']},
   claude:{site:'https://console.anthropic.com/settings/keys',open:'Open the Anthropic Console',
     about:'Paid per use from credit you add: roughly US$0.10–0.40 per web look-up, a few cents for the rest. The most reliable, and rarely busy.',
     steps:['Click <b>Open the Anthropic Console</b> below and sign in or sign up.','Add some credit under <b>Billing</b>.','Go to <b>Settings › API Keys</b> and click <b>Create Key</b>.','Copy the key (it starts with <code>sk-ant-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']}
@@ -6984,16 +7375,16 @@ const KEY_HELP={
 // Send a tiny "hello" with this key and return the AI's reply (or throw, saying what is wrong in plain words).
 async function aiTest(p,key){
   const ask='Reply with just the word: hello';
-  if(p==='nvidia'){
-    let last='';
-    for(const m of [WF.store.get('nvidiaModel'),...NV_TEXT].filter((m,i,a)=>m&&a.indexOf(m)===i)){
-      const {status,j,msg}=await nvChat(key,m,ask,20);
-      if(status===401||status===403)throw new Error('NVIDIA didn\'t accept this key. Check you copied all of it (it starts with nvapi-).');
-      if(status===429)throw new Error('The key looks fine, but NVIDIA is busy or the free limit was reached. Wait a minute and test again.');
+  if(OA[p]){
+    const A=OA[p];let last='';
+    for(const m of oaOrder(p)){
+      const {status,j,msg}=await oaChat(p,key,m,ask,A.testTokens||20);
+      if(status===401||status===403)throw new Error(A.name+' didn\'t accept this key. Check you copied all of it (it starts with '+A.starts+').');
+      if(status===429)throw new Error('The key looks fine, but '+A.name+' is busy or the free limit ('+A.limit+') was reached. Wait a minute (or until tomorrow for a daily limit) and test again.');
       if(status===200){const c=j.choices&&j.choices[0];return String((c&&c.message&&c.message.content)||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim()||'(an empty reply)';}
       last=msg||'HTTP '+status;// busy or renamed model: try the next
     }
-    throw new Error('NVIDIA didn\'t answer ('+last+'). The key may still be fine: test again in a minute.');
+    throw new Error(A.name+' didn\'t answer ('+last+'). The key may still be fine: test again in a minute.');
   }
   if(p==='claude'){
     const SDK=window.AnthropicSDK;if(!SDK)throw new Error('The Claude add-on is missing from this copy of the app.');
@@ -7034,7 +7425,7 @@ function askKey(prov){
     const draw=()=>{
       const h=KEY_HELP[p],has=!!aiKey(p);
       box.innerHTML=`<div class="kHead"><b>AI key for</b> <select data-k="prov">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${k===p?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></div>
-<div class="ewNote">${h.about}</div>${p==='nvidia'&&!(window.wfNative&&window.wfNative.aiPost)?'<div class="warn">This is the web version: NVIDIA only works in the EvenUCan desktop app. Here, pick Google Gemini (free) or Claude.</div>':''}${has?'<div class="ok">✓ A key is saved for this AI. Paste a new one to replace it.</div>':''}
+<div class="ewNote">${h.about}</div>${OA[p]&&OA[p].deskOnly&&!(window.wfNative&&window.wfNative.aiPost)?'<div class="warn">This is the web version: NVIDIA only works in the EvenUCan desktop app. Here, pick Google Gemini (free) or Claude.</div>':''}${has?'<div class="ok">✓ A key is saved for this AI. Paste a new one to replace it.</div>':''}
 <ol>${h.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
 <div class="btns kOpen"><button data-k="open">${esc(h.open)}</button></div>
 <input data-k="key" autocomplete="off" spellcheck="false" placeholder="Paste your ${esc(PROVIDERS[p].short)} key here" value="${esc(has?aiKey(p):'')}">
@@ -7197,35 +7588,62 @@ async function gemini(parts,tools){
 // Tries each model in turn, so a renamed or retired model doesn't break it.
 const NV_TEXT=['deepseek-ai/deepseek-v4.1-flash','moonshotai/kimi-k2.6','mistralai/mistral-large-4-1t-a52b','nvidia/llama-3.1-nemotron-70b-instruct'];
 const NV_VISION=['meta/llama-3.2-90b-vision-instruct','meta/llama-3.2-11b-vision-instruct'];
-async function nvChat(key,model,content,maxTokens){
-  const post=window.wfNative&&window.wfNative.aiPost;
-  if(!post)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini (free) or Claude instead.');
-  let r;
-  try{r=await post('https://integrate.api.nvidia.com/v1/chat/completions',key,JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:maxTokens}));}
-  catch(e){throw new Error('Couldn\'t reach NVIDIA. Check the internet connection and try again.');}
-  let j={};try{j=JSON.parse(r.text);}catch(e){/* intentional: handled below as an empty answer */}
-  return {status:r.status,j,msg:String(j.detail||j.title||(j.error&&(j.error.message||j.error))||'')};
+// (1.9.38) Groq and OpenRouter speak the same OpenAI-style "chat completions" as NVIDIA, so all three share
+// this code. Groq and OpenRouter accept calls straight from a web page; NVIDIA needs the desktop app.
+// None of them can search the web or read PDFs. Model lists checked against each provider's model page (Nov 2026).
+const OA={
+  nvidia:{name:'NVIDIA',starts:'nvapi-',url:'https://integrate.api.nvidia.com/v1/chat/completions',text:NV_TEXT,vision:NV_VISION,deskOnly:true,limit:'about 40 requests a minute'},
+  groq:{name:'Groq',starts:'gsk_',url:'https://api.groq.com/openai/v1/chat/completions',
+    text:['openai/gpt-oss-120b','llama-3.3-70b-versatile','qwen/qwen3.8-27b','openai/gpt-oss-20b','llama-3.1-8b-instant'],
+    vision:['qwen/qwen3.8-27b','meta-models/muse-spark-open'],limit:'about 30 requests a minute, 1,000 a day',testTokens:200},
+  openrouter:{name:'OpenRouter',starts:'sk-or-',url:'https://openrouter.ai/api/v1/chat/completions',
+    text:['openrouter/free','nvidia/nemotron-3-ultra-550b-a55b:free','google/gemma-4-31b-it:free'],
+    vision:['openrouter/free','google/gemma-4-31b-it:free','nvidia/nemotron-3.5-super-vl:free'],limit:'about 50 requests a day',testTokens:200,
+    headers:{'X-Title':'EvenUCan'}}
+};
+const isOA=p=>!!OA[p||aiProv()];
+const oaOrder=p=>[WF.store.get(p+'Model'),...OA[p].text].filter((m,i,a)=>m&&a.indexOf(m)===i);
+// One request. The desktop app passes it on (its allow-list has all three hosts); the web version fetches directly.
+async function oaChat(p,key,model,content,maxTokens){
+  const A=OA[p],post=window.wfNative&&window.wfNative.aiPost;
+  const body=JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:maxTokens});
+  let status,raw;
+  if(post){
+    try{const r=await post(A.url,key,body);status=r.status;raw=r.text;}
+    catch(e){throw new Error('Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+  }else{
+    if(A.deskOnly)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini, Groq or OpenRouter (all free) or Claude instead.');
+    try{const r=await fetch(A.url,{method:'POST',headers:Object.assign({'Content-Type':'application/json',Authorization:'Bearer '+key},A.headers||{}),body});status=r.status;raw=await r.text();}
+    catch(e){throw new Error('Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+  }
+  let j={};try{j=JSON.parse(raw);}catch(e){/* intentional: handled below as an empty answer */}
+  return {status,j,msg:String(j.detail||j.title||(j.error&&(j.error.message||j.error))||'')};
 }
-async function nvidia(text,pic){
-  const key=aiKey('nvidia');
-  const order=pic?NV_VISION:[WF.store.get('nvidiaModel'),...NV_TEXT].filter((m,i,a)=>m&&a.indexOf(m)===i);
+const nvChat=(key,model,content,maxTokens)=>oaChat('nvidia',key,model,content,maxTokens);
+const oaSkip=(status,msg)=>status===404||status===410||(status===400&&/model|not found|not supported|unknown|decommission|no endpoints|image/i.test(msg));
+async function oaAI(p,text,pic){
+  const A=OA[p],key=aiKey(p);
+  if(pic&&!A.vision.length)throw new Error(A.name+' can\'t read pictures. Switch to Gemini or Claude to read a drawing.');
+  const order=pic?A.vision:oaOrder(p);
   let busy=0,skipped='';
   for(const m of order){
     const content=pic?[{type:'text',text},{type:'image_url',image_url:{url:'data:'+pic.mime+';base64,'+pic.b64}}]:text;
-    const {status,j,msg}=await nvChat(key,m,content,8192);
-    aiLastReply=`NVIDIA model ${m} · HTTP ${status}\n`+JSON.stringify(j,null,1).slice(0,6000);
-    if(status===401||status===403)throw new Error('NVIDIA didn\'t accept the key. Click "Change NVIDIA key…" and paste it again.');
+    const {status,j,msg}=await oaChat(p,key,m,content,8192);
+    aiLastReply=`${A.name} model ${m} · HTTP ${status}\n`+JSON.stringify(j,null,1).slice(0,6000);
+    if(status===401||status===403)throw new Error(A.name+' didn\'t accept the key. Click "Change '+A.name+' key…" and paste it again.');
     if(status===429||status>=500){busy++;skipped=msg;continue;}// busy or over the free limit: try the next model
-    if(status===404||status===410||(status===400&&/model|not found|not supported|unknown/i.test(msg))){skipped=msg;continue;}
-    if(status!==200)throw new Error('NVIDIA said: '+(msg||'HTTP '+status));
-    if(!pic)WF.store.set('nvidiaModel',m);
+    if(oaSkip(status,msg)){skipped=msg;continue;}
+    if(status!==200)throw new Error(A.name+' said: '+(msg||'HTTP '+status));
+    if(!pic)WF.store.set(p+'Model',m);
     const c=j.choices&&j.choices[0],txt=String((c&&c.message&&c.message.content)||'');
-    aiLastReply=`NVIDIA model ${m} · finished: ${(c&&c.finish_reason)||'?'}\n\n`+(txt||JSON.stringify(j,null,1).slice(0,6000));
+    aiLastReply=`${A.name} model ${m} · finished: ${(c&&c.finish_reason)||'?'}\n\n`+(txt||JSON.stringify(j,null,1).slice(0,6000));
     return {data:aiJSON(txt.replace(/<think>[\s\S]*?<\/think>/g,''),false),sources:[]};// (some models think out loud first)
   }
-  if(busy)throw new Error('NVIDIA\'s free AI is busy right now, or the free limit (about 40 requests a minute) was reached. Wait a minute, or switch to another AI.');
-  throw new Error('None of NVIDIA\'s free models answered'+(skipped?' ('+skipped+')':'')+'. They may have been renamed; an app update will fix this.');
+  if(busy)throw new Error(A.name+'\'s free AI is busy right now, or the free limit ('+A.limit+') was reached. Wait a minute (or until tomorrow for a daily limit), or switch to another AI.');
+  if(pic)throw new Error(A.name+'\'s free picture-reading models didn\'t answer'+(skipped?' ('+skipped+')':'')+'. Switch to Gemini or Claude to read a drawing.');
+  throw new Error('None of '+A.name+'\'s free models answered'+(skipped?' ('+skipped+')':'')+'. They may have been renamed; an app update will fix this.');
 }
+const nvidia=(text,pic)=>oaAI('nvidia',text,pic);
 // NVIDIA takes pictures up to about 180 KB inside a request: shrink until it fits (drawings stay readable at ~1200 px).
 async function nvSmall(b64,mime){
   if(b64.length<175000)return {b64,mime};
@@ -7236,7 +7654,7 @@ async function nvSmall(b64,mime){
     const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
     const s=c.toDataURL('image/jpeg',0.8).split(',')[1];if(s.length<175000)return {b64:s,mime:'image/jpeg'};
   }
-  throw new Error('That picture is too detailed for NVIDIA. Crop it to just the drawing, or switch to Gemini or Claude.');
+  throw new Error('That picture is too detailed for this AI. Crop it to just the drawing, or switch to Gemini or Claude.');
 }
 // Turn the AI's answer into the part being edited (a draft: nothing is saved until you click Save part).
 function applyDrawing(d,src,sources){
@@ -7289,9 +7707,10 @@ function applyDrawing(d,src,sources){
 // Have the chosen AI read a drawing (picture or PDF, base64) into part data.
 async function aiRead(b64,mime,hint){
   const ask=AI_PROMPT+'\n\n'+hint;
-  if(aiProv()==='nvidia'){
-    if(mime==='application/pdf')throw new Error('NVIDIA can\'t read PDFs. Use a picture of the drawing (a screenshot works), or switch to Gemini or Claude.');
-    return (await nvidia(ask,await nvSmall(b64,mime))).data;
+  if(isOA()){
+    const nm=OA[aiProv()].name;
+    if(mime==='application/pdf')throw new Error(nm+' can\'t read PDFs. Use a picture of the drawing (a screenshot works), or switch to Gemini or Claude.');
+    return (await oaAI(aiProv(),ask,await nvSmall(b64,mime))).data;
   }
   const {data}=aiProv()==='claude'
     ?await claude([mime==='application/pdf'?{type:'document',source:{type:'base64',media_type:mime,data:b64}}:{type:'image',source:{type:'base64',media_type:mime,data:b64}},{type:'text',text:ask}],false)
@@ -7339,8 +7758,8 @@ Then answer using the format below. Also add "sources": [the https links of the 
 `+AI_PROMPT;
     // Three tries, each simpler than the last: search + open pages, search only, then the AI's own knowledge
     // (well-known boards such as the Arduino Nano are described in countless places it learned from).
-    // (NVIDIA can't search the web, so it goes straight to what it already knows)
-    const useClaude=aiProv()==='claude',useNv=aiProv()==='nvidia',known={tools:null,how:'the AI\'s own knowledge of "'+q+'" (no web pages)',busy:'Asking the AI what it already knows about "'+q+'"…',known:true};
+    // (NVIDIA, Groq and OpenRouter can't search the web, so they go straight to what they already know)
+    const useClaude=aiProv()==='claude',useNv=isOA(),known={tools:null,how:'the AI\'s own knowledge of "'+q+'" (no web pages)',busy:'Asking the AI what it already knows about "'+q+'"…',known:true};
     const tries=useNv?[known]:useClaude
       ?[{web:true,how:'a web search by Claude for "'+q+'"',busy:'Claude is searching the web for "'+q+'" and reading the datasheets… this can take a minute or two.'},known]
       :[{tools:[{google_search:{}},{url_context:{}}],how:'a web search for "'+q+'"',busy:'Searching the web for "'+q+'" and reading what it finds… this can take up to a minute.'},
@@ -7350,7 +7769,7 @@ Then answer using the format below. Also add "sources": [the https links of the 
       aiBusy=t.busy;setHint();
       const text=t.known?`From your own knowledge (no web search), give the mechanical dimensions of this part: "${q}". Only answer if you know this part well; otherwise return {"error":"not found"}. Put every value you are not sure of in "uncertain".\n\n`+AI_PROMPT:ask;
       try{
-        const r=useClaude?await claude([{type:'text',text}],!!t.web):useNv?await nvidia(text):await gemini([{text}],t.tools);
+        const r=useClaude?await claude([{type:'text',text}],!!t.web):useNv?await oaAI(aiProv(),text):await gemini([{text}],t.tools);
         if(r.data.error||!(num(r.data.w,0)>0)){why.push('no sizes found');continue;}
         got={...r,how:t.how,known:t.known};break;
       }catch(e){if(!e.soft)throw e;why.push(e.message);}
@@ -7365,7 +7784,7 @@ Then answer using the format below. Also add "sources": [the https links of the 
     aiBusy=false;
     if(extra){aiNote=(/Exact positions/.test(extra)?aiNote.replace(/^<b>Draft[^<]*<\/b>[^.]*\./,'<b>Draft found online, with exact positions from a drawing:</b>'):lookupNote)+extra;}
     renderEditor();
-    WF.flash(got.known?(useNv?'Draft filled in from what NVIDIA\'s AI knows (it can\'t search the web). Check every size before saving.':'Draft filled in from the AI\'s own knowledge (the web search found nothing). Check every size before saving.'):/Exact positions/.test(extra)?'Draft filled in from the web, with positions read from a dimension drawing. Check it, then Save part.':'Draft filled in from the web. Check it against the sources, then Save part.',8000);
+    WF.flash(got.known?(useNv?'Draft filled in from what '+OA[aiProv()].name+'\'s AI knows (it can\'t search the web). Check every size before saving.':'Draft filled in from the AI\'s own knowledge (the web search found nothing). Check every size before saving.'):/Exact positions/.test(extra)?'Draft filled in from the web, with positions read from a dimension drawing. Check it, then Save part.':'Draft filled in from the web. Check it against the sources, then Save part.',8000);
   }catch(e){aiBusy=false;aiFail(e);}
 }
 // Something went wrong: say what, and offer to show exactly what Google sent back. A plain JS error (as
@@ -8087,7 +8506,8 @@ const PF_CODE_PROMPT={
 Rules:
 - Start with a comment block whose first line is "// LIBRARIES_NEEDED:" followed by every library to install from the Arduino IDE Library Manager (its exact Library Manager name), one per line, or "//   (none: only built-in libraries)".
 - Then the correct #include lines for everything used (Wire.h for I2C parts, and each library's own header).
-- A #define for every pin the code uses, with the EXACT pin numbers from the wiring below (Arduino pins 14-17 are A0-A3; I2C parts use the board's own SDA/SCL through Wire, so no #define for them).
+- After the #include lines, ONE clearly marked SETTINGS block before setup(), headed "// ===== SETTINGS: everything you may want to change =====". Every value the user could want to edit goes in that block, one per line, each with a short plain-English comment: Wi-Fi name and password, any ntfy topic, the exact message text that gets sent, every pin, and every timing, cooldown or threshold constant. Nothing like that may be buried in loop() or a helper function - the message text in particular must be a named constant (e.g. const char* NTFY_MESSAGE) in this block, never written inline where it is sent.
+- A #define for every pin the code uses, inside the SETTINGS block, with the EXACT pin numbers from the wiring below (Arduino pins 14-17 are A0-A3; I2C parts use the board's own SDA/SCL through Wire, so no #define for them).
 - setup() and loop(), plus small helper functions with clear names. Plain-English comments explaining each step to someone who has never coded.
 - Use only the parts in the wiring. Use millis() timing instead of long delay() calls when buttons or beeps must react.
 - You MUST make the code do EVERY requirement listed under "Requirements". Never silently leave one out, never replace one with a comment, and never write a comment saying something isn't possible. If a requirement truly cannot be met with this board and these parts, write NO code: return {"refuse":true,"reason":"<one plain-English sentence: which requirement, and why>"} instead.
@@ -8099,7 +8519,7 @@ Rules:
 - Use BCM GPIO numbers EXACTLY as in the wiring below (GPIO.setmode(GPIO.BCM)); I2C parts are on bus 1.
 - Small functions with clear names (e.g. read_tilt(), show_on_screen(), beep()) and a main() with the main loop.
 - Wrap the main loop in try/finally and call GPIO.cleanup() (and close any I2C bus or display) in the finally block, so stopping it with Ctrl+C leaves the pins safe. Handle KeyboardInterrupt quietly.
-- Plain-English comments for someone who has never coded. Use only the parts in the wiring. Settings (keys, topics, times) are constants at the top.
+- Plain-English comments for someone who has never coded. Use only the parts in the wiring. Put every setting in ONE clearly marked block near the top, after the imports, headed "# ===== SETTINGS: everything you may want to change =====": Wi-Fi details, API keys, topics, the exact message text that gets sent, pin numbers, timings and thresholds, each on its own line with a short comment. Nothing editable may be buried in a function - the message text in particular must be a named constant (e.g. NTFY_MESSAGE) in this block, never written inline where it is sent.
 - You MUST make the code do EVERY requirement listed under "Requirements". Never silently leave one out, never replace one with a comment, and never write a comment saying something isn't possible. If a requirement truly cannot be met with this board and these parts, write NO code: return {"refuse":true,"reason":"<one plain-English sentence: which requirement, and why>"} instead.
 Return ONLY a JSON object: {"code":"<the complete program>","notes":"<two to four short plain-English sentences: what it does, how to install and run it, anything to adjust>"}.`
 };
@@ -8370,8 +8790,8 @@ async function platformCodeAI(pf){
   if(wifi)sets.unshift('- WIFI_SSID = "PUT_YOUR_WIFI_NAME_HERE" (placeholder: EvenUCan fills it in on the user\'s computer)','- WIFI_PASSWORD = "PUT_YOUR_WIFI_PASSWORD_HERE" (placeholder, as above)');
   if(topic)sets.push('- NTFY_TOPIC = "'+topic+'"');
   const reqs=intentReqs(it);
-  const extra=(topic&&pf==='esp32ide'?'\nPhone messages: connect to Wi-Fi with WiFi.h and send each message as an HTTPS POST to "https://ntfy.sh/" + NTFY_TOPIC with HTTPClient (WiFiClientSecure with setInsecure() is fine), with the message text as the body. Put these three lines near the top, under a comment saying the user can edit them: const char* WIFI_SSID = "PUT_YOUR_WIFI_NAME_HERE"; const char* WIFI_PASSWORD = "PUT_YOUR_WIFI_PASSWORD_HERE"; const char* NTFY_TOPIC = "<the topic below>";. Reconnect if the Wi-Fi drops, and send at most one message every 30 seconds.\n':'')+
-    (topic&&pf==='raspberrypi'?'\nPhone messages: send each one with requests.post("https://ntfy.sh/" + NTFY_TOPIC, data=message.encode()), with NTFY_TOPIC a constant at the top.\n':'');
+  const extra=(topic&&pf==='esp32ide'?'\nPhone messages: connect to Wi-Fi with WiFi.h and send each message as an HTTPS POST to "https://ntfy.sh/" + NTFY_TOPIC with HTTPClient (WiFiClientSecure with setInsecure() is fine), with the message text as the body. Put these four lines in ONE clearly marked settings block near the top, under a comment saying the user can edit them: const char* WIFI_SSID = "PUT_YOUR_WIFI_NAME_HERE"; const char* WIFI_PASSWORD = "PUT_YOUR_WIFI_PASSWORD_HERE"; const char* NTFY_TOPIC = "<the topic below>"; const char* NTFY_MESSAGE = "<the plain-English message the user asked for>";. Send NTFY_MESSAGE as the body; never write the message text inline in loop(). Reconnect if the Wi-Fi drops, and send at most one message every 30 seconds, but let the very first press after start-up send immediately (start the cooldown timer already expired).\n':'')+
+    (topic&&pf==='raspberrypi'?'\nPhone messages: send each one with requests.post("https://ntfy.sh/" + NTFY_TOPIC, data=message.encode()), with NTFY_TOPIC and NTFY_MESSAGE as constants in the settings block at the top, and the first message allowed immediately after start-up.\n':'');
   const text=PF_CODE_PROMPT[pf]+'\n\nThe project, in the user\'s words:\n"""'+(desc||'(no description: make the parts work and show their readings)')+'"""\n'+
     '\nRequirements (the code MUST do every one of these):\n'+(reqs.length?reqs.map((r,i)=>(i+1)+'. '+r).join('\n'):'1. Make every part work.')+'\n'+extra+
     (A.code_description?'\nWhat the code needs to do:\n'+A.code_description+'\n':'')+(A.code_libraries&&A.code_libraries.length?'\nLibraries suggested earlier: '+A.code_libraries.join(', ')+'\n':'')+
@@ -8544,7 +8964,7 @@ async function esphWithAI(){
       say(`<div class="ewNote">${tries?'Fixing what ESPHome found (try '+(tries+1)+' of 3)…':'Asking your AI ('+esc(PROVIDERS[aiProv()].name)+')… this usually takes 10–40 seconds.'}</div>`);
       const text=ESPH_AI_PROMPT+`\n\nThe parts in this device: ${P.insts.map(i=>i.label).join(', ')}.\nReadings (sensor ids): ${base.meas.map(m=>m.id+' = '+m.label+' in '+(m.unit==='cm'?'metres':m.unit)).join(', ')||'none'}.\nLight id: ${base.lightId||'none'}${base.rgb?' (an RGB light)':base.lightId?' (on/off only)':''}.\n\n`+(base.unknown.length?`Parts not in the file yet: write the ESPHome components for each of these, using exactly the GPIO pins given (they are already wired that way). Work out what each module is from its name, part-file details and pin names, then remove the "# Still to add" comment:\n${JSON.stringify(base.unknown,null,1)}\n\n`:'')+`What the user wants the device to do:\n"""${desc||'(nothing extra: just make every part work and report its readings)'}"""\n\n`+intentAINote()+
         (tries?`Your last file failed ESPHome's check with these errors. Fix them and send the whole corrected file:\n${errs}\n\nYour last file:\n${yaml}`:`The current file:\n${yaml}`);
-      const {data}=aiProv()==='claude'?await claude([{type:'text',text}],false):aiProv()==='nvidia'?await nvidia(text):await gemini([{text}],false);
+      const {data}=aiProv()==='claude'?await claude([{type:'text',text}],false):isOA()?await oaAI(aiProv(),text):await gemini([{text}],false);
       if(data&&data.refuse)throw softErr('Your AI says it can\'t do everything you asked: '+String(data.reason||'no reason given').slice(0,300));
       if(!data||typeof data.yaml!=='string'||!/esphome:/.test(data.yaml))throw softErr('The AI didn\'t send back a whole ESPHome file. Try again, or describe it more simply.');
       yaml=data.yaml.replace(/\r/g,'');if(!yaml.endsWith('\n'))yaml+='\n';notes=String(data.notes||'').slice(0,600);
@@ -8596,18 +9016,18 @@ async function chatAsk(msgs){
     }
     return m.content.filter(b=>b.type==='text').map(b=>b.text).join('').trim()||'(no reply)';
   }
-  if(prov==='nvidia'){
-    const content=[{role:'system',content:sys},...msgs.map(x=>({role:x.role,content:x.text}))];
-    let last='';
-    for(const mdl of [WF.store.get('nvidiaModel'),...NV_TEXT].filter((m,i,a)=>m&&a.indexOf(m)===i)){
-      const {status,j,msg}=await nvChat(key,mdl,content,1500);
-      if(status===401||status===403)throw new Error('NVIDIA didn\'t accept the key. Click "Change NVIDIA key…" and paste it again.');
-      if(status===429||status>=500){last=msg;continue;}
-      if(status===404||status===410||(status===400&&/model|not found|not supported|unknown/i.test(msg))){last=msg;continue;}
-      if(status!==200)throw new Error('NVIDIA said: '+(msg||'HTTP '+status));
+  if(OA[prov]){
+    const A=OA[prov],content=[{role:'system',content:sys},...msgs.map(x=>({role:x.role,content:x.text}))];
+    let last='',busy=0;
+    for(const mdl of oaOrder(prov)){
+      const {status,j,msg}=await oaChat(prov,key,mdl,content,1500);
+      if(status===401||status===403)throw new Error(A.name+' didn\'t accept the key. Click "Change '+A.name+' key…" and paste it again.');
+      if(status===429||status>=500){busy++;last=msg;continue;}
+      if(oaSkip(status,msg)){last=msg;continue;}
+      if(status!==200)throw new Error(A.name+' said: '+(msg||'HTTP '+status));
       const c=j.choices&&j.choices[0];return String((c&&c.message&&c.message.content)||'').replace(/<think>[\s\S]*?<\/think>/g,'').trim()||'(no reply)';
     }
-    throw new Error('NVIDIA is busy right now'+(last?' ('+last+')':'')+'. Wait a minute, or switch AI.');
+    throw new Error(busy?A.name+' is busy right now, or the free limit ('+A.limit+') was reached. Wait a minute (or until tomorrow for a daily limit), or switch AI.':'None of '+A.name+'\'s free models answered'+(last?' ('+last+')':'')+'. Wait a minute, or switch AI.');
   }
   // Gemini: plain-text multi-turn (no JSON mode, so it can talk freely)
   const order=[WF.store.get('geminiModel'),...AI_MODELS].filter((m,i,a)=>m&&a.indexOf(m)===i);
@@ -8952,7 +9372,7 @@ const PART_WORDS={gyroscope:'gyro imu dof mpu',gyro:'gyro imu dof mpu',accelerom
   motor:'motor servo stepper',wifi:'wifi wi-fi esp',bluetooth:'bluetooth ble hc-05 hc-06',clock:'rtc clock ds3231 ds1307',
   weight:'load cell hx711 weight',heart:'heart pulse max30',water:'water moisture rain soil',button:'button push tactile switch',
   knob:'potentiometer rotary encoder knob',battery:'battery lipo 18650 charger',relay:'relay',gps:'gps neo-6m'};
-const partText=p=>(p.title+' | '+(p.family||'')+' | '+(p.tags||[]).join(' ')+' | '+(p.desc||'')).toLowerCase();
+const partText=p=>(p.title+' | '+(p.family||'')+' | '+(p.pkg||'')+' | '+(p.tags||[]).join(' ')+' | '+(p.desc||'')).toLowerCase();
 const partKind=p=>{const s=p.title+' '+(p.family||'')+' '+(p.tags||[]).join(' ');return (PART_KINDS.find(k=>k.re.test(s))||{k:'other'}).k;};
 function searchParts(list,q,kind){
   const words=q.toLowerCase().split(/[\s,]+/).filter(Boolean);
@@ -8980,6 +9400,9 @@ const idb=()=>new Promise((res,rej)=>{const r=indexedDB.open('evenucan',1);r.onu
 async function idbGet(k){const d=await idb();return new Promise((res,rej)=>{const q=d.transaction('files').objectStore('files').get(k);q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error);});}
 async function idbSet(k,v){const d=await idb();return new Promise((res,rej)=>{const tx=d.transaction('files','readwrite');tx.objectStore('files').put(v,k);tx.oncomplete=()=>res();tx.onerror=()=>rej(tx.error);});}
 let webLib=null;
+// (r5) Bump when the shipped parts-library.json changes: a browser that kept an older copy in
+// IndexedDB then refreshes it automatically instead of showing the old one for ever.
+const LIB_VER='2026-11-05';
 function pickLibraryFile(){
   return new Promise(done=>{
     let settled=false;const finish=v=>{if(settled)return;settled=true;window.removeEventListener('focus',onFocus);done(v);};
@@ -8989,7 +9412,7 @@ function pickLibraryFile(){
       try{WF.flash('Reading the parts library…',8000);
         const all=await Promise.all(fls.map(async fl=>JSON.parse(await fl.text())));
         if(all.some(x=>!x||!Array.isArray(x.parts)||!x.parts.length||!x.parts[0].conns))throw new Error('not a EvenUCan parts library');
-        const j={...all[0],parts:all.flatMap(x=>x.parts)};
+        const j={...all[0],parts:all.flatMap(x=>x.parts)};j.ver=LIB_VER;j.made=LIB_VER;// (r5) the user chose this file: keep it as it is, no stale-library nudge later
         try{await idbSet('parts-library',j);}catch(e){WF.flash('The browser wouldn\'t keep the library, so it will ask again next time',6000);}
         WF.flash(j.parts.length+' parts loaded'+' and kept in this browser',4000);finish(j);}
       catch(e){WF.flash('That file isn\'t the parts library ('+(e.message||e)+'). Choose parts-library.json.',7000);finish(null);}};
@@ -9013,7 +9436,7 @@ async function fetchLibrary(){
     const main=await get('parts-library.json');
     if(!main||!Array.isArray(main.parts)||!main.parts.length)throw new Error('parts-library.json is not a parts library');
     const extra=await Promise.all(['eagle-parts.json','kicad-parts.json'].map(f=>get(f).catch(e=>{console.warn('EvenUCan: optional '+f+' not loaded',e);return null;})));
-    const j={...main,parts:[main,...extra].filter(x=>x&&Array.isArray(x.parts)).flatMap(x=>x.parts)};
+    const j={...main,parts:[main,...extra].filter(x=>x&&Array.isArray(x.parts)).flatMap(x=>x.parts)};j.ver=LIB_VER;
     try{await idbSet('parts-library',j);}catch(e){console.warn('EvenUCan: the browser would not keep the parts library',e);}
     return j;
   }catch(e){console.warn('EvenUCan: could not fetch the parts library next to the page, will ask for it',e);return null;}
@@ -9026,7 +9449,7 @@ let webLibList=null;// (r1) the search list, built the first time it is needed a
 // neither works) the file-picker prompt - as the FIRST thing done after the click, before the AI is asked.
 async function ensureLibraryReady(){
   if(window.wfNative&&window.wfNative.fritzingList)return;
-  if(!webLib){try{webLib=await idbGet('parts-library');}catch(e){console.warn('EvenUCan: could not read the kept parts library',e);}}
+  if(!webLib){try{const w=await idbGet('parts-library');webLib=(w&&w.ver===LIB_VER&&(!w.made||w.made===LIB_VER))?w:null;}catch(e){console.warn('EvenUCan: could not read the kept parts library',e);}}
   if(!webLib)webLib=await fetchLibrary();
   if(!webLib)await partsSource(true,true);// confirm() + file picker, while the click that got us here is still fresh; it sets webLib itself
 }
@@ -9035,7 +9458,7 @@ let libAsked=false;// (r4 fix) from deep async code (not a direct click), ask at
 // always gets its own, genuinely fresh chance, regardless of an earlier decline.
 async function partsSource(ask,freshClick){
   if(window.wfNative&&window.wfNative.fritzingList)return {list:()=>window.wfNative.fritzingList(),load:id=>window.wfNative.fritzingLoad(id)};
-  if(!webLib){try{webLib=await idbGet('parts-library');}catch(e){console.warn('EvenUCan: could not read the kept parts library',e);}}
+  if(!webLib){try{const w=await idbGet('parts-library');webLib=(w&&w.ver===LIB_VER&&(!w.made||w.made===LIB_VER))?w:null;}catch(e){console.warn('EvenUCan: could not read the kept parts library',e);}}
   if(!webLib&&ask)webLib=await fetchLibrary();
   if(!webLib&&ask&&(freshClick||!libAsked)){
     libAsked=true;
@@ -9045,7 +9468,7 @@ async function partsSource(ask,freshClick){
   if(!webLib)return null;
   const P=webLib.parts;
   return {list:async()=>{
-      if(!webLibList||webLibList.src!==P)webLibList={src:P,list:P.map((p,id)=>({id,title:p.title,folder:p.folder,library:true,family:p.info.family||'',tags:p.info.tags||[],desc:(p.info.description||'').slice(0,300)}))};
+      if(!webLibList||webLibList.src!==P)webLibList={src:P,list:P.map((p,id)=>({id,title:p.title,folder:p.folder,library:true,family:p.info.family||'',pkg:((p.info.props||{}).package)||'',tags:p.info.tags||[],desc:(p.info.description||'').slice(0,300)}))};
       return webLibList.list;},
     load:async id=>{const d=P[id];if(!d)throw new Error('no such part');return {data:{title:d.title,conns:d.conns,info:d.info,g:d.g,file:d.file,features:d.features}};}};
 }
@@ -9073,13 +9496,13 @@ function pickFritzing(list,title){
     const show=()=>{
       const hits=searchParts(list,inp.value,sel.value),shown=hits.slice(0,300);
       box.innerHTML=(hits.length>300?`<div class="ewNote" style="padding:4px 6px">Showing 300 of ${hits.length}: type more to narrow it down.</div>`:'')+
-        shown.map(p=>`<div class="fzRow" data-id="${p.id}"><b>${esc(p.title)}</b><span class="ewNote">${esc(p.family||'')}</span></div>`).join('')||'<div class="ewNote" style="padding:6px">No parts match. Try another word, or "All kinds".</div>';
+        shown.map(p=>`<div class="fzRow" data-id="${p.id}"><b>${esc(p.title)}</b><span class="ewNote">${esc(p.family||'')}${p.pkg?' · '+esc(p.pkg):''}</span></div>`).join('')||'<div class="ewNote" style="padding:6px">No parts match. Try another word, or "All kinds".</div>';
       if(shown[0]&&cur===null)preview(shown[0].id);
     };
     const preview=async id=>{
       cur=id;for(const r of box.querySelectorAll('.fzRow'))r.classList.toggle('on',+r.dataset.id===id);
       const p=list.find(x=>x.id===id);if(!p)return;
-      prev.innerHTML=`<h4 style="margin:0 0 4px">${esc(p.title)}</h4><div class="ewNote">${esc(p.family||'')}</div><div class="ewRow"><button class="primary" data-f="box" title="Save this part and put it in the Enclosure Wizard's box">Add to my box</button><button data-f="use" title="Open it as a new part, to check and change before saving">Open to check first</button></div><div class="fzPic"><span class="ewNote">Loading the picture…</span></div><div class="ewNote fzDesc">${esc((p.desc||'').replace(/^\s*p,\s*li\s*\{[^}]*\}\s*/,''))}</div>`;
+      prev.innerHTML=`<h4 style="margin:0 0 4px">${esc(p.title)}</h4><div class="ewNote">${esc(p.family||'')}${p.pkg?' · '+esc(p.pkg):''}</div><div class="ewRow"><button class="primary" data-f="box" title="Save this part and put it in the Enclosure Wizard's box">Add to my box</button><button data-f="use" title="Open it as a new part, to check and change before saving">Open to check first</button></div><div class="fzPic"><span class="ewNote">Loading the picture…</span></div><div class="ewNote fzDesc">${esc((p.desc||'').replace(/^\s*p,\s*li\s*\{[^}]*\}\s*/,''))}</div>`;
       try{const v=await fzPreview(id);if(cur!==id)return;
         prev.querySelector('.fzPic').innerHTML=(v.photo?`<img src="${v.photo}" alt="">`:'<span class="ewNote">No picture</span>')+`<div class="ewNote">${v.pins} pins${v.w?' · about '+Math.round(Math.max(v.w,v.h))+' × '+Math.round(Math.min(v.w,v.h))+' mm':''}</div>`;}
       catch(e){if(cur===id)prev.querySelector('.fzPic').innerHTML='<span class="ewNote">Couldn\'t read this part.</span>';}
@@ -9324,7 +9747,7 @@ const CTRL_PARTS={
 const CTRL_IDS=Object.values(PLATFORMS).map(p=>p.board);
 function ctrlPart(pf){pf=pfOk(pf);return pf==='esphome'||pf==='esp32ide'?builtinById('b-esp32s3'):commonPart({part:CTRL_PARTS[pf]});}
 // One structured (JSON) request to the AI chosen in the AI menu: shared by the intent, part lookup and code writers.
-async function callAI(text){return aiProv()==='claude'?await claude([{type:'text',text}],false):aiProv()==='nvidia'?await nvidia(text):await gemini([{text}],false);}
+async function callAI(text){return aiProv()==='claude'?await claude([{type:'text',text}],false):isOA()?await oaAI(aiProv(),text):await gemini([{text}],false);}
 // The parts shown for a platform: its own board first; a Wi-Fi part is built in (ESP32, Pi) or removed (Arduino Nano).
 function pfMatches(base,pf){
   pf=pfOk(pf);const P=PLATFORMS[pf];
@@ -9863,10 +10286,10 @@ function aiHelperBox(short){
   return `<div class="aiHelp" style="border:1px solid #c9d7ea;background:#f4f8fd;border-radius:8px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.5">
 <div style="font-weight:600;font-size:14px">🤖 About the AI helper</div>
 ${short?'':'<div>When you describe an idea, a free online AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: you use your own free key.</div>'}
-<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:6px 0"><button id="wcAiGem">Get a free Google Gemini key</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>Get a free NVIDIA key${desk?'':' (desktop app only)'}</button></div>
+<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:6px 0"><button id="wcAiGem">Get a free Google Gemini key</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>Get a free NVIDIA key${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">Get a free Groq key</button><button id="wcAiOr">Get a free OpenRouter key</button></div>
 <div class="ewNote">A paid Claude key (from Anthropic) works too.${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'}</div>
 <div style="margin-top:4px">${has?`<span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button>`:'<span class="warn">No AI key is set up yet.</span> You can set one up now or later.'}</div>
-<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA or Anthropic) to plan it. Free keys have limits (a number of requests a minute or a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
+<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
 }
 // (1.9.37) Carry on without AI: ready-made examples (common modules and built-in parts, no look-up needed)
 const NOAI_EX=[
@@ -9933,6 +10356,8 @@ iwBack.addEventListener('click',e=>{
     case 'wcNoAiGo':noaiKeep();iw.err='';noaiPlan(iw.noai.parts,iw.noai.pf,'','');break;
     case 'wcAiGem':askKey('gemini').then(renderIntent);break;
     case 'wcAiNv':askKey('nvidia').then(renderIntent);break;
+    case 'wcAiGroq':askKey('groq').then(renderIntent);break;
+    case 'wcAiOr':askKey('openrouter').then(renderIntent);break;
     case 'wcAiTest':askKey(aiProv()).then(renderIntent);break;
     case 'nkKey':askKey().then(()=>{if(!aiKey())return renderIntent();if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';intentAnalyse();}else run();});break;
     case 'nkBack':iw.err='';if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';renderIntent();}else go('w3');break;
@@ -10098,5 +10523,14 @@ updateStrip();
 window.WFEnclosure={askKey,openCodeGated,openWelcome,openWizard,openLibrary,openWiring,planWiring,esphomeYaml,fritzingData,engine,autoLayout,buildSolids,get layout(){return lay;},parts:allParts,reloadState};
 })();
 </script>
+<script>
+// Install as an app (PWA): when the page is served over http(s), register the service worker that
+// caches EvenUCan for offline use. Skipped for file:// (browsers forbid it there) and for the
+// desktop app, which ships its own copy of every file.
+if(/^https?:$/.test(location.protocol)&&'serviceWorker' in navigator){
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(e=>console.warn('EvenUCan: could not set up offline use',e));});
+}
+</script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"f0f03d0605bf45f1a3b17cf7d5e6861f","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>

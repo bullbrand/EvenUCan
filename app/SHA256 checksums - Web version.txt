@@ -5,12 +5,16 @@ A checksum is a "fingerprint" of a file. If even one byte of the file is
 changed (by a virus, a hacker or a broken download), the fingerprint
 comes out completely different.
 
-8db902ba3b8e9f2b611111402d0711e3423dc8ddc50861c36ccc2c78082550b2  EvenUCan.html
-2fc09d93dee61c53b5175b16682904554420dc0ec5a2b902da6455a291fb3a76  parts-library.json
+991125b56f3601339fa02321541f90443fc50b5544529d514f7feaa665b11331  EvenUCan.html
+f7abe79050bd1f2755f3f3d1a5fa07dd2fed90ea7c14d6e2e31134a0414914db  parts-library.json
 247770d54a1c1aa52206481190ee300c7f4a6459d0f9e52d8199b365e2e1dfad  eagle-parts.json
 861f4c1a1ce2a98fd0383f5bc61e56501ed892706475d07ab009e108004d22bd  kicad-parts.json
 cc263382d4380918f26a0a2ff7a6fb5ada1a3be110a70603d0ee5f03c8591093  EvenUCan User Manual.pdf
 3dd17ee54dbbb868a56e3903377766b8a6d71a262396325770605a0c75a168e8  THIRD-PARTY-NOTICES.txt
+37e8736ed61e697b928024b06d891ee36cf2626787c4daa589394c1e209ba704  sw.js
+6007fb0cd5d37167f35c76c24f078f11c95d06328bad819c4e1a03021c979bda  manifest.json
+c8df0b93754206eebf98d25567a1297cfe39c852cae1f5445df9b7d1dbbaa8fe  icons/icon-192.png
+899c4f8f907353a9ef63ac6c31905e1e7d50c5019355c494e72d13b26f636ad7  icons/icon-512.png
 
 
 HOW TO CHECK YOUR COPY
