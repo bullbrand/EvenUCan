@@ -14,6 +14,33 @@ if you prefer - or you can carry on without AI. "Fill in automatically"
 
 
 =====================================================================
+ IMPORTANT: A FREE AI KEY IS NEEDED TO START A NEW PROJECT
+=====================================================================
+
+"Describe your idea" - the wizard that turns a plain-English
+description into a parts list, a box and code - needs an AI to do
+that one translation. It is the only part of the whole program that
+has to reach the internet.
+
+  Bring your own free key. Five AIs work: Google Gemini, Groq and
+  OpenRouter (all free, no card needed), NVIDIA (free, desktop program
+  only), or your own paid Anthropic Claude key. Set one up on the
+  wizard's first screen, or under "AI key" on the toolbar.
+
+  Kept on your own computer only. Your key is saved in EvenUCan's own
+  settings (never uploaded anywhere except the AI company you chose).
+
+  Everything after that is offline. Once the AI has turned your idea
+  into a parts list, the box designer, the wiring diagram and the
+  ESPHome/Arduino/Pi code all run entirely on your own computer - the
+  AI connection closes and is not needed again for that project.
+
+  Don't want to use AI at all? Click "Carry on without AI" instead of
+  describing your idea: start from one of six ready-made examples, or
+  tick the parts you have. Everything else works exactly the same way.
+
+
+=====================================================================
  GETTING STARTED
 =====================================================================
 

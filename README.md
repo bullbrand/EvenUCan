@@ -12,17 +12,26 @@ EvenUCan is a free program that takes you from a box of electronic bits to a fin
 
 The drawing, box design, wiring and ESPHome code all work offline. The wizard's AI helper (turning your idea into a parts list, and writing Arduino sketches) uses the internet with a free key from Google Gemini or NVIDIA (desktop app), or your own paid key if you prefer — or you can carry on without AI.
 
+## Important: a free AI key is needed to start a new project
+
+**"Tell it your idea"** — the wizard step that turns a plain-English description into a parts list, a box and code — needs an AI to do that one translation. It's the only part of the whole program that has to reach the internet.
+
+- **Bring your own free key.** Five AI gateways work: Google Gemini, Groq and OpenRouter (all free, no card needed), NVIDIA (free, desktop app only), or your own paid Anthropic Claude key. Set one up from the wizard's first screen.
+- **Kept on your own device only.** Your key is saved in the app's own local settings (or this browser's storage for the web version) and is never sent anywhere except the AI company you chose.
+- **Everything after that is offline.** Once the AI has turned your idea into a parts list, the 3D box designer, the wiring diagram and the ESPHome/Arduino/Pi code all run entirely on your own computer — no AI, no internet, needed again for that project.
+- **Don't want AI at all?** Click **Carry on without AI** instead of describing your idea: start from one of six ready-made examples, or tick the parts you have, and the rest of the app works exactly the same way.
+
 ## Download
 
 Go to the **[Releases page](https://github.com/bullbrand/EvenUCan/releases/latest)** and pick one:
 
 | You have | Download | How to start it |
 |---|---|---|
-| Any computer with Chrome or Edge | `EvenUCan_1.9.37_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
-| Windows, and you want it installed | `EvenUCan-Setup-1.9.37.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
-| Windows, without installing | `EvenUCan-Portable-1.9.37.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
-| Mac | `EvenUCan-1.9.37.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
-| Linux | `EvenUCan-1.9.37.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
+| Any computer with Chrome or Edge | `EvenUCan_1.9.39_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
+| Windows, and you want it installed | `EvenUCan-Setup-1.9.39.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
+| Windows, without installing | `EvenUCan-Portable-1.9.39.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
+| Mac | `EvenUCan-1.9.39.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
+| Linux | `EvenUCan-1.9.39.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
 
 ### "Windows protected your PC"
 
@@ -30,7 +39,17 @@ The programs aren't signed by a big company, so the first time you run one, Wind
 
 ### Checking a download is genuine
 
-The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.37.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.39.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+
+## New in 1.9.39
+
+- **Fixed: "Make it with AI" could leave a part silently unconnected.** The relay, buzzer, button or motion sensor it wrote could end up with no name of its own to act on, so it sometimes added a second, duplicate component on a pin that isn't actually wired. Every one of these now gets a stable id, and the AI is told to reuse it instead of inventing a new one. A phone message (ntfy.sh) written by the AI could also fail to compile if it forgot to turn that feature on in the file; fixed too.
+- **Clearer about the AI key requirement.** Documentation across the app now makes it explicit that "Tell it your idea" needs an AI key to do that one translation step, and that everything afterwards (the box, wiring and code) runs fully offline.
+
+## New in 1.9.38
+
+- **Installable web app.** The web version can now be installed like an app (a manifest, icons and an offline service worker) — "Install" or "Add to Home screen" in your browser puts EvenUCan on your desktop or phone with its own icon and window.
+- The built-in parts library was also updated.
 
 ## New in 1.9.37
 

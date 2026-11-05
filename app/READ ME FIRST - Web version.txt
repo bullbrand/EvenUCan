@@ -13,6 +13,20 @@ prefer - or you can choose "Carry on without AI": start from an example
 project or tick the parts you have, and the Code tab makes a starter
 sketch with your pins filled in.
 
+IMPORTANT: A FREE AI KEY IS NEEDED TO START A NEW PROJECT
+  "Describe your idea" - the wizard that turns a plain-English
+  description into a parts list, a box and code - needs an AI to do
+  that one translation: it is the only part of the whole program that
+  has to reach the internet. Five AIs work: Google Gemini, Groq and
+  OpenRouter (all free, no card needed), NVIDIA (free, desktop program
+  only), or your own paid Anthropic Claude key. Your key is kept in
+  this browser only, never uploaded anywhere except the AI company you
+  chose. Once the AI has turned your idea into a parts list, the box
+  designer, the wiring diagram and the ESPHome code all run entirely
+  on your own computer - no AI or internet needed again for that
+  project. Don't want to use AI at all? Click "Carry on without AI"
+  instead of describing your idea.
+
 HOW TO START
   1. Unzip this folder (right-click > Extract All). Keep the files together.
   2. Double-click EvenUCan.html. It opens in your web browser.
