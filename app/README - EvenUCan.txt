@@ -1,5 +1,5 @@
 EvenUCan  -  from idea to object 
-Version 1.9.38
+Version 1.9.39
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -19,11 +19,11 @@ if you prefer - or you can carry on without AI. "Fill in automatically"
 
 You will have one of these two files. Either one is the whole program:
 
-  EvenUCan-Portable-1.9.38.exe
+  EvenUCan-Portable-1.9.39.exe
       Just double-click it. Nothing is installed. It also works from
       a USB stick.
 
-  EvenUCan-Setup-1.9.38.exe
+  EvenUCan-Setup-1.9.39.exe
       Installs the program with a Start menu and desktop shortcut.
       Uninstall it any time from Settings > Apps.
 
@@ -39,6 +39,15 @@ First thing to do:
   type its build size (X, Y and Z in mm). The app then warns you if
   anything is too big to print.
 
+Fixed in 1.9.39: "Make it with AI" (in Wiring) could leave the buzzer,
+relay, button or motion sensor it wrote silently unconnected - the
+switch or sensor it just declared in the file had no name of its own
+to act on, so it sometimes added a second, duplicate one on a pin that
+isn't actually wired. Every one of these now gets its own stable name
+in the file, and the AI is told to reuse it instead of inventing a new
+one. A message to your phone (ntfy.sh) written by the AI could also
+fail to compile if it forgot to turn that feature on in the file;
+fixed too.
 NEW in 1.9.38: the web version can now be installed like an app (a
 manifest, icons and an offline service worker) - "Install" or "Add to
 Home screen" in your browser puts EvenUCan on your desktop or phone
