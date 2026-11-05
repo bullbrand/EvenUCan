@@ -8038,14 +8038,16 @@ function esphomeYaml(P,f){
   // (wizard-r2) a planned idea that messages the phone: movement sends an ntfy.sh message at once, and sounds the buzzer
   const topic=wx?'':intentTopic(),planned=!!intentNow(),buzz=planned?sigs.find(x=>x.kind==='buzzer'):null;
   let ntfyUsed=false;
-  // every switch gets a stable id, so "Make it with AI" (and anyone editing the file) can turn it
-  // on/off by id instead of declaring a second, duplicate component for hardware already wired here.
-  const switchIds=new Set(buzz?['buzzer_1']:[]),switchId=nm=>{
-    let s=String(nm||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,24)||'switch';
-    if(/^[0-9]/.test(s))s='sw_'+s;// ESPHome ids must start with a letter, not a digit
+  // every switch and binary_sensor gets a stable id, so "Make it with AI" (and anyone editing the
+  // file) can refer to it instead of declaring a second, duplicate component for hardware already
+  // wired here. One shared registry: ESPHome ids must be unique across the whole file, not just
+  // within one platform.
+  const compIds=new Set(buzz?['buzzer_1']:[]),compId=nm=>{
+    let s=String(nm||'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,24)||'part';
+    if(/^[0-9]/.test(s))s='c_'+s;// ESPHome ids must start with a letter, not a digit
     let id=s,n=2;
-    while(switchIds.has(id))id=s+'_'+(n++);
-    switchIds.add(id);return id;
+    while(compIds.has(id))id=s+'_'+(n++);
+    compIds.add(id);return id;
   };
   for(const {a,kind} of sigs){
     const nm=a.inst.label,pin=g(a);
@@ -8058,12 +8060,12 @@ function esphomeYaml(P,f){
       oneWire.push(`  - platform: gpio\n    id: one_wire${s}\n    pin: ${pin}`);
       sensors.push(`  - platform: dallas_temp\n    one_wire_id: one_wire${s}\n    id: temperature${s}\n    name: ${yq('Temperature'+(k>1?' '+k:''))}\n    update_interval: ${every}`);
     }else if(kind==='button'||kind==='touch'){
-      let b=`  - platform: gpio\n    name: ${yq(nm)}\n    pin:\n      number: ${pin}`+(kind==='button'?`\n      mode:\n        input: true\n        pullup: true\n      inverted: true`:'');
+      let b=`  - platform: gpio\n    id: ${compId(nm)}\n    name: ${yq(nm)}\n    pin:\n      number: ${pin}`+(kind==='button'?`\n      mode:\n        input: true\n        pullup: true\n      inverted: true`:'');
       if(voice&&f.button==='talk')b+=`\n    on_press:\n      - voice_assistant.start:`;
       else if(f.button==='light'&&lightId)b+=`\n    on_press:\n      - light.toggle: ${lightId}`;
       bins.push(b);
     }else if(kind==='motion'){
-      let b=`  - platform: gpio\n    name: ${yq(nm)}\n    device_class: motion\n    pin: ${pin}`;
+      let b=`  - platform: gpio\n    id: ${compId(nm)}\n    name: ${yq(nm)}\n    device_class: motion\n    pin: ${pin}`;
       const acts=[];
       if(topic){ntfyUsed=true;acts.push('      # A message to your phone straight away (ntfy.sh: subscribe to ntfy_topic in the free ntfy app)','      - http_request.post:','          url: "https://ntfy.sh/${ntfy_topic}"',`          body: ${yq('Movement detected: '+nm)}`);}
       if(buzz)acts.push('      # Beep: the buzzer sounds for 5 seconds','      - switch.turn_on: buzzer_1','      - delay: 5s','      - switch.turn_off: buzzer_1');
@@ -8072,7 +8074,7 @@ function esphomeYaml(P,f){
     }
     else if(kind==='pixel'){pixelN++;lights.push(`  - platform: esp32_rmt_led_strip\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    pin: ${pin}\n    num_leds: 1  # change to the number of LEDs on the strip\n    rgb_order: GRB\n    chipset: ws2812`);}
     else if(kind==='led'){outputs.push(`  - platform: gpio\n    id: led_out_${ledN+1}\n    pin: ${pin}`);lights.push(`  - platform: binary\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    output: led_out_${ledN}`);}
-    else if(kind==='relay'||kind==='buzzer')switches.push(`  - platform: gpio\n    id: ${buzz&&buzz.a===a?'buzzer_1':switchId(nm)}\n    name: ${yq(nm)}\n    pin: ${pin}`);
+    else if(kind==='relay'||kind==='buzzer')switches.push(`  - platform: gpio\n    id: ${buzz&&buzz.a===a?'buzzer_1':compId(nm)}\n    name: ${yq(nm)}\n    pin: ${pin}`);
     else unk(a.inst,a);
   }
   if(statusLed)lights.unshift(`  - platform: esp32_rmt_led_strip\n    id: status_led\n    name: "Status light"\n    pin: GPIO${brd.led}\n    num_leds: 1\n    rgb_order: GRB\n    chipset: ws2812`);
