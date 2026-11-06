@@ -1,4 +1,5 @@
 # EvenUCan
+<img width="1100" height="820" alt="EvenUCan_Screen_Reel" src="https://github.com/user-attachments/assets/ae7e54b3-8c64-413b-a52e-be1b08696d9a" />
 
 ### You bought the gear. Now what?
 
@@ -7,15 +8,21 @@ EvenUCan is a free program that takes you from a box of electronic bits to a fin
 - **Tell it your idea** in your own words, for example "beep and message my phone when someone opens the shed".
 - **It picks the parts** and checks they can really do the job. No AI key? Start from an example project, or tick the parts you have.
 - **It designs a 3D-printable box** that fits them, with holes for the sockets and buttons. Download it as 3MF or STL for your slicer.
+ <img width="3810" height="2040" alt="10" src="https://github.com/user-attachments/assets/3bb30144-9391-4483-9846-1fdc1229021f" />
+
 - **It shows you how to wire it up**, wire by wire, with a tick-list.
+  <img width="3798" height="2031" alt="11" src="https://github.com/user-attachments/assets/d28ad58b-b02c-4a73-9768-f9042f8fb11c" />
+
 - **It writes the code** for ESPHome, the Arduino IDE or a Raspberry Pi, opens it in the right program, and walks you through putting it on your board.
 
 The drawing, box design, wiring and ESPHome code all work offline. The wizard's AI helper (turning your idea into a parts list, and writing Arduino sketches) uses the internet with a free key from Google Gemini or NVIDIA (desktop app), or your own paid key if you prefer — or you can carry on without AI.
 
 ## Important: a free AI key is needed to start a new project.
 Ollama for full offline AI is now an included option free no key required try using Gemma 2.b 
+<img width="1845" height="1917" alt="2" src="https://github.com/user-attachments/assets/48111ac6-1c3b-447d-875c-c2c9647f78e9" />
 
 **"Tell it your idea"** — the wizard step that turns a plain-English description into a parts list, a box and code — needs an AI to do that one translation. It's the only part of the whole program that has to reach the internet.
+
 
 - **Bring your own free key, or go fully offline.** Google Gemini, Groq and OpenRouter (all free, no card needed), NVIDIA (free, desktop app only), and your own paid Anthropic Claude key all work. Or choose **Ollama**: a small AI running on this computer, no key and no internet needed once it's set up. Set one up from the wizard's first screen.
 - **Kept on your own device only.** Your key is saved in the app's own local settings (or this browser's storage for the web version) and is never sent anywhere except the AI company you chose.
