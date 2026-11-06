@@ -12,7 +12,8 @@ EvenUCan is a free program that takes you from a box of electronic bits to a fin
 
 The drawing, box design, wiring and ESPHome code all work offline. The wizard's AI helper (turning your idea into a parts list, and writing Arduino sketches) uses the internet with a free key from Google Gemini or NVIDIA (desktop app), or your own paid key if you prefer — or you can carry on without AI.
 
-## Important: a free AI key is needed to start a new project
+## Important: a free AI key is needed to start a new project.
+Ollama for full offline AI is now an included option free no key required try using Gemma 2.b 
 
 **"Tell it your idea"** — the wizard step that turns a plain-English description into a parts list, a box and code — needs an AI to do that one translation. It's the only part of the whole program that has to reach the internet.
 
