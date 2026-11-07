@@ -9961,6 +9961,7 @@ Guidance:
 - Some sensors cannot go in an enclosure box: a soil moisture probe goes in soil, a waterproof temperature probe goes in liquid. Note this in "function" so the box design can accommodate it.
 - If the user wants both moisture AND temperature, use SEPARATE parts: a soil moisture sensor AND a DHT22/BME280.
 - If in doubt about which sensor to use, prefer the most specific match from the table above over a general-purpose or best-known alternative.
+- LED RULE: a plain coloured LED (category "output-led", search "5mm LED red" or "5mm LED green") is ALWAYS the right choice for a simple indicator light. NEVER use a WS2812/NeoPixel/addressable LED for a plain on/off indicator — only suggest addressable LEDs when the user explicitly asks for colour-changing lights, an LED strip, or animated lighting effects.
 - Information from the internet (weather, forecasts, prices) needs no part. For weather use the free OpenWeatherMap API and ask for the extra inputs "owm_api_key" (url https://home.openweathermap.org/api_keys) and "location" (e.g. "London,GB").
 - Messages to the user's phone use ntfy.sh (free, no account): notification_method "ntfy" and the extra input "ntfy_topic". Use "none" when the device sends nothing.
 - Power: one part with category "power" and search "USB", "LiPo battery" if it must run without a cable, or "mains adapter" if it stays plugged into a wall socket.
@@ -10031,7 +10032,7 @@ const IW_BADGE='<span style="background:#fff3c4;color:#7a5a00;border:1px solid #
 const EXAMPLES={
   'Weather station':'A weather station that shows the current weather and the forecast on a small screen, and sends me a daily weather summary on my phone.',
   'RV level checker':'I want to know when my RV (motorhome/caravan) is level. It should measure how far off level it is in all directions, show me on a small screen which corner needs to go up or down, and beep when it\'s level. I don\'t need WiFi.',
-  'Plant watering reminder':'Check how dry the soil in my plant pot is, light up red when it needs watering and green when it\'s fine, and send a reminder to my phone when it gets too dry.',
+  'Plant watering reminder':'Check how dry the soil in my plant pot is, turn on a red LED when it needs watering and a green LED when it\'s fine, and send a reminder to my phone when it gets too dry.',
   'Motion alarm':'Detect movement in my shed, beep loudly when someone moves inside, and send a message to my phone straight away.',
   'Pet feeder timer':'Feed my cat twice a day at set times by turning a small servo motor that opens the food flap, with a button to feed her now.'
 };
