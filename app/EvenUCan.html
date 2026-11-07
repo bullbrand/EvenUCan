@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.50';
+const APP_VERSION='1.9.51';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5654,6 +5654,35 @@ const BUILTIN=[
     notes:'Battery backup HAT for Raspberry Pi. Fits Pi 3B+/4/5. I²C fuel gauge. Sizes vary by brand — measure yours.',features:[]},
   {id:'b-motorhat',name:'Raspberry Pi Motor / Servo HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
     notes:'PWM HAT for controlling DC motors, steppers, and servos. I²C, 40-pin header. Screw terminals for motors.',features:[]},
+
+  // ── Extended sensor & module set ─────────────────────────────────────────
+  {id:'b-bmp280',name:'BMP280 pressure/temperature sensor',type:'sensor',shape:'rect',w:11.5,d:11.5,pcb:1,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Bosch BMP280 breakout (pressure + temperature; no humidity — that is the BME280). I²C or SPI. 6-pin 2.54 mm header.',features:[]},
+  {id:'b-vl53l0x',name:'VL53L0X ToF laser distance sensor',type:'sensor',shape:'rect',w:25,d:11,pcb:1.6,h:3,below:0,mount:'wall',acc:'approx',
+    notes:'Time-of-Flight laser ranging sensor, up to 2 m. I²C. 6-pin header. The laser window must face outward through a small cutout.',features:[]},
+  {id:'b-max30102',name:'MAX30102 pulse oximeter module',type:'sensor',shape:'rect',w:14,d:14,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Heart-rate and SpO2 sensor. I²C. 5-pin header. The red/IR LEDs must be close to skin — usually mounted flush with an opening.',features:[]},
+  {id:'b-adxl345',name:'ADXL345 3-axis accelerometer',type:'sensor',shape:'rect',w:21,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Low-power 3-axis digital accelerometer. I²C or SPI. 8-pin header. Same popular breakout as the GY-291.',features:[]},
+  {id:'b-hmc5883l',name:'HMC5883L / QMC5883L compass',type:'sensor',shape:'rect',w:25,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'3-axis digital magnetometer/compass. I²C. 5-pin header. Keep well away from magnets and motor current paths.',features:[]},
+  {id:'b-apds9960',name:'APDS-9960 gesture/proximity sensor',type:'sensor',shape:'rect',w:20,d:15,pcb:1.6,h:3,below:0,mount:'wall',acc:'approx',
+    notes:'RGB, ambient light, proximity and gesture sensing in one module. I²C. 6-pin header. Sensor face must be flush with or through the wall.',features:[]},
+  {id:'b-bh1750',name:'BH1750 ambient light sensor',type:'sensor',shape:'rect',w:20,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Digital lux meter. I²C. 5-pin header. Place near a window opening if measuring natural light.',features:[]},
+  {id:'b-sw420',name:'SW-420 vibration sensor module',type:'sensor',shape:'rect',w:30,d:14,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'Ball-tilt vibration switch with comparator. 3-pin header (VCC/GND/DO). Trimpot to set sensitivity.',features:[]},
+  {id:'b-ky008',name:'KY-008 laser transmitter (5 mW)',type:'led',shape:'rect',w:15,d:19,pcb:1.6,h:12,below:0,mount:'wall',acc:'approx',
+    notes:'650 nm red laser module. 3-pin header. The laser diode is on one face — the beam exits perpendicular to the board. Mount flush with or through a wall cutout.',features:[]},
+  {id:'b-syn115',name:'SYN115 433 MHz RF transmitter',type:'wireless',shape:'rect',w:19,d:19,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'ASK/OOK 433 MHz transmitter module. 4-pin header. Usually paired with an SYN480R receiver. Antenna wire connects to the ANT pin.',features:[]},
+  {id:'b-neo6m',name:'NEO-6M GPS module',type:'sensor',shape:'rect',w:25,d:35,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'u-blox NEO-6M GPS module with ceramic patch antenna. UART, 4-pin header. Needs a clear view of the sky — allow a window or roof opening.',
+    features:[{t:'antenna',side:'xmax',u:17.5,len:5,width:25}]},
+  {id:'b-dipswitch4',name:'DIP switch 4-way',type:'switch',shape:'rect',w:10,d:7,pcb:0,h:5,below:3,mount:'floor',acc:'approx',
+    notes:'4-position DIP switch for setting binary config (address, mode). Through-hole, 2.54 mm pitch.',features:[]},
+  {id:'b-cr2032holder',name:'CR2032 coin cell holder',type:'power',shape:'round',w:23,d:23,pcb:0,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'PCB-mount or bare CR2032 holder. Ø23 mm × 5 mm. Used for RTC backup power.',features:[]},
 ];
 for(const b of BUILTIN)b.builtin=true;
 // ---- pins, for the wiring diagram. x,y: position on the part (mm, same frame as its features; approximate
