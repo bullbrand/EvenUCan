@@ -28,7 +28,7 @@ build/              the app icons (placeholders for now: see section 4)
 
 The app works exactly like the web version. Saved work is kept inside the app, and the parts library loads by itself, so users are never asked to find `parts-library.json`. The menu has **File → Open User Manual**, **File → Open in Browser** (opens the same page in your normal browser, in case it's ever needed) and **Help → About**.
 
-The drawing, box design, wiring and ESPHome code all work offline. The wizard's AI helper (turning your idea into a parts list, and writing Arduino sketches) uses the internet with a free key from Google Gemini or NVIDIA, or your own paid Claude key — or you can carry on without AI. NVIDIA's free AI works only in the desktop app: NVIDIA doesn't accept requests straight from a web page, so the desktop app sends them through `netbridge.js`, which only talks to the known AI sites.
+The drawing, box design, wiring and ESPHome code all work offline. The wizard's AI helper (turning your idea into a parts list, and writing Arduino sketches) uses the internet with an AI key of your choice — or you can carry on without AI. Free options (no card needed): Google Gemini, Groq, OpenRouter, NVIDIA. Paid options: Anthropic Claude, ChatGPT / OpenAI, DeepSeek, Grok / xAI. NVIDIA's free AI works only in the desktop app: NVIDIA doesn't accept requests straight from a web page, so the desktop app sends them through `netbridge.js`, which only talks to the known AI sites.
 
 ## 2. Building it on your own computer (optional)
 

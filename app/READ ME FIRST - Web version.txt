@@ -1,4 +1,4 @@
-EvenUCan 1.9.42 - web-page version
+EvenUCan 1.9.43 - web-page version
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -7,21 +7,20 @@ Edge on Windows, Mac or Linux.
 
 The drawing, box design, wiring and ESPHome code all work offline. The
 wizard's AI helper (turning your idea into a parts list, and writing
-Arduino sketches) uses the internet with a free key from Google Gemini
-(or NVIDIA in the desktop program), or your own paid Claude key if you
-prefer - or you can choose "Carry on without AI": start from an example
-project or tick the parts you have, and the Code tab makes a starter
-sketch with your pins filled in.
+Arduino sketches) uses the internet with an AI key - or you can choose
+"Carry on without AI": start from an example project or tick the parts
+you have, and the Code tab makes a starter sketch with your pins filled in.
 
 IMPORTANT: A FREE AI KEY IS NEEDED TO START A NEW PROJECT
   "Describe your idea" - the wizard that turns a plain-English
   description into a parts list, a box and code - needs an AI to do
   that one translation: it is the only part of the whole program that
   has to reach the internet (or your own computer, for Ollama).
-  Google Gemini, Groq and OpenRouter (all free, no card
-  needed), NVIDIA (free, desktop program only), or your own paid
-  Anthropic Claude key all work. Your key is kept in this browser
-  only, never uploaded anywhere except the AI company you chose.
+  Free (no card needed): Google Gemini, Groq, OpenRouter. NVIDIA is
+  free too but desktop program only - it won't work from a web page.
+  Paid (pay-as-you-go): Anthropic Claude, ChatGPT / OpenAI, DeepSeek,
+  Grok / xAI. Your key is kept in this browser only, never uploaded
+  anywhere except the AI company you chose.
   For a fully offline option, choose Ollama instead: a small AI
   running on this computer. This page can reach it directly at
   localhost - no key, nothing sent anywhere. It lists the models

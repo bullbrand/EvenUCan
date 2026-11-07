@@ -1,5 +1,5 @@
 EvenUCan  -  from idea to object 
-Version 1.9.41
+Version 1.9.43
 © 2026 David John Waugh. Free software under the GNU GPL v3 or later
 (see LICENSE.txt). It comes with no warranty.
 
@@ -7,9 +7,8 @@ Draw your own 3D parts, or let EvenUCan design a printable box
 (an "enclosure") around your electronics. Everything runs on your own
 computer. The drawing, box design, wiring and ESPHome code all work
 offline. The wizard's AI helper (turning your idea into a parts list,
-and writing Arduino sketches) uses the internet with a free key from
-Google Gemini or NVIDIA (desktop program), or your own paid Claude key
-if you prefer. For a fully offline option, Ollama runs a small AI on
+and writing Arduino sketches) uses the internet with an AI key of your
+choice. For a fully offline option, Ollama runs a small AI on
 this computer instead - no key, no internet, once it's set up. Or you
 can carry on without AI altogether. "Fill in automatically" (looking
 up a part's sizes online) uses the same AI key.
@@ -24,9 +23,10 @@ description into a parts list, a box and code - needs an AI to do
 that one translation. It is the only part of the whole program that
 has to reach the internet.
 
-  Bring your own free key, or go fully offline. Google Gemini, Groq
-  and OpenRouter (all free, no card needed), NVIDIA (free, desktop
-  program only), and your own paid Anthropic Claude key all work. Or
+  Bring your own key, or go fully offline. Free (no card needed):
+  Google Gemini, Groq, OpenRouter, NVIDIA (desktop program only).
+  Paid (pay-as-you-go): Anthropic Claude, ChatGPT / OpenAI, DeepSeek,
+  Grok / xAI. Or
   choose Ollama: a small AI running on this computer, no key and no
   internet needed once it's set up - EvenUCan can tell you whether it's
   running, list the models you've already pulled, and start it for you
