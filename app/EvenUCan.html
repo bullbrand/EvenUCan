@@ -7464,7 +7464,10 @@ const KEY_HELP={
     steps:['Click <b>Open OpenAI Platform</b> below and sign in or sign up.','Add credit under <b>Billing → Add payment method</b>.','Go to <b>API Keys</b> and click <b>Create new secret key</b>.','Copy the key (it starts with <code>sk-</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']},
   grok:{site:'https://console.x.ai/',open:'Open xAI Console',
     about:'Paid per use (Grok by xAI). Fast and capable. You pay from credit added to your xAI account.',
-    steps:['Click <b>Open xAI Console</b> below and sign in (an X/Twitter account or email works).','Add credit under <b>Billing</b>.','Go to <b>API Keys</b> and click <b>Create API Key</b>.','Copy the key (it starts with <code>xai-</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']}
+    steps:['Click <b>Open xAI Console</b> below and sign in (an X/Twitter account or email works).','Add credit under <b>Billing</b>.','Go to <b>API Keys</b> and click <b>Create API Key</b>.','Copy the key (it starts with <code>xai-</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']},
+  deepseek:{site:'https://platform.deepseek.com/api_keys',open:'Open DeepSeek Platform',
+    about:'Paid per use. Very cheap: deepseek-chat (V3) costs about US$0.27 per million tokens — a typical parts-wizard run costs a fraction of a cent. Fast and accurate. You pay from credit added to your DeepSeek account.',
+    steps:['Click <b>Open DeepSeek Platform</b> below and sign in or create a free account.','Go to <b>Billing</b> and add a small amount of credit (even $5 lasts a very long time).','Go to <b>API Keys</b> and click <b>Create API Key</b>.','Copy the key (it starts with <code>sk-</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']}
 };
 // Send a tiny "hello" with this key and return the AI's reply (or throw, saying what is wrong in plain words).
 async function aiTest(p,key){
