@@ -24,7 +24,7 @@ Ollama for full offline AI is now an included option free no key required try us
 **"Tell it your idea"** — the wizard step that turns a plain-English description into a parts list, a box and code — needs an AI to do that one translation. It's the only part of the whole program that has to reach the internet.
 
 
-- **Bring your own free key, or go fully offline.** Google Gemini, Groq and OpenRouter (all free, no card needed), NVIDIA (free, desktop app only), and your own paid Anthropic Claude key all work. Or choose **Ollama**: a small AI running on this computer, no key and no internet needed once it's set up. Set one up from the wizard's first screen.
+- **Bring your own free key, or go fully offline.** Google Gemini, Groq, OpenRouter and DeepSeek (all free, no card needed), NVIDIA (free, desktop app only), and your own paid Anthropic Claude key all work. Or choose **Ollama**: a small AI running on this computer, no key and no internet needed once it's set up. Set one up from the wizard's first screen.
 - **Kept on your own device only.** Your key is saved in the app's own local settings (or this browser's storage for the web version) and is never sent anywhere except the AI company you chose.
 - **Everything after that is offline.** Once the AI has turned your idea into a parts list, the 3D box designer, the wiring diagram and the ESPHome/Arduino/Pi code all run entirely on your own computer — no AI, no internet, needed again for that project.
 - **Don't want AI at all?** Click **Carry on without AI** instead of describing your idea: start from one of six ready-made examples, or tick the parts you have, and the rest of the app works exactly the same way.
