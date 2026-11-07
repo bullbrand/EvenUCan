@@ -36,7 +36,13 @@ IMPORTANT: A FREE AI KEY IS NEEDED TO START A NEW PROJECT
 
 HOW TO START
   1. Unzip this folder (right-click > Extract All). Keep the files together.
-  2. Double-click EvenUCan.html. It opens in your web browser.
+  2. Double-click "Start EvenUCan.bat". It starts a small local server and
+     opens EvenUCan in your browser. Keep that window open while you work.
+
+  IMPORTANT - Windows may block the launcher the first time:
+  Right-click "Start EvenUCan.bat" > Properties > tick "Unblock" at the
+  bottom > OK. Then double-click it as normal. You only need to do this once.
+  (Windows blocks .bat files downloaded from the internet - this is normal.)
 
 INSTALLING IT AS AN APP (when it is on a website)
   Where EvenUCan is served from a website over https (for example GitHub
