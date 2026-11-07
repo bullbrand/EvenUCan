@@ -35,11 +35,11 @@ Go to the **[Releases page](https://github.com/bullbrand/EvenUCan/releases/lates
 
 | You have | Download | How to start it |
 |---|---|---|
-| Any computer with Chrome or Edge | `EvenUCan_1.9.41_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
-| Windows, and you want it installed | `EvenUCan-Setup-1.9.41.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
-| Windows, without installing | `EvenUCan-Portable-1.9.41.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
-| Mac | `EvenUCan-1.9.41.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
-| Linux | `EvenUCan-1.9.41.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
+| Any computer with Chrome or Edge | `EvenUCan_1.9.42_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
+| Windows, and you want it installed | `EvenUCan-Setup-1.9.42.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
+| Windows, without installing | `EvenUCan-Portable-1.9.42.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
+| Mac | `EvenUCan-1.9.42.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
+| Linux | `EvenUCan-1.9.42.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
 
 ### "Windows protected your PC"
 
@@ -47,7 +47,13 @@ The programs aren't signed by a big company, so the first time you run one, Wind
 
 ### Checking a download is genuine
 
-The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.41.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.42.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+
+## New in 1.9.42
+
+- **Fixed: soil moisture sensors now mount outside the box.** Capacitive soil probes were being placed inside the enclosure. They are now marked `mount: outside` — they appear in the wiring diagram but don't take up space inside the box and don't add a wall cutout.
+- **Fixed: plain LEDs no longer confused with WS2812 / NeoPixel strips.** When an LED was described as a "soil-dry indicator LED" or similar, the word "soil" could cause it to be matched as a soil moisture sensor. LED patterns are now checked first, and the soil moisture matcher explicitly excludes "LED" and "indicator".
+- **Fixed: LED wall mounts now cut a hole in the box wall.** LEDs placed on a wall now use an `opening` feature (a physical round cutout), so the LED actually shines through rather than just showing an outline on the face.
 
 ## New in 1.9.41
 

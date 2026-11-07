@@ -3457,6 +3457,19 @@ function newFile(){
   commitChange();setDirty(false);setView('iso');homeCam();camDirty();setWorkPlane('ground');cubeIntro(true);
   if(window.WFEnclosure&&window.WFEnclosure.openWelcome)window.WFEnclosure.openWelcome(true);// (r4) unless the user turned it off
 }
+// (startup-r1) Start a brand-new project: same cleanup as newFile but always opens the Welcome wizard,
+// even if the user previously ticked "Don't show this again".
+// Exposed on window so the WFEnclosure IIFE's startup dialog can call it.
+window.newProject=function newProject(){
+  if(docDirty&&!confirm('Discard unsaved changes to "'+docName+'"?'))return;
+  if(tool.cancel)tool.cancel();
+  model={faces:[],edges:[],guides:[]};lastShape=null;clearHistory();selection.clear();fileHandle=null;docName='Untitled';setGhosts([]);
+  Object.values(ELEC_KEYS).forEach(k=>{try{localStorage.removeItem('opensketch.'+k);}catch(e){}});
+  try{Object.keys(localStorage).filter(k=>/^opensketch\.intent_inputs\./.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}
+  commitChange();setDirty(false);setView('iso');homeCam();camDirty();setWorkPlane('ground');cubeIntro(true);
+  // Force the Welcome wizard open regardless of the "don't show" preference
+  if(window.WFEnclosure&&window.WFEnclosure.openWelcome)window.WFEnclosure.openWelcome(false);
+}
 function exportOBJ(){
   flushAutosave();// (Perf-r1)
   let s='# EvenUCan OBJ export - units: metres, Y up\n',vi=1;
@@ -3815,7 +3828,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.41';
+const APP_VERSION='1.9.42';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -4690,7 +4703,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
   const flip=(i,c,label)=>({label,fn:()=>flipSelected(i,c),enabled:hasSel});
   const MENUS={
     File:[{label:'Start a project (step by step)...',fn:BTN('bBuild')},null,
-      {label:'New',key:'Ctrl+N',fn:BTN('bNew')},{label:'Open...',key:'Ctrl+O',fn:BTN('bOpen')},
+      {label:'New Project...',fn:()=>newProject()},{label:'New',key:'Ctrl+N',fn:BTN('bNew')},{label:'Open...',key:'Ctrl+O',fn:BTN('bOpen')},
       {label:'Save',key:'Ctrl+S',fn:BTN('bSave')},{label:'Save As...',key:'Ctrl+Shift+S',fn:BTN('bSaveAs')},null,
       {head:'Export'},{label:'3MF for 3D printing...',fn:BTN('b3mf')},{label:'STL for 3D printing...',fn:BTN('bStl')},
       {label:'OBJ (other 3D programs)...',fn:BTN('bObj')},{label:'Picture of the view (PNG)...',fn:BTN('bPng')},null,
@@ -4903,6 +4916,7 @@ window.WF={
   clearSelection(){selection.clear();selChanged();},
   replaceModel(faces,name){if(tool.cancel)tool.cancel();model={faces,edges:[],guides:[]};fixIds();lastShape=null;selection.clear();if(name)docName=name;fileHandle=null;},
   setTool,downloadBlob,download,store,bedText,fitsBed,readZip,pushPullMany,exportSTL,export3MF,
+  setBed(x,y,z){if(x>9&&y>9&&z>9){bed={x,y,z};store.set('bed',JSON.stringify(bed));}},
   setDocName(n){if(n){docName=String(n);setDirty(docDirty);}},
   // page position of a model point (for tests and add-ons)
   toPage(p){const s=toScreen(p),r=cv.getBoundingClientRect();return s?[r.left+s[0],r.top+s[1]]:null;},
@@ -5061,8 +5075,8 @@ if(!model.faces.length&&!model.edges.length){units='mm';store.set('units','mm');
 uSel.value=units;syncPersp();buildGrid();buildPalette();setTool('select');updateStats();setDirty(false);
 if(!model.faces.length)setHint('Welcome! Press R and draw a rectangle on the ground, then press P and pull it up into a box. Press F1 for help.');
 setWorkPlane('ground');if(!model.faces.length&&!model.edges.length)cubeIntro(true);
-// (r4) the Welcome window greets an empty drawing, once every script has loaded
-{const welcome=()=>{try{if(window.WFEnclosure&&window.WFEnclosure.openWelcome)window.WFEnclosure.openWelcome(true);}catch(e){console.error('EvenUCan: could not show the Welcome window',e);}};
+// (r4) startup-r1: on first run show the Welcome wizard; on 2nd+ run show the Continue/New dialog when there is saved state
+{const welcome=()=>{try{if(window.WFEnclosure){if(window.WFEnclosure.openStartupChoice)window.WFEnclosure.openStartupChoice();else if(window.WFEnclosure.openWelcome)window.WFEnclosure.openWelcome(true);}}catch(e){console.error('EvenUCan: could not show the startup screen',e);}};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',welcome);else setTimeout(welcome,0);}
 markDirty();
 })();
@@ -5452,7 +5466,7 @@ function tidyPart(p){
   if(p.hdr===undefined){p.belowOn=Math.max(0,num(p.belowOn,p.below));p.belowBare=Math.max(0,num(p.belowBare,0));p.hdr=p.below>0.05?'on':'off';}
   else{p.belowOn=Math.max(0,num(p.belowOn,p.below));p.belowBare=Math.max(0,num(p.belowBare,0));}
   p.below=p.hdr==='off'?p.belowBare:p.belowOn;
-  if(!TYPES[p.type])p.type='other';if(p.shape!=='round')p.shape='rect';if(p.mount!=='wall')p.mount='floor';
+  if(!TYPES[p.type])p.type='other';if(p.shape!=='round')p.shape='rect';if(p.mount!=='wall'&&p.mount!=='outside')p.mount='floor';
   p.features=(p.features||[]).filter(f=>f&&FEAT[f.t]);
   // (1.9.7 measured a flex button from the top of the board; now it is from the table the part lies on, resting on
   // whatever sticks out underneath)
@@ -5557,6 +5571,9 @@ function prep(inst,st){
   const p=inst.part,F=p.features||[];
   const mount=inst.mount!=='auto'?inst.mount:(p.mount||typeOf(p).mount);
   const o={inst,p,mount,pcb:+p.pcb||0,h:+p.h||0,below:+p.below||0,w:+p.w,d:+p.d,type:p.type};
+  // Parts mounted outside the enclosure (soil probes, outdoor sensors, etc.) are wired through the box
+  // but have no footprint inside it: skip them from the layout entirely.
+  if(mount==='outside')return Object.assign(o,{outside:true});
   if(mount==='wall'){
     o.cone=F.some(f=>f.t==='cone');
     o.tk=o.below+o.pcb+o.h+(o.cone&&o.pcb===0?2.8:0);// speakers get a rib behind them
@@ -5773,7 +5790,7 @@ const outerSize=L=>{const st=L.st,t=st.wall;return {w:L.W+2*t+(st.ears?24:0),d:L
 function autoLayout(){
   const st=styleNow(),insts=instances();
   if(!insts.length)return {error:'Add some parts to put in the box.'};
-  const os=insts.map(i=>prep(i,st));
+  const os=insts.map(i=>prep(i,st)).filter(o=>!o.outside);
   const area=o=>o.mount==='wall'?o.w*o.tk:o.fw*o.fd;
   const pri=o=>o.mount==='wall'?0:(o.portSides.length?1:2);
   const orders=[[...os].sort((a,b)=>pri(a)-pri(b)||area(b)-area(a)),[...os].sort((a,b)=>area(b)-area(a))];
@@ -6412,10 +6429,12 @@ function renderSide(){
   const rows=wiz.items.map((it,i)=>{
     const p=partById(it.pid);
     if(!p)return `<div class="ewPart"><div class="nm"><span class="bad">Missing part (deleted from the library)</span><button class="x" data-del="${i}">✕</button></div></div>`;
-    const hasPort=(p.features||[]).some(f=>(f.t==='port'||f.t==='switch'||f.t==='cutout')&&isEdge(f)),wallM=(it.mount==='auto'?(p.mount||typeOf(p).mount):it.mount)==='wall';
-    const wallSel=hasPort||wallM?`<label>${wallM?'Wall':'Port faces'} <select data-k="wall" data-i="${i}">${['auto','xmin','xmax','ymin','ymax'].map(v=>`<option value="${v}"${it.wall===v?' selected':''}>${v==='auto'?'Auto':SIDE_NAME[v]}</option>`).join('')}</select></label>`:'';
+    const effMount=it.mount==='auto'?(p.mount||typeOf(p).mount):it.mount;
+    const hasPort=(p.features||[]).some(f=>(f.t==='port'||f.t==='switch'||f.t==='cutout')&&isEdge(f)),wallM=effMount==='wall';
+    const wallSel=(hasPort||wallM)&&effMount!=='outside'?`<label>${wallM?'Wall':'Port faces'} <select data-k="wall" data-i="${i}">${['auto','xmin','xmax','ymin','ymax'].map(v=>`<option value="${v}"${it.wall===v?' selected':''}>${v==='auto'?'Auto':SIDE_NAME[v]}</option>`).join('')}</select></label>`:'';
+    const autoLabel=effMount==='outside'?'outside':effMount==='wall'?'wall':'floor';
     return `<div class="ewPart"><div class="nm"><span title="${esc(p.name)}">${esc(p.name)}</span><label title="How many">× <input type="number" min="1" max="10" step="1" data-k="qty" data-i="${i}" value="${esc(it.qty||1)}"></label><button class="x" data-del="${i}" title="Remove from the box">✕</button></div>
-<div class="ewRow"><label>Mount <select data-k="mount" data-i="${i}"><option value="auto"${it.mount==='auto'?' selected':''}>Auto (${(p.mount||typeOf(p).mount)==='wall'?'wall':'floor'})</option><option value="floor"${it.mount==='floor'?' selected':''}>Floor</option><option value="wall"${it.mount==='wall'?' selected':''}>Against a wall</option></select></label>${wallSel}</div></div>`;
+<div class="ewRow"><label>Mount <select data-k="mount" data-i="${i}"><option value="auto"${it.mount==='auto'?' selected':''}>Auto (${autoLabel})</option><option value="floor"${it.mount==='floor'?' selected':''}>Floor</option><option value="wall"${it.mount==='wall'?' selected':''}>Against a wall</option><option value="outside"${it.mount==='outside'?' selected':''}>Outside the enclosure</option></select></label>${wallSel}</div>${effMount==='outside'?'<div class="ewNote" style="margin:-2px 0 4px">This part lives outside the box — only wire exits are needed. It won\'t be counted in the box size.</div>':''}</div>`;
   }).join('');
   const st=wiz.style;
   s.innerHTML=`<h4>1. Parts in the box</h4>
@@ -6696,6 +6715,8 @@ function renderEditor(){
 <div class="ewRow"><button id="plKey">${keyLabel()}</button></div>
 ${aiProv()==='claude'?'<div class="ewNote">Claude is paid per use from your Anthropic credit: roughly US$0.10–0.40 per web look-up, a few cents to read a drawing (an estimate; it depends how much it reads).</div>':
   aiProv()==='nvidia'?'<div class="ewNote">NVIDIA is free but can\'t search the web: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs) and works in the desktop app only.</div>':
+  aiProv()==='ollama'?'<div class="ewNote">Ollama is local: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs).</div>':
+  OA[aiProv()]&&!OA[aiProv()].free?'<div class="ewNote">'+OA[aiProv()].name+' can\'t search the web from here: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs).</div>':
   isOA()?'<div class="ewNote">'+OA[aiProv()].name+' is free but can\'t search the web: <b>Look up online</b> uses what it already knows, so check every size. It reads pictures of drawings (not PDFs).'+(aiProv()==='openrouter'?' The free tier allows about 50 requests a day.':'')+'</div>':''}
 <div class="ewNote"><b>Look up online</b>: type the part number and the AI finds the sizes and fills them in. Or save a dimension drawing and use <b>Read a drawing</b> (or drag it onto the picture, or Ctrl+V). Always check the draft before saving.</div></div>
 <label class="f"><span>Name</span><input type="text" data-p="name" value="${p.name==='New part'?'':esc(p.name)}" placeholder="New part: type its name"></label>
@@ -6711,7 +6732,7 @@ ${p.shape==='round'?'':`<label class="f"><span>Width (bottom → top)</span><inp
 <label class="f"><span>With pins fitted</span><input type="number" data-p="belowOn" value="${fx(p.belowOn)}" step="0.1" min="0"> mm</label>
 <label class="f"><span>Bare board</span><input type="number" data-p="belowBare" value="${fx(p.belowBare)}" step="0.1" min="0"> mm</label>
 <div class="ewNote" style="margin:-2px 0 6px">Used now (Pins / parts underneath): <b>${fx(p.below)} mm</b>.</div>
-<label class="f"><span>Usually mounted</span><select data-p="mount">${opt({floor:'Flat on the floor',wall:'Face against a wall'},p.mount)}</select></label>
+<label class="f" title="Where this part lives: floor/wall means inside the box; Outside means it goes in the environment (soil probes, outdoor sensors) — the box only needs cable exits for its wires"><span>Usually mounted</span><select data-p="mount">${opt({floor:'Flat on the floor',wall:'Face against a wall',outside:'Outside the enclosure'},p.mount)}</select></label>
 <div class="ewNote" style="margin:2px 0 6px">Board thickness 0 = a solid block (battery, speaker). For wall parts, the photo and positions are of the side that faces out.</div>
 <div class="ewRow" style="flex-wrap:wrap;gap:4px 14px" title="Keeps that edge back from the wall by this much when the Enclosure Wizard builds the box - for screw terminals, a row of header pins, or anything else that needs working space on a side, even one with no hole through it. 0 = no extra room."><span style="width:100%">Extra room on an edge (mm)</span>${['xmin','xmax','ymin','ymax'].map(s=>`<label style="text-transform:capitalize">${EDGE_NAME[s]} <input type="number" step="0.5" min="0" style="width:52px" data-pec="${s}" value="${fx((p.edgeClear&&p.edgeClear[s])||0)}"></label>`).join('')}</div>
 <label>Notes<textarea data-p="notes">${esc(p.notes||'')}</textarea></label>
@@ -7608,7 +7629,7 @@ Return ONLY a JSON object:
  "shape": "rect"|"round", "w": length in mm along X (the LONGER side of a rectangle; the diameter if round), "d": width in mm along Y,
  "pcb": board thickness in mm (0 for a solid block such as a battery or enclosed speaker), "h": height of the tallest part above the board top in mm (for a block: its full height),
  "below": height of pins or parts under the board in mm (0 if none),
- "mount": "wall" if the part must face out through a side of the box (microphones, speakers, ultrasonic or distance sensors, cameras), otherwise "floor",
+ "mount": "wall" if the part must face out through a side of the box (microphones, speakers, ultrasonic or distance sensors, cameras), "outside" if the part lives entirely outside the enclosure (soil moisture probes, buried or submerged sensors, outdoor weather sensors, anything that goes into soil, water or the environment), otherwise "floor",
  "features": [ ... ], "pins": [ {"name": exact printed label e.g. "SDA" or "D7", "x", "y": centre of that pin/pad in mm (same frame as above), "role": "gnd"|"3v3"|"5v"|"vcc"|"vin"|"sda"|"scl"|"gpio"|"sig"|"trig"|"echo"|"nc"} ], "uncertain": [short strings], "notes": short string}
 Coordinates: looking down on the top (component side), origin at the bottom-left corner, x to the right along w, y up along d, all in mm, positions are centres.
 Feature objects:
@@ -7734,10 +7755,10 @@ const NV_VISION=['meta/llama-3.2-90b-vision-instruct','meta/llama-3.2-11b-vision
 // None of them can search the web or read PDFs. Model lists checked against each provider's model page (Nov 2026).
 const OA={
   nvidia:{name:'NVIDIA',starts:'nvapi-',url:'https://integrate.api.nvidia.com/v1/chat/completions',text:NV_TEXT,vision:NV_VISION,deskOnly:true,limit:'about 40 requests a minute'},
-  groq:{name:'Groq',starts:'gsk_',url:'https://api.groq.com/openai/v1/chat/completions',
+  groq:{name:'Groq',starts:'gsk_',url:'https://api.groq.com/openai/v1/chat/completions',free:true,
     text:['openai/gpt-oss-120b','llama-3.3-70b-versatile','qwen/qwen3.8-27b','openai/gpt-oss-20b','llama-3.1-8b-instant'],
     vision:['qwen/qwen3.8-27b','meta-models/muse-spark-open'],limit:'about 30 requests a minute, 1,000 a day',testTokens:200},
-  openrouter:{name:'OpenRouter',starts:'sk-or-',url:'https://openrouter.ai/api/v1/chat/completions',
+  openrouter:{name:'OpenRouter',starts:'sk-or-',url:'https://openrouter.ai/api/v1/chat/completions',free:true,
     text:['openrouter/free','nvidia/nemotron-3-ultra-550b-a55b:free','google/gemma-4-31b-it:free'],
     vision:['openrouter/free','google/gemma-4-31b-it:free','nvidia/nemotron-3.5-super-vl:free'],limit:'about 50 requests a day',testTokens:200,
     headers:{'X-Title':'EvenUCan'}},
@@ -7828,7 +7849,7 @@ function applyDrawing(d,src,sources){
   ed.shape=d.shape==='round'?'round':'rect';
   ed.w=n(d.w,ed.w)||ed.w;ed.d=ed.shape==='round'?ed.w:(n(d.d,ed.d)||ed.d);
   ed.pcb=n(d.pcb,ed.pcb);ed.h=n(d.h,ed.h);ed.below=n(d.below,ed.below);
-  ed.mount=d.mount==='wall'||d.mount==='floor'?d.mount:TYPES[ed.type].mount;
+  ed.mount=d.mount==='wall'||d.mount==='floor'||d.mount==='outside'?d.mount:TYPES[ed.type].mount;
   const F=[];
   for(const f of Array.isArray(d.features)?d.features:[]){
     if(!f||!FEAT[f.t])continue;
@@ -8101,6 +8122,10 @@ function planWiring(){
 // ---- ESPHome device file: a complete YAML for the controller, from the wiring plan and a few answers.
 // Each part gets the ESPHome section that matches its pin roles; the purpose decides what it does.
 const ESPH_KEY='esphome.form';
+const ESPH_AI_KEY='esphome.ai';// persists the AI-written YAML across re-renders / page reloads
+// A short fingerprint for a set of unknown parts: sorted "label:pin,pin" strings joined.
+// If the fingerprint matches what was stored, the AI result is still valid.
+const esphAiSig=unknown=>unknown.map(u=>u.label+':'+u.pins.map(p=>p.gpio).sort().join(',')).sort().join('|');
 const ESPH_DEFAULT={name:'',purpose:'sensor',ha:true,every:30,alarm:30,lowbat:3.5,button:'report',wake:'okay_nabu',status:true,
   ruleOn:false,ruleSrc:'',ruleOp:'above',ruleVal:30,ruleA:'red',ruleB:'green',desc:''};
 const esphForm=()=>{try{return Object.assign({},ESPH_DEFAULT,JSON.parse(WF.store.get(ESPH_KEY)||'{}'));}catch(e){return {...ESPH_DEFAULT};}};
@@ -8648,6 +8673,13 @@ function esphPanel(){
   const buttons=P.assigned.some(a=>a.role==='sig'&&/button|touch|ttp22|push|tact/i.test(a.inst.part.name));
   const opt=(o,v)=>Object.entries(o).map(([k,n])=>`<option value="${k}"${k===v?' selected':''}>${esc(n)}</option>`).join('');
   const r=esphomeYaml(P,f);
+  // Restore a previously AI-written result if the same unknown parts are still present (same fingerprint).
+  // This prevents the red "needs the AI" banner from reappearing after a re-render or page reload.
+  if(!wr.ai&&r.unknown.length){
+    try{const stored=JSON.parse(WF.store.get(ESPH_AI_KEY)||'null');
+      if(stored&&stored.sig===esphAiSig(r.unknown))wr.ai={yaml:stored.yaml,notes:stored.notes,ok:stored.ok};}
+    catch(e){}
+  }
   let h=`<h4>ESPHome device</h4>${capHtml(planIssues(P))}<div class="ewNote" style="margin-bottom:6px">Answer a few questions and EvenUCan writes the whole ESPHome file for ${esc(P.ctrl.label)}, with the pins from this wiring.</div>
 <label class="ef">Device name <input data-ef="name" value="${esc(f.name)}" maxlength="40"></label>
 <label class="ef">What is it for? <select data-ef="purpose">${opt(ESPH_PURPOSES,f.purpose)}</select></label>`;
@@ -8670,7 +8702,14 @@ is <select data-ef="ruleOp"><option value="above"${f.ruleOp!=='below'?' selected
   }
   const canAI=!!aiKey();
   const unk=r.unknown.map(u=>esc(u.label)).join(', ');
-  h+=`<div class="efbox">`+(r.unknown.length?`<div class="warn" style="line-height:1.45;margin-bottom:6px"><b>${r.unknown.length===1?'1 part needs':r.unknown.length+' parts need'} the AI:</b> ${unk}. EvenUCan doesn't know ${r.unknown.length===1?'it':'them'} yet, so click <b>Make it with AI</b> and your AI writes ${r.unknown.length===1?'its':'their'} code from the part's name, part-file details and pins.</div>`:'')+`<b>What should it do?</b> <span class="ewNote">(optional: in your own words; your AI adds it${window.wfNative&&window.wfNative.esphomeCheck?', then ESPHome checks it':''})</span>
+  // When wr.ai is set the AI has already written the code for all unknown parts — replace the red
+  // warning with a green tick so the user can see it's been handled.
+  const unkBanner=r.unknown.length
+    ?(wr.ai
+      ?`<div class="ok" style="line-height:1.45;margin-bottom:6px">✓ <b>AI has written the code for ${r.unknown.length===1?unk:'all '+r.unknown.length+' parts'}</b> (${unk}). The file below includes their ESPHome components.</div>`
+      :`<div class="warn" style="line-height:1.45;margin-bottom:6px"><b>${r.unknown.length===1?'1 part needs':r.unknown.length+' parts need'} the AI:</b> ${unk}. EvenUCan doesn't know ${r.unknown.length===1?'it':'them'} yet, so click <b>Make it with AI</b> and your AI writes ${r.unknown.length===1?'its':'their'} code from the part's name, part-file details and pins.</div>`)
+    :'';
+  h+=`<div class="efbox">`+unkBanner+`<b>What should it do?</b> <span class="ewNote">(optional: in your own words; your AI adds it${window.wfNative&&window.wfNative.esphomeCheck?', then ESPHome checks it':''})</span>
 <textarea data-ef="desc" rows="3" style="width:100%;margin-top:4px" placeholder="In your own words, e.g. Light the LED red when the temperature is over 28 °C and green when it's fine, and turn on the relay when it's over 30 °C.">${esc(f.desc||'')}</textarea>
 <div class="ewRow"><button id="wrAi"${esphAiBusy||!canAI?' disabled':''}>${esphAiBusy?'Writing… please wait':'Make it with AI'}</button>${canAI?'':'<span class="ewNote">Needs a key for this AI: click <b>'+esc(keyLabel())+'</b> above.</span>'}</div><div id="wrAiOut">${wr.aiMsg||''}</div>
 <div class="ewRow"><label>AI <select id="wrProv">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${aiProv()===k?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></label><button id="wrKey">${keyLabel()}</button></div></div>`;
@@ -8982,7 +9021,7 @@ function switchBoard(pf){
   if(it){it.platform=pf;WF.store.set(INTENT_KEY,JSON.stringify(it));}
   const c=ctrlPart(pf);if(!c)return WF.flash('Couldn\'t add that board to your parts.',6000);
   wiz.items=wiz.items.filter(i=>!CTRL_IDS.includes(i.pid));wiz.items.unshift({pid:c.id,qty:1,mount:'auto',wall:'auto'});
-  saveWiz();lay=null;pfCode=null;pfMsg='';if(wr)wr.ai=null;
+  saveWiz();lay=null;pfCode=null;pfMsg='';if(wr)wr.ai=null;WF.store.set(ESPH_AI_KEY,'');
   if(iw.analysis){iw.pf=pf;iw.matches=pfMatches(iw.base,pf);}
   if(wrBack.style.display==='grid')openWiring();
   WF.flash('Switched to '+PLATFORMS[pf].name+'.',4000);updateStrip();
@@ -9174,7 +9213,9 @@ let esphAiBusy=false;
 const ESPH_AI_PROMPT=`You write ESPHome device configuration (ESPHome version 2026.8). You are given a working, already validated ESPHome YAML file for a device, and the user's description of what the device should do.
 Change the file so the device does what the user describes. Rules:
 - Keep every existing section, pin, id, board, framework, psram, wifi, api, ota, logger and captive_portal setting exactly as it is. Do not change pins or invent new wiring: only the parts already in the file exist.
-- Add behaviour with ESPHome's built-in automations (on_value, on_press, interval, if/then/else, lambda conditions, light.turn_on with red/green/blue percentages, switch.turn_on, delay, script). No external_components, no custom C++ files, no new secrets.
+- Add behaviour with ESPHome's built-in automations (on_value, on_press, interval, if/then/else, lambda conditions, light.turn_on, switch.turn_on, delay, script). No external_components, no custom C++ files, no new secrets.
+- RGB colours in YAML automations use percentages (red: 100%, green: 0%, blue: 0%). RGB colours inside C++ lambda blocks use floats 0.0–1.0: id(led).turn_on().set_rgb(1.0, 0.0, 0.0).perform() — NEVER use % inside a lambda.
+- ESPHome substitutions (\${varname}) expand in YAML but NOT inside C++ lambda string literals at runtime. In a lambda, use the numeric value directly (e.g. float threshold = 60.0;) or read a global variable — never atof("\${varname}") inside a lambda string.
 - Every switch, sensor and binary_sensor already in the file has its own id: use that id in your automations. NEVER declare a second switch/sensor/binary_sensor for hardware that already has one in the file (e.g. if a relay or buzzer is already declared with an id, turn that id on/off - don't add a new one on a different, unwired pin). This applies just as much to a part you yourself add under "Every part listed as not in the file yet" below: once you've declared its sensor/binary_sensor, your own automations must read that same id, not a separate pin you make up to match it.
 - If you use http_request.post or http_request.get anywhere in your automations, you MUST also add a top-level http_request:\n  timeout: 10s\n  verify_ssl: false section (ESPHome fails to compile without it).
 - Every part listed as not in the file yet must get its own working section (sensor, binary_sensor, output, light, switch, uart, display… as the module needs), with a clear friendly name.
@@ -9213,9 +9254,37 @@ async function esphWithAI(){
       ok=false;errs=c.out.split(/\r?\n/).filter(l=>/ERROR|Failed config|is a required|not valid|Invalid|Unable|Couldn't|\[[a-z_.]+\]/i.test(l)&&!/ignore_|log_level/.test(l)).slice(0,25).join('\n')||c.out.slice(-2500);
     }
     wr.ai={yaml,notes,ok};
+    // Persist the AI result so re-opening the Code screen (or re-running with the same parts)
+    // restores the green banner instead of showing "needs the AI" again.
+    if(ok!==false&&base.unknown.length)WF.store.set(ESPH_AI_KEY,JSON.stringify({yaml,notes,ok,sig:esphAiSig(base.unknown)}));
+    // (bug-9) When the AI wrote code for previously-unknown parts, save a note on each part in
+    // the custom library so the user knows ESPHome code has been generated for it, and so the
+    // green "AI has written the code" banner stays informative on future visits.
+    let savedPartNames=[];
+    if(ok!==false&&base.unknown.length){
+      const dateStr=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+      for(const u of base.unknown){
+        // Find the part in the full parts list by matching the name used in the unknown entry.
+        const pid=wr.plan.insts.find(i=>i.label===u.label)?.part?.id;
+        if(!pid)continue;
+        const existing=custom.find(c=>c.id===pid);
+        const base_=existing||(allParts().find(p=>p.id===pid));
+        if(!base_)continue;
+        const updated=Object.assign({},base_,{
+          espYamlNote:`ESPHome code written by AI on ${dateStr}`,
+          notes:(base_.notes||'').replace(/\nESPHome code written by AI.*$/,'').trim()+'\nESPHome code written by AI on '+dateStr
+        });
+        delete updated.builtin;
+        const idx=custom.findIndex(c=>c.id===pid);
+        if(idx>=0)custom[idx]=updated;else custom.push(updated);
+        savedPartNames.push(u.label);
+      }
+      if(savedPartNames.length)saveLib();
+    }
+    const savedMsg=savedPartNames.length?`<div class="ewNote">✓ Saved to your parts library: ${savedPartNames.map(n=>esc(n)).join(', ')} — EvenUCan now knows ESPHome code was generated for ${savedPartNames.length===1?'this part':'these parts'}.</div>`:'';
     say(ok===false?`<div class="bad">✗ After 3 tries ESPHome still finds a problem in the AI's file. It is shown below so you can see it, but don't flash it: try describing it more simply, or use the Light rule.</div>`:
       `<div class="${ok?'ok':'warn'}" style="margin:4px 0">${ok?'✓ Written by your AI and checked by ESPHome'+(tries?' (fixed after '+tries+' tr'+(tries>1?'ies':'y')+')':''):'Written by your AI. ESPHome isn\'t on this computer, so click Validate in ESPHome Device Builder before installing.'}</div>`+
-      (notes?`<div class="ewNote"><b>AI's notes:</b> ${esc(notes)}</div>`:'')+'<div class="ewNote">Read it through before you install it: an AI can misunderstand. <a href="#" id="wrAiUndo">Back to the plain file</a></div>');
+      savedMsg+(notes?`<div class="ewNote"><b>AI's notes:</b> ${esc(notes)}</div>`:'')+'<div class="ewNote">Read it through before you install it: an AI can misunderstand. <a href="#" id="wrAiUndo">Back to the plain file</a></div>');
   }catch(e){
     const isTimeout=e&&(e.name==='AbortError'||/abort|timed? ?out/i.test(e.message||''));
     say('<div class="bad">'+(isTimeout?'The AI didn\'t reply within 60 seconds.'+esc(_otherAiHint())+' Check your internet connection or try again.':esc(e.message||String(e)))+'</div>');
@@ -9935,6 +10004,7 @@ You must:
 Guidance:
 - Put the board in "microcontroller", not in "parts".
 - RULE 1 – ONLY INCLUDE WHAT WAS ASKED FOR. Read the user's description word by word. Only add a part if the user explicitly mentioned needing that function. Never add parts because they are popular or common. Example: "check soil moisture and light an LED" needs a soil sensor and an LED — it does NOT need a tilt sensor, temperature sensor, display, buzzer, or motion sensor.
+- RULE 1b – NEGATION RULE (highest priority). If the user's text explicitly says they do NOT want something — "no display", "no screen", "no LEDs", "no buzzer", "without a display", "standard LED not NeoPixel", "LED with a resistor" — treat that as an absolute exclusion. Remove it from the parts list regardless of any other instructions, any "It should" text that follows, or any default suggestions. Plain wording like "standard LED with a resistor" means a 5mm through-hole LED, NOT an addressable/NeoPixel/WS2812 LED.
 - RULE 2 – USE THE EXACT RIGHT SENSOR. This table is the law; never substitute or add from it unless the user asked for that function:
   SOIL/PLANT/COMPOST/POT moisture, dry soil, needs watering → "capacitive soil moisture" ONLY. Do NOT add BME280, DHT22, or MPU-6050 for a soil project.
   AIR temperature or humidity → "BME280" or "DHT22". Only if the user asked for air temperature or humidity.
@@ -9961,7 +10031,7 @@ Guidance:
 - Some sensors cannot go in an enclosure box: a soil moisture probe goes in soil, a waterproof temperature probe goes in liquid. Note this in "function" so the box design can accommodate it.
 - If the user wants both moisture AND temperature, use SEPARATE parts: a soil moisture sensor AND a DHT22/BME280.
 - If in doubt about which sensor to use, prefer the most specific match from the table above over a general-purpose or best-known alternative.
-- LED RULE: a plain coloured LED (category "output-led", search "5mm LED red" or "5mm LED green") is ALWAYS the right choice for a simple indicator light. NEVER use a WS2812/NeoPixel/addressable LED for a plain on/off indicator — only suggest addressable LEDs when the user explicitly asks for colour-changing lights, an LED strip, or animated lighting effects.
+- LED RULE: a plain coloured LED (category "output-led", search "LED with resistor red" or "LED with resistor green") is ALWAYS the right choice for a simple indicator light. Use ONE part per LED colour needed (e.g. two separate parts: "LED with resistor red" and "LED with resistor green"). NEVER use a WS2812/NeoPixel/addressable LED for a plain on/off indicator — only suggest addressable LEDs when the user explicitly asks for colour-changing lights, an LED strip, or animated lighting effects. The search string must include "LED with resistor" so it is unambiguous.
 - Information from the internet (weather, forecasts, prices) needs no part. For weather use the free OpenWeatherMap API and ask for the extra inputs "owm_api_key" (url https://home.openweathermap.org/api_keys) and "location" (e.g. "London,GB").
 - Messages to the user's phone use ntfy.sh (free, no account): notification_method "ntfy" and the extra input "ntfy_topic". Use "none" when the device sends nothing.
 - Power: one part with category "power" and search "USB", "LiPo battery" if it must run without a cable, or "mains adapter" if it stays plugged into a wall socket.
@@ -10134,6 +10204,10 @@ const COMMON_MODS=[
     pins:cmPins([['VCC','3v3'],['GND','gnd'],['SCL','scl'],['SDA','sda']],13.6,1.9),features:[]}},
   {re:/\bpir\b|hc-?sr501|\bmotion\b|\bmovement\b/i,not:/water|leak|liquid|rain|flood/i,part:{id:'p-cm-pir',name:'HC-SR501 PIR motion sensor',type:'sensor',w:32.3,d:24.3,pcb:1.2,h:14,below:6,mount:'wall',
     pins:cmPins([['VCC','5v'],['OUT','sig'],['GND','gnd']],2,13.6),features:[{t:'opening',x:16.15,y:12.15,dia:23}]}},
+  {re:/\bleds?\b|led with resistor|status light|indicator light|light up/i,not:/ws2812|neopixel|\brgb\b|addressable|colou?r|strip/i,part:{id:'p-cm-led5mm',name:'5 mm LED with resistor',type:'other',w:10,d:10,pcb:1.2,h:5,below:0,mount:'wall',
+    pins:cmPins([['+','sig'],['-','gnd']],2,2.5),features:[{t:'opening',x:5,y:5,dia:5.5}]}},
+  {re:/soil|plant.*moist|moist.*soil|capacitive.*moist|soil.*probe|moisture.*probe/i,not:/water leak|flood|rain|liquid level|\bleds?\b|indicator/i,part:{id:'p-cm-soilmoist',name:'Capacitive soil moisture sensor module',type:'sensor',w:22,d:35,pcb:1.6,h:3,below:3,mount:'outside',
+    pins:cmPins([['VCC','3v3'],['GND','gnd'],['AOUT','sig']],1.5,2),features:[]}},
   {re:/water (leak|level)|leak sensor|liquid level|rain(drop)? sensor|flood sensor|moisture sensor module/i,part:{id:'p-cm-water',name:'Water leak / level sensor module',type:'sensor',w:40,d:16,pcb:1.2,h:1.2,below:2,mount:'floor',
     pins:cmPins([['S','sig'],['+','3v3'],['-','gnd']],2,3),features:[]}},
   {re:/bh1750|light sens|light level|\blux\b|brightness|ambient light|\bldr\b/i,part:{id:'p-cm-bh1750',name:'BH1750 light level sensor (I2C)',type:'sensor',w:18.5,d:13.9,pcb:1.6,h:2,below:2.5,mount:'floor',
@@ -10142,7 +10216,7 @@ const COMMON_MODS=[
     pins:cmPins([['+','3v3'],['OUT','sig'],['-','gnd']],1.5,5),features:[]}},
   {re:/button|push|tactile|press/i,part:{id:'p-cm-button',name:'Push button 12 mm (tactile)',type:'other',w:12,d:12,pcb:0,h:7.3,below:0,mount:'floor',
     pins:[{n:'SIG',r:'sig',x:1,y:6},{n:'GND',r:'gnd',x:11,y:6}],features:[{t:'button',x:6,y:6}]}},
-  {re:/ws2812|neopixel|rgb|\bleds?\b|status light|light up/i,part:{id:'p-cm-ws2812',name:'WS2812 RGB LED module (NeoPixel)',type:'other',w:10,d:10,pcb:1.6,h:3,below:0,mount:'floor',
+  {re:/ws2812|neopixel|\brgb\b|addressable|led strip|colou?r light/i,part:{id:'p-cm-ws2812',name:'WS2812 RGB LED module (NeoPixel)',type:'other',w:10,d:10,pcb:1.6,h:3,below:0,mount:'floor',
     pins:cmPins([['5V','5v'],['GND','gnd'],['DIN','sig']],1.5,2.5),features:[{t:'led',x:5,y:5,dia:5}]}},
   {re:/buzzer|beep|piezo|alarm sound/i,part:{id:'p-cm-buzzer',name:'Active buzzer module',type:'other',w:18.5,d:15,pcb:1.6,h:12,below:2.5,mount:'floor',
     pins:cmPins([['VCC','3v3'],['I/O','sig'],['GND','gnd']],1.5,6.7),features:[{t:'led',x:9.25,y:8.5,dia:4}]}},
@@ -10171,8 +10245,9 @@ async function importLibPart(src,id){
 async function intentMatch(specs){
   const out=[];let lib=null,libList=null,libTried=false;
   const own=()=>allParts().map(p=>({title:p.name,family:(TYPES[p.type]||TYPES.other).name,tags:[p.type],desc:(p.notes||'').slice(0,300),ref:p}));
-  // loose: drop words from the end until something matches (for the big library; the user's own parts must match every word)
-  const find=(list,q,loose)=>{const w=String(q||'').split(/[\s,]+/).filter(Boolean);while(w.length){const r=searchParts(list,w.join(' '),'all');if(r.length)return r[0];if(!loose)break;w.pop();}return null;};
+  // loose: drop words from the end until something matches, but keep at least ceil(original/2) words so
+  // "capacitive" alone can't pull in a touchscreen display when the search was "capacitive soil moisture".
+  const find=(list,q,loose)=>{const w=String(q||'').split(/[\s,]+/).filter(Boolean),min=loose?Math.max(1,Math.ceil(w.length/2)):w.length;while(w.length){if(w.length>=min){const r=searchParts(list,w.join(' '),'all');if(r.length)return r[0];}if(!loose||w.length<=min)break;w.pop();}return null;};
   for(const spec of specs){
     const txt=spec.category+' '+spec.search+' '+spec.function;
     if(/^power/i.test(spec.category)){
@@ -10186,7 +10261,9 @@ async function intentMatch(specs){
     if(!part){const m=COMMON_MODS.find(m=>(m.re.test(spec.search)||m.re.test(spec.function))&&!(m.not&&(m.not.test(spec.search)||m.not.test(spec.function))));if(m){part=commonPart(m);if(part)from='common module';}}
     if(!part){
       if(!libTried){libTried=true;try{lib=await partsSource(true);if(lib){partsSrc=lib;libList=await lib.list();}}catch(e){console.error('EvenUCan: could not open the parts library for the project idea',e);}}
-      const hit=libList&&find(libList,spec.search,true);
+      // (r6) category-aware filter: reject library parts that are clearly the wrong type for the requested category
+      const catOk=p=>{const h=(p.title+' '+(p.family||'')+' '+(p.tags||[]).join(' ')).toLowerCase();if(/^sensors?-/i.test(spec.category)&&/featherwing|tft|display|screen|shield|\bhat\b/i.test(h))return false;if(/^output-led/i.test(spec.category)&&/ws2812|neopixel|addressable/i.test(h)&&!/ws2812|neopixel|addressable|rgb/i.test(spec.search))return false;return true;};
+      const hit=libList&&find(libList.filter(catOk),spec.search,true);
       if(hit){try{part=await importLibPart(lib,hit.id);if(part)from='parts library ("'+hit.title+'")';}catch(e){console.error('EvenUCan: could not add "'+hit.title+'"',e);out.push({spec,part:null,from:'',note:'Found "'+hit.title+'" in the parts library but couldn\'t add it: '+(e.message||e)});continue;}}
     }
     out.push({spec,part,from,note:part?'':'Click 🔍 Look this up to ask your AI for its typical size and pins, or add it yourself later with Parts Library….'});
@@ -10253,6 +10330,140 @@ document.body.insertAdjacentHTML('beforeend',`<div id="iwBack" class="ewBack"><d
   <div class="ewFoot" id="iwFoot"></div>
 </div></div>`);
 const iwBack=$('iwBack');
+// (setup-r1) First-run setup wizard: printer bed size + AI key. Shows once then never again.
+const setupDone=()=>WF.store.get('setup_done')==='1';
+const SU_PRESETS=[
+  {label:'Ender 3 / Ender 3 Pro / Neo',v:'220,220,250'},
+  {label:'Bambu Lab X1 / P1 series',v:'256,256,256'},
+  {label:'Bambu Lab A1 mini',v:'180,180,180'},
+  {label:'Bambu Lab A1 (full size)',v:'256,256,256'},
+  {label:'Prusa MK4 / MK3S',v:'250,210,220'},
+  {label:'Prusa Mini / Mini+',v:'180,180,180'},
+  {label:'Creality K1 / K1 Max',v:'220,220,250'},
+  {label:'AnkerMake M5 / M5C',v:'235,235,250'},
+  {label:'Voron 2.4 (300 mm)',v:'300,300,300'},
+  {label:'Voron 0 / 0.2',v:'120,120,120'},
+  {label:'Something else (enter size)',v:'custom'}
+];
+document.body.insertAdjacentHTML('beforeend',
+  '<div id="suBack" class="ewBack"><div class="ewWin" role="dialog" aria-modal="true" aria-labelledby="suTitle" style="width:min(520px,calc(100vw - 20px));height:auto">'+
+  '<div class="ewHead"><h2 id="suTitle">🎉 Welcome to EvenUCan</h2></div>'+
+  '<div id="suProg" style="font-size:12px;color:var(--text2);padding:8px 16px 2px;font-weight:600"></div>'+
+  '<div id="suBody" style="padding:8px 16px 0;font-size:13px;line-height:1.55"></div>'+
+  '<div id="suFoot" style="padding:10px 16px 14px;display:flex;gap:8px;flex-wrap:wrap"></div>'+
+  '</div></div>');
+const suBack=$('suBack');
+let su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false};
+function renderSetup(){
+  const b=$('suBody'),f=$('suFoot'),P=$('suProg');
+  if(su.step==='su1'){
+    P.textContent='Step 1 of 2 — Your 3D printer';
+    b.innerHTML=
+      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">What 3D printer do you have?</div>'+
+      '<div style="color:var(--text2);margin-bottom:10px">This sets the build plate size so EvenUCan can warn you if your box is too big to print.</div>'+
+      '<select id="suPreset" style="width:100%;font:inherit;padding:4px 6px;margin-bottom:10px">'+
+        '<option value="">— Choose your printer —</option>'+
+        SU_PRESETS.map(p=>'<option value="'+p.v+'"'+(su.bedSet&&su._preset===p.v?' selected':'')+'>'+esc(p.label)+'</option>').join('')+
+      '</select>'+
+      '<div id="suManual" style="'+(su.bedSet?'':'display:none')+'">'+
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px">'+
+          '<label>Width (X)&nbsp;<input id="suBedX" type="number" min="10" max="2000" value="'+su.bedX+'" style="width:68px;font:inherit;padding:3px 5px"> mm</label>'+
+          '<label>Depth (Y)&nbsp;<input id="suBedY" type="number" min="10" max="2000" value="'+su.bedY+'" style="width:68px;font:inherit;padding:3px 5px"> mm</label>'+
+          '<label>Height (Z)&nbsp;<input id="suBedZ" type="number" min="10" max="2000" value="'+su.bedZ+'" style="width:68px;font:inherit;padding:3px 5px"> mm</label>'+
+        '</div>'+
+      '</div>';
+    f.innerHTML='<button id="suNext1" class="primary wcBig">Next →</button>'+
+      '<button id="suSkip1" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">Skip for now</button>';
+    const pre=$('suPreset');
+    pre.addEventListener('change',()=>{
+      const v=pre.value;if(!v)return;
+      su._preset=v;su.bedSet=true;
+      if(v==='custom'){$('suManual').style.display='';return;}
+      const[x,y,z]=v.split(',');su.bedX=+x;su.bedY=+y;su.bedZ=+z;
+      $('suManual').style.display='';
+      $('suBedX').value=x;$('suBedY').value=y;$('suBedZ').value=z;
+    });
+  }else if(su.step==='su2'){
+    const has=!!aiKey(),P2=PROVIDERS[aiProv()];
+    P.textContent='Step 2 of 2 — AI helper';
+    b.innerHTML=
+      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">Set up an AI key</div>'+
+      '<div style="color:var(--text2);margin-bottom:10px">The AI plans the parts, box and code from your description. Free keys work great — no credit card needed. You can always change this later in <b>Tools → AI key</b>.</div>'+
+      aiHelperBox(true)+
+      (has?'<div style="color:var(--ok);margin-top:4px">✅ '+esc(P2.name)+' key is set up — you\'re ready!</div>':'');
+    f.innerHTML='<button id="suBack2" class="wcBig wcPlain">← Back</button>'+
+      '<button id="suDone" class="primary wcBig">Let\'s build! →</button>';
+  }
+}
+suBack.addEventListener('click',e=>{
+  const id=e.target.id;
+  if(id==='suNext1'||id==='suSkip1'){
+    if(id==='suNext1'&&su.bedSet){
+      const x=+($('suBedX')||{value:su.bedX}).value||su.bedX;
+      const y=+($('suBedY')||{value:su.bedY}).value||su.bedY;
+      const z=+($('suBedZ')||{value:su.bedZ}).value||su.bedZ;
+      if(x>9&&y>9&&z>9&&window.WF&&window.WF.setBed)window.WF.setBed(x,y,z);
+    }
+    su.step='su2';renderSetup();
+  }else if(id==='suBack2'){su.step='su1';renderSetup();}
+  else if(id==='suDone'){WF.store.set('setup_done','1');suBack.style.display='none';openStartupChoice();}
+  // AI key buttons reused from aiHelperBox — same IDs as welcome wizard
+  else if(id==='wcAiGem')askKey('gemini').then(renderSetup);
+  else if(id==='wcAiNv')askKey('nvidia').then(renderSetup);
+  else if(id==='wcAiGroq')askKey('groq').then(renderSetup);
+  else if(id==='wcAiOr')askKey('openrouter').then(renderSetup);
+  else if(id==='wcAiOllama')askKey('ollama').then(renderSetup);
+  else if(id==='wcAiCl')askKey('claude').then(renderSetup);
+  else if(id==='wcAiOa')askKey('openai').then(renderSetup);
+  else if(id==='wcAiDs')askKey('deepseek').then(renderSetup);
+  else if(id==='wcAiGrok')askKey('grok').then(renderSetup);
+  else if(id==='wcAiTest')askKey(aiProv()).then(renderSetup);
+});
+function openSetup(){
+  if(setupDone())return false;
+  su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false,_preset:''};
+  suBack.style.display='grid';
+  renderSetup();
+  return true;
+}
+// (startup-r1) Startup choice overlay: shown on 2nd+ run when there is a previous project to restore.
+document.body.insertAdjacentHTML('beforeend','<div id="spBack" class="ewBack"><div class="ewWin" role="dialog" aria-modal="true" aria-labelledby="spTitle" style="width:min(480px,calc(100vw - 20px));height:auto">'+
+  '<div class="ewHead"><h2 id="spTitle">👋 Welcome back</h2></div>'+
+  '<div style="padding:12px 16px 0;font-size:13px;line-height:1.55">'+
+  '<p style="margin:0 0 14px">Your last project is ready to carry on. Or start something new — the wizard will plan the parts, the box and the code from your description.</p>'+
+  '<button id="spContinue" class="wcBig primary" style="margin-bottom:8px">Continue my last project →</button>'+
+  '<button id="spNew" class="wcBig wcPlain">Start a new project…</button>'+
+  '</div><div style="height:14px"></div>'+
+'</div></div>');
+const spBack=$('spBack');
+function openStartupChoice(){
+  if(openSetup())return;// first ever open: show the setup wizard (printer + AI key) first
+  // If saved project data exists, offer Continue / New (regardless of wcSeen which is unreliable)
+  const hasSaved=!!(WF.store.get(WIZ_KEY)||WF.store.get(ESPH_KEY)||WF.store.get(ESPH_AI_KEY)||intentNow());
+  if(hasSaved){spBack.style.display='grid';return;}
+  // Nothing saved (true first run after setup, or after a New Project) → open the Welcome wizard
+  openWelcome(true);
+}
+function closeStartupChoice(){spBack.style.display='none';}
+spBack.addEventListener('click',e=>{
+  const id=e.target.id;
+  if(id==='spContinue')closeStartupChoice();
+  else if(id==='spNew'){
+    closeStartupChoice();
+    // Clear all project keys from storage now (hardcoded: ELEC_KEYS is in the outer IIFE)
+    ['enclosure.wizard','esphome.form','parts','intent'].forEach(k=>WF.store.set(k,''));
+    WF.store.set(ESPH_AI_KEY,'');
+    WF.store.set('welcome_seen','');// allow welcome wizard to show again on next open
+    try{Object.keys(localStorage).filter(k=>/^opensketch\.intent_inputs\./.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}
+    // Reset in-memory wizard state so stale checkboxes/text don't bleed into the next run
+    iw.w={text:'',does:[],pf:'auto',noShow:false};iw.desc='';iw.step='ask';
+    // Reset in-memory state before the wizard opens (storage is clear so readWiz returns DEFAULT_WIZ)
+    wiz=readWiz();
+    if(wr){wr.ai=null;wr.plan=null;}
+    if(window.newProject)window.newProject();
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&spBack.style.display==='grid')closeStartupChoice();});
 const IW_STEPS=['Thinking about your idea…','Finding matching parts…','Setting up the enclosure…','Generating code…'];
 let iw={step:'ask',desc:'',prog:0,analysis:null,base:null,matches:null,pf:'esphome',override:false,missingAdded:[],vals:{},err:'',raw:'',busy:false,
   welcome:false,w:{text:'',does:[],pf:'auto',noShow:false},userPf:null,noai:{parts:[],pf:'esphome'},nokeyFrom:''};// (r4) welcome: opened by the Welcome window; w: its answers
@@ -10567,8 +10778,11 @@ function aiHelperBox(short){
   return `<div class="aiHelp" style="border:1px solid #c9d7ea;background:#f4f8fd;border-radius:8px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.5">
 <div style="font-weight:600;font-size:14px">🤖 About the AI helper</div>
 ${short?'':'<div>When you describe an idea, an AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: use a free key, a paid key, or a model running on this computer with Ollama if you\'d rather stay fully offline.</div>'}
-<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:6px 0"><button id="wcAiGem">Get a free Google Gemini key</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>Get a free NVIDIA key${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">Get a free Groq key</button><button id="wcAiOr">Get a free OpenRouter key</button><button id="wcAiOllama">Use Ollama (local, offline)</button></div>
-<div class="ewNote">A paid Claude key (from Anthropic) works too.${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'}</div>
+<div style="font-size:12px;color:var(--text2);margin:6px 0 2px;font-weight:600">Free keys (no credit card needed):</div>
+<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:0 0 8px"><button id="wcAiGem">🆓 Google Gemini</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>🆓 NVIDIA${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">🆓 Groq</button><button id="wcAiOr">🆓 OpenRouter</button><button id="wcAiOllama">🆓 Ollama (offline)</button></div>
+<div style="font-size:12px;color:var(--text2);margin:2px 0 2px;font-weight:600">Paid keys (very cheap, most capable):</div>
+<div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:0 0 4px"><button id="wcAiCl">💳 Claude (Anthropic)</button><button id="wcAiOa">💳 ChatGPT (OpenAI)</button><button id="wcAiDs">💳 DeepSeek</button><button id="wcAiGrok">💳 Grok (xAI)</button></div>
+<div class="ewNote">${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'} Paid keys cost a fraction of a cent per run — DeepSeek is the cheapest.</div>
 <div style="margin-top:4px">${has?`<span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button>`:'<span class="warn">No AI key is set up yet.</span> You can set one up now or later.'}</div>
 <div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it - except Ollama, which runs on this computer and sends nothing anywhere. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
 }
@@ -10640,6 +10854,10 @@ iwBack.addEventListener('click',e=>{
     case 'wcAiGroq':askKey('groq').then(renderIntent);break;
     case 'wcAiOr':askKey('openrouter').then(renderIntent);break;
     case 'wcAiOllama':askKey('ollama').then(renderIntent);break;
+    case 'wcAiCl':askKey('claude').then(renderIntent);break;
+    case 'wcAiOa':askKey('openai').then(renderIntent);break;
+    case 'wcAiDs':askKey('deepseek').then(renderIntent);break;
+    case 'wcAiGrok':askKey('grok').then(renderIntent);break;
     case 'wcAiTest':askKey(aiProv()).then(renderIntent);break;
     case 'nkKey':askKey().then(()=>{if(!aiKey())return renderIntent();if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';intentAnalyse();}else run();});break;
     case 'nkBack':iw.err='';if(iw.nokeyFrom==='ask'){iw.welcome=false;iw.step='ask';renderIntent();}else go('w3');break;
@@ -10802,7 +11020,9 @@ function readyParts(){
 }
 function readyWiring(){const o=wr;wr={plan:planWiring(),pos:{},hi:-1,tab:'list',chat:{msgs:[],busy:false}};try{if(!wr.plan.error){placeModules();linkNets();}return wiringText();}finally{wr=o;}}// a fresh plan with its wire links, without touching the open window
 updateStrip();
-window.WFEnclosure={askKey,openCodeGated,openWelcome,openWizard,openLibrary,openWiring,planWiring,esphomeYaml,fritzingData,engine,autoLayout,buildSolids,get layout(){return lay;},parts:allParts,reloadState};
+window.WFEnclosure={askKey,openCodeGated,openWelcome,openWizard,openLibrary,openWiring,planWiring,esphomeYaml,fritzingData,engine,autoLayout,buildSolids,get layout(){return lay;},parts:allParts,reloadState,
+  // (startup-r1) exposed so the main script's page-load call can invoke the startup screen
+  openStartupChoice,openSetup};
 })();
 </script>
 <script>

@@ -1,5 +1,5 @@
 {
   "version": "1.9.42",
-  "notes": "Ollama response timing, smarter AI parts, Start Here scripts",
+  "notes": "Smarter parts matching: soil moisture sensor now correctly identified, plain LEDs no longer confused with WS2812/NeoPixel, LED wall mounts now cut proper holes in the box, soil sensor correctly placed outside the enclosure",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }
