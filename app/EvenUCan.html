@@ -249,6 +249,7 @@ if(location.protocol==='file:'){
     </nav>
     <span class="mspace"></span>
     <button id="bBuild" title="Start a new gadget: describe what it should do and EvenUCan plans the parts, the box and the code, step by step">💡 <span class="bl">Start a project</span></button>
+    <button id="bCookbook" title="Cookbook: tick the parts you own at home, then ask the AI what you can build today" style="padding:4px 10px">🍳 <span class="bl">Cookbook</span></button>
     <!-- The old menu-bar buttons stay here, hidden, so every id and handler keeps working; the menus click them. -->
     <div id="legacyBtns" hidden aria-hidden="true">
       <button id="bNew" title="New (Ctrl+N)">New</button>
@@ -3836,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.45';
+const APP_VERSION='1.9.46';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -10754,6 +10755,7 @@ function wcRender(){
 <button id="wcNoAi" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧰 Carry on without AI</span><br><span class="ewNote">Start from a ready-made example, or tick the parts you have</span></button>
 <div class="wcOr"><span>or</span></div>
 <button id="wcDraw" class="wcBig wcPlain"><span style="font-size:15px">✏️ I want to draw something myself</span><br><span class="ewNote">(close this and use the drawing canvas)</span></button>
+<div style="margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,#7048e8 5%,var(--bg2));text-align:left"><b>🍳 New: Open Cookbook</b> — tick the parts you own at home, set quantities, then press <b>💡 What can I build?</b> and the AI suggests up to 6 projects you can start today. Find it in the <b>Tools</b> menu or the <b>🍳 Cookbook</b> button in the top bar.</div>
 <label style="display:inline-flex;gap:6px;align-items:center;margin-top:16px"><input type="checkbox" id="wcNoShow"${w.noShow?' checked':''}> Don't show this when I open a new file</label>
 <div class="ewNote" style="margin-top:4px">You can always come back with <b>💡 Start a project</b> at the top right.</div></div>`;
     f.style.display='none';f.innerHTML='';focus='wcIdea';
@@ -10945,6 +10947,7 @@ iwBack.addEventListener('keydown',e=>{
 });
 $('ewIntent').onclick=openIntent;
 $('bBuild').onclick=()=>openWelcome(false);
+$('bCookbook').onclick=()=>openCookbook();
 $('iwX').onclick=closeIntent;
 $('iwFoot').addEventListener('click',e=>{
   const id=e.target.id;
