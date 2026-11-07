@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.49';
+const APP_VERSION='1.9.50';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5612,6 +5612,48 @@ const BUILTIN=[
     notes:'Exposed PCB-trace water sensor. 3-pin header (VCC/GND/SIG). Analogue output. Keep the header dry.',features:[]},
   {id:'b-breadboard830',name:'830-point breadboard',type:'connector',shape:'rect',w:170,d:63,pcb:0,h:9,below:0,mount:'floor',acc:'approx',
     notes:'Standard full-size solderless breadboard. 830 tie points. No mounting holes (rubber feet).',features:[]},
+
+  // ── Environmental & climate sensors ──────────────────────────────────────
+  {id:'b-bmp180',name:'BMP180 barometric pressure sensor',type:'sensor',shape:'rect',w:10.5,d:12.5,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Bosch BMP180 breakout. I²C, 4-pin header. Measures pressure, altitude and temperature. Superseded by BMP280 but very common.',features:[]},
+  {id:'b-yl69',name:'YL-69 soil moisture sensor',type:'sensor',shape:'rect',w:60,d:20,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Exposed-trace soil probe. Used with a companion comparator board. 2-pin connector plus 4-pin header on the driver board.',features:[]},
+  {id:'b-fc37',name:'FC-37 raindrop sensor',type:'sensor',shape:'rect',w:54,d:40,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Exposed-trace rain / water detector board. Companion comparator module with 4-pin header and trimpot.',features:[]},
+  {id:'b-mq2',name:'MQ-2 smoke / gas sensor',type:'sensor',shape:'rect',w:32,d:22,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Detects smoke, LPG, methane, alcohol. Cylindrical heater element on top. 4-pin header (AO/DO/GND/VCC). Needs warm-up time.',features:[]},
+  {id:'b-mq7',name:'MQ-7 CO sensor',type:'sensor',shape:'rect',w:32,d:22,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Carbon monoxide sensor. Same board footprint as MQ-2 family.',features:[]},
+  {id:'b-mq135',name:'MQ-135 air quality sensor',type:'sensor',shape:'rect',w:32,d:22,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Detects NH3, NOx, alcohol, benzene, CO2. Same board footprint as MQ-2 family.',features:[]},
+  // ── Motion, position & optical sensors ────────────────────────────────────
+  {id:'b-flamesensor',name:'Flame sensor module (IR)',type:'sensor',shape:'rect',w:30,d:14,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'IR phototransistor sensitive to 760–1100 nm. Detects candle-sized flames up to ~1 m. 4-pin header (AO/DO/GND/VCC).',features:[]},
+  {id:'b-linetrack',name:'IR line tracking sensor',type:'sensor',shape:'rect',w:40,d:16,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'IR emitter + receiver pair for line-following robots. Detects black line on white surface. 4-pin header. Trimpot to set sensitivity.',features:[]},
+  // ── Human interface & biometric ───────────────────────────────────────────
+  {id:'b-ky039',name:'KY-039 heartbeat sensor',type:'sensor',shape:'rect',w:15,d:36,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'IR transmitter + phototransistor in a clip-shaped holder. Place a finger over the tip. Analogue output. 3-pin header.',features:[]},
+  // ── Control & power ───────────────────────────────────────────────────────
+  {id:'b-relay8ch',name:'5 V relay module (8-channel)',type:'relay',shape:'rect',w:140,d:55,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Eight relays, 10 A 250 VAC each. 10-pin header (VCC/GND/IN1–IN8). Screw terminals on the relay side.',features:[]},
+  {id:'b-ds1302',name:'DS1302 RTC module',type:'board',shape:'rect',w:38,d:22,pcb:1.6,h:10,below:0,mount:'floor',acc:'approx',
+    notes:'Older real-time clock module with CR2032 battery. 3-wire SPI (not I²C). 5-pin header.',features:[]},
+  // ── Arduino shields & expansion boards ────────────────────────────────────
+  {id:'b-ethernetshield',name:'Arduino Ethernet Shield (W5100)',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:15,below:0,mount:'floor',acc:'approx',
+    notes:'Stacks on Uno/Mega. RJ-45 Ethernet port on one short end. SD card slot. Same mounting holes as Uno (3.2 mm dia).',
+    features:[{t:'port',kind:'RJ-45',side:'xmin',u:15,zc:5,pw:16,ph:13},{t:'hole',x:2.5,y:50.8,dia:3.2},{t:'hole',x:66.1,y:50.8,dia:3.2},{t:'hole',x:66.1,y:7.6,dia:3.2},{t:'hole',x:15.3,y:2.5,dia:3.2}]},
+  {id:'b-sensorshieldv5',name:'Sensor Shield V5.0 (Uno)',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'Stacks on Uno. Breaks all digital and analogue pins out to 3-pin VCC/GND/SIG headers. IIC port and SD slot.',features:[]},
+  {id:'b-protoshield',name:'Arduino Proto Shield (Uno)',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'Blank prototyping board that stacks on an Uno or Mega. Grid of 0.1″ holes for custom soldering.',features:[]},
+  // ── Raspberry Pi HATs ──────────────────────────────────────────────────────
+  {id:'b-sensehat',name:'Raspberry Pi Sense HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:15,below:0,mount:'floor',acc:'approx',
+    notes:'HAT for Pi A+/B+/2/3/4/5. 8×8 RGB LED matrix, 5-way joystick, humidity/pressure/gyro/accel sensors. 40-pin GPIO header.',features:[]},
+  {id:'b-upsdhat',name:'Raspberry Pi UPS HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:14,below:0,mount:'floor',acc:'approx',
+    notes:'Battery backup HAT for Raspberry Pi. Fits Pi 3B+/4/5. I²C fuel gauge. Sizes vary by brand — measure yours.',features:[]},
+  {id:'b-motorhat',name:'Raspberry Pi Motor / Servo HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'PWM HAT for controlling DC motors, steppers, and servos. I²C, 40-pin header. Screw terminals for motors.',features:[]},
 ];
 for(const b of BUILTIN)b.builtin=true;
 // ---- pins, for the wiring diagram. x,y: position on the part (mm, same frame as its features; approximate
