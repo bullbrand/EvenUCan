@@ -10914,16 +10914,22 @@ ${aiHelperBox(true)}
 // (1.9.37) "About the AI helper": honest about what is sent where, which keys work, and whether one is set up.
 function aiHelperBox(short){
   const desk=!!(window.wfNative&&window.wfNative.aiPost),has=!!aiKey(),P=PROVIDERS[aiProv()];
+  // Collapsed by default when a key is already set; expanded when no key yet
+  const startOpen=!has;
   return `<div class="aiHelp" style="border:1px solid #c9d7ea;background:#f4f8fd;border-radius:8px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.5">
-<div style="font-weight:600;font-size:14px">🤖 About the AI helper</div>
-${short?'':'<div>When you describe an idea, an AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: use a free key, a paid key, or a model running on this computer with Ollama if you\'d rather stay fully offline.</div>'}
+<div style="font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none" onclick="(function(el){var b=el.closest('.aiHelp').querySelector('.aiHelpBody');var open=b.style.display!=='none';b.style.display=open?'none':'';el.querySelector('.aiHelpChev').textContent=open?'▶':'▼';})(this)">🤖 About the AI helper <span class="aiHelpChev" style="font-size:11px;color:#888">${startOpen?'▼':'▶'}</span></div>
+<div class="aiHelpBody" style="display:${startOpen?'':'none'}">
+${short?'':'<div style="margin-top:6px">When you describe an idea, an AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: use a free key, a paid key, or a model running on this computer with Ollama if you\'d rather stay fully offline.</div>'}
 <div style="font-size:12px;color:var(--text2);margin:6px 0 2px;font-weight:600">Free keys (no credit card needed):</div>
 <div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:0 0 8px"><button id="wcAiGem">🆓 Google Gemini</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>🆓 NVIDIA${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">🆓 Groq</button><button id="wcAiOr">🆓 OpenRouter</button><button id="wcAiOllama">🆓 Ollama (offline)</button></div>
 <div style="font-size:12px;color:var(--text2);margin:2px 0 2px;font-weight:600">Paid keys (very cheap, most capable):</div>
 <div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:0 0 4px"><button id="wcAiCl">💳 Claude (Anthropic)</button><button id="wcAiOa">💳 ChatGPT (OpenAI)</button><button id="wcAiDs">💳 DeepSeek</button><button id="wcAiGrok">💳 Grok (xAI)</button></div>
 <div class="ewNote">${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'} Paid keys cost a fraction of a cent per run — DeepSeek is the cheapest.</div>
 <div style="margin-top:4px">${has?`<span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button>`:'<span class="warn">No AI key is set up yet.</span> You can set one up now or later.'}</div>
-<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it - except Ollama, which runs on this computer and sends nothing anywhere. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
+<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it - except Ollama, which runs on this computer and sends nothing anywhere. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div>
+</div>
+${has&&!startOpen?`<div style="margin-top:6px"><span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button></div>`:''}
+</div>`;
 }
 // (1.9.37) Carry on without AI: ready-made examples (common modules and built-in parts, no look-up needed)
 const NOAI_EX=[
