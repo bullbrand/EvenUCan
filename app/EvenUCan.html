@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.52';
+const APP_VERSION='1.9.53';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -11285,7 +11285,7 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
       parts===1?'1 part · '+units+' unit'+(units===1?'':'s') :
       parts+' parts · '+units+' total units';
   }
-  $('cbList').addEventListener('change',e=>{
+  $('cbList').addEventListener('input',e=>{
     const inp=e.target;if(!inp.classList.contains('cbQty')||!inp.dataset.cbid)return;
     const stock=getStock();
     const qty=Math.max(0,parseInt(inp.value,10)||0);
@@ -11305,6 +11305,17 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
 
   $('cbAsk').onclick=async()=>{
     if(cbBusy)return;
+    // Flush any typed-but-not-yet-saved quantities before reading stock
+    document.querySelectorAll('.cbQty').forEach(inp=>{
+      if(!inp.dataset.cbid)return;
+      const stock2=getStock();
+      const qty=Math.max(0,parseInt(inp.value,10)||0);
+      if(qty>0)stock2[inp.dataset.cbid]=qty;else delete stock2[inp.dataset.cbid];
+      setStock(stock2);
+      const row=inp.closest('.cbItem');
+      if(row){row.classList.toggle('cbOwned',qty>0);inp.style.borderColor=qty>0?'#7048e8':'';};
+    });
+    updateCbCount();
     const stock=getStock();
     const owned=Object.entries(stock).filter(([,q])=>q>0);
     if(!owned.length){WF.flash('Set at least one part quantity above 0 — the AI needs to know what you have.');return;}
