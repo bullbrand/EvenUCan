@@ -3035,6 +3035,59 @@ function pasteClip(){
 let nav=null,lastM={x:0,y:0},lastE=null;
 const mpos=e=>{const r=cv.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top};};
 cv.addEventListener('contextmenu',e=>e.preventDefault());
+// Right-click context menu (Cut/Copy/Paste) for text inputs and textareas anywhere in the app.
+// Browsers suppress the native context menu in some sandboxed / PWA contexts, so we build our own.
+(()=>{
+  const menu=document.createElement('div');
+  menu.id='ctxMenu';
+  menu.style.cssText='position:fixed;z-index:99999;background:var(--panel,#fff);border:1px solid var(--border,#ccc);border-radius:6px;box-shadow:0 3px 12px rgba(0,0,0,.18);padding:4px 0;min-width:140px;display:none;font-size:13px';
+  document.body.appendChild(menu);
+  let ctxTarget=null;
+  const hide=()=>{menu.style.display='none';ctxTarget=null;};
+  document.addEventListener('mousedown',e=>{if(!menu.contains(e.target))hide();},true);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();},true);
+  document.addEventListener('contextmenu',e=>{
+    const t=e.target;
+    if(!(t instanceof HTMLInputElement||t instanceof HTMLTextAreaElement))return;
+    e.preventDefault();e.stopPropagation();
+    ctxTarget=t;
+    const sel=t.selectionStart!==t.selectionEnd;
+    const ro=t.readOnly||t.disabled;
+    const items=[
+      {label:'Cut',key:'cut',enabled:sel&&!ro},
+      {label:'Copy',key:'copy',enabled:sel},
+      {label:'Paste',key:'paste',enabled:!ro}
+    ];
+    menu.innerHTML=items.map(it=>`<div data-cmd="${it.key}" style="padding:6px 18px;cursor:${it.enabled?'pointer':'default'};opacity:${it.enabled?1:.4};user-select:none">${it.label}</div>`).join('');
+    menu.querySelectorAll('[data-cmd]').forEach(el=>{
+      el.addEventListener('mousedown',ev=>{
+        ev.preventDefault();ev.stopPropagation();
+        const cmd=el.dataset.cmd;
+        if(cmd==='cut'||cmd==='copy'){
+          const v=t.value.substring(t.selectionStart,t.selectionEnd);
+          navigator.clipboard&&navigator.clipboard.writeText(v).catch(()=>{});
+          if(cmd==='cut'&&!ro){const s=t.selectionStart,e2=t.selectionEnd;t.value=t.value.slice(0,s)+t.value.slice(e2);t.selectionStart=t.selectionEnd=s;t.dispatchEvent(new Event('input',{bubbles:true}));}
+        }else if(cmd==='paste'){
+          if(navigator.clipboard&&navigator.clipboard.readText){
+            navigator.clipboard.readText().then(text=>{
+              const s=t.selectionStart,e2=t.selectionEnd;
+              t.value=t.value.slice(0,s)+text+t.value.slice(e2);
+              t.selectionStart=t.selectionEnd=s+text.length;
+              t.dispatchEvent(new Event('input',{bubbles:true}));
+            }).catch(()=>{});
+          }else{t.focus();document.execCommand('paste');}
+        }
+        hide();
+      });
+    });
+    // Position near the cursor, keeping inside the viewport
+    const vw=window.innerWidth,vh=window.innerHeight;
+    menu.style.display='block';
+    const mw=menu.offsetWidth,mh=menu.offsetHeight;
+    menu.style.left=Math.min(e.clientX,vw-mw-4)+'px';
+    menu.style.top=Math.min(e.clientY,vh-mh-4)+'px';
+  },true);
+})();
 // Mouse: right-drag orbits around the point under the mouse; the left button always belongs to the active tool
 // (draw/edit, with press-drag-release finishing a step; box-select in the Select tool);
 // middle-drag pans, wheel zooms toward the mouse. A left click without dragging still does the tool's action.
@@ -3393,6 +3446,9 @@ function newFile(){
   if(docDirty&&!confirm('Discard unsaved changes to "'+docName+'"?'))return;
   if(tool.cancel)tool.cancel();
   model={faces:[],edges:[],guides:[]};lastShape=null;clearHistory();selection.clear();fileHandle=null;docName='Untitled';setGhosts([]);
+  // Clear all electronics/wizard state so reopening gives a clean workspace
+  Object.values(ELEC_KEYS).forEach(k=>{try{localStorage.removeItem('opensketch.'+k);}catch(e){}});
+  try{Object.keys(localStorage).filter(k=>/^opensketch\.intent_inputs\./.test(k)).forEach(k=>localStorage.removeItem(k));}catch(e){}
   commitChange();setDirty(false);setView('iso');homeCam();camDirty();setWorkPlane('ground');cubeIntro(true);
   if(window.WFEnclosure&&window.WFEnclosure.openWelcome)window.WFEnclosure.openWelcome(true);// (r4) unless the user turned it off
 }
@@ -7173,7 +7229,7 @@ function finishSide(pins){
 // The key is kept on this computer only and is never exported with parts.
 const AI_MODELS=['gemini-2.5-flash','gemini-3.6-flash','gemini-3.8-flash','gemini-3-flash-preview','gemini-2.5-flash-lite'];
 // Which AI does the reading: Google Gemini, NVIDIA, Groq or OpenRouter (free keys) or Claude (paid key). Each keeps its own key.
-const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'},ollama:{name:'Ollama (local, offline)',short:'Ollama',key:'ollamaModel',noKey:true}};
+const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'},openai:{name:'ChatGPT / OpenAI (paid per use)',short:'ChatGPT',key:'openaiKey'},grok:{name:'Grok / xAI (paid per use)',short:'Grok',key:'grokKey'},ollama:{name:'Ollama (local, offline)',short:'Ollama',key:'ollamaModel',noKey:true}};
 const aiProv=()=>PROVIDERS[WF.store.get('aiProvider')]?WF.store.get('aiProvider'):'gemini';
 const aiKey=p=>WF.store.get(PROVIDERS[p||aiProv()].key);
 const keyLabel=()=>(aiKey()?'Change ':'Set up ')+PROVIDERS[aiProv()].short+(PROVIDERS[aiProv()].noKey?'…':' key…');
@@ -7373,7 +7429,13 @@ const KEY_HELP={
     steps:['Click <b>Open the Anthropic Console</b> below and sign in or sign up.','Add some credit under <b>Billing</b>.','Go to <b>Settings › API Keys</b> and click <b>Create Key</b>.','Copy the key (it starts with <code>sk-ant-</code>).','Come back here, paste it in the box below and click <b>Test</b>.']},
   ollama:{site:'https://ollama.com/download',open:'Download Ollama',
     about:'Completely free and offline: a small AI runs on this computer, no account and nothing sent over the internet once it\'s set up. Best for the parts-list wizard and ESPHome code; most small local models can\'t read a picture of a drawing, so those stay on Gemini or Claude.',
-    steps:['Click <b>Download Ollama</b> below, install it, and open it (it runs quietly in the background).','Open a terminal (Command Prompt, PowerShell or Terminal) and run: <code>ollama pull gemma:2b</code> (or any small model you\'d rather use, e.g. <code>llama3.2</code> or <code>qwen2.5:7b</code> - bigger models need a more powerful computer).','Type the exact model name below, the same as you pulled it (run <code>ollama list</code> if you forget it).','Click <b>Test</b> to check EvenUCan can reach it.']}
+    steps:['Click <b>Download Ollama</b> below, install it, and open it (it runs quietly in the background).','Open a terminal (Command Prompt, PowerShell or Terminal) and run: <code>ollama pull gemma:2b</code> (or any small model you\'d rather use, e.g. <code>llama3.2</code> or <code>qwen2.5:7b</code> - bigger models need a more powerful computer).','Type the exact model name below, the same as you pulled it (run <code>ollama list</code> if you forget it).','Click <b>Test</b> to check EvenUCan can reach it.']},
+  openai:{site:'https://platform.openai.com/api-keys',open:'Open OpenAI Platform',
+    about:'Paid per use (ChatGPT / GPT-4o). Very reliable and accurate. You pay from credit you add to your OpenAI account. Good for all tasks: parts wizard, writing code and looking things up.',
+    steps:['Click <b>Open OpenAI Platform</b> below and sign in or sign up.','Add credit under <b>Billing → Add payment method</b>.','Go to <b>API Keys</b> and click <b>Create new secret key</b>.','Copy the key (it starts with <code>sk-</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']},
+  grok:{site:'https://console.x.ai/',open:'Open xAI Console',
+    about:'Paid per use (Grok by xAI). Fast and capable. You pay from credit added to your xAI account.',
+    steps:['Click <b>Open xAI Console</b> below and sign in (an X/Twitter account or email works).','Add credit under <b>Billing</b>.','Go to <b>API Keys</b> and click <b>Create API Key</b>.','Copy the key (it starts with <code>xai-</code>). You only see it once.','Come back here, paste it in the box below and click <b>Test</b>.']}
 };
 // Send a tiny "hello" with this key and return the AI's reply (or throw, saying what is wrong in plain words).
 async function aiTest(p,key){
@@ -7452,7 +7514,7 @@ function askKey(prov){
       }else if(desk){
         el.innerHTML='<div class="warn">Ollama doesn\'t seem to be running.</div><div class="btns"><button data-k="startOll">Start Ollama</button></div>';
       }else{
-        el.innerHTML='<div class="warn">Couldn\'t reach Ollama at localhost:11434. Start it on this computer (or open the desktop app, which can start it for you), then click Test again.</div>';
+        el.innerHTML='<div class="ewNote">Running EvenUCan in a browser tab? The browser blocks direct access to Ollama (CORS) — if Ollama is already running, that\'s fine: just type the model name below and click <b>Test</b> to confirm it works. Run <code>ollama list</code> in a terminal to see your models.</div>';
       }
     };
     const draw=()=>{
@@ -7463,6 +7525,7 @@ function askKey(prov){
 <div class="btns kOpen"><button data-k="open">${esc(h.open)}</button></div>
 ${noKey?'<div id="ollStatus"></div>':''}
 <input data-k="key" autocomplete="off" spellcheck="false" placeholder="${noKey?'Type the Ollama model name here, e.g. gemma:2b':'Paste your '+esc(PROVIDERS[p].short)+' key here'}" value="${esc(has?aiKey(p):'')}">
+${noKey?(()=>{try{const all=JSON.parse(WF.store.get('ollamaTimings')||'{}'),m=aiKey(p)||'',arr=m&&all[m];if(!arr||!arr.length)return'';const avg=Math.round(arr.reduce((a,b)=>a+b,0)/arr.length),last=arr[arr.length-1];return`<div class="ewNote" id="ollTimings" style="margin-top:4px">⏱ <b>${esc(m)}</b>: last ${last}s · avg ${avg}s over ${arr.length} run${arr.length===1?'':'s'}</div>`;}catch(e){return'';}})():''}
 <div class="kTest"></div>
 <div class="btns">${has?`<button data-k="remove">Remove ${word}</button>`:''}<button data-k="test">Test</button><button data-ok>Save</button><button data-cancel>Cancel</button></div>
 <div class="ewNote" style="margin-top:6px">${noKey?'The model name stays on this computer only, and nothing is ever sent anywhere else.':'The key stays on this computer only.'}</div>`;
@@ -7472,6 +7535,7 @@ ${noKey?'<div id="ollStatus"></div>':''}
     const done=()=>{back.remove();aiChanged();res();};
     const save=()=>{
       const v=box.querySelector('input').value.trim(),word=PROVIDERS[p].noKey?'model name':'key';
+      if(!v&&PROVIDERS[p].noKey){const out=box.querySelector('.kTest');if(out)out.innerHTML='<span class="bad">Type the model name first (e.g. gemma:2b). Run <code>ollama list</code> in a terminal to see what you have.</span>';return;}
       if(v){WF.store.set(PROVIDERS[p].key,v);WF.store.set('aiProvider',p);WF.flash(PROVIDERS[p].short+' '+word+' saved on this computer. EvenUCan now uses '+PROVIDERS[p].name+'.',5000);}
       done();
     };
@@ -7604,8 +7668,9 @@ async function gemini(parts,tools){
     let r,j,msg;
     // A busy model (500/503) usually frees up within seconds: wait and ask once more, then try the next model.
     for(let attempt=0;attempt<2;attempt++){
-      try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});}
-      catch(e){throw new Error('Couldn\'t reach Google. Check the internet connection and try again.');}
+      const _gSig=AbortSignal.timeout?AbortSignal.timeout(60000):(()=>{const ac=new AbortController();setTimeout(()=>ac.abort(),60000);return ac.signal;})();
+      try{r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body),signal:_gSig});}
+      catch(e){if(e&&e.name==='AbortError')throw new Error('Google\'s AI took too long to reply (over 60 s). Try again or switch provider.');throw new Error('Couldn\'t reach Google. Check the internet connection and try again.');}
       j=await r.json().catch(()=>({}));msg=(j.error&&j.error.message)||r.statusText||'';
       aiLastReply=`Model ${m} · HTTP ${r.status}\n`+JSON.stringify(j,null,1).slice(0,6000);
       if(r.status!==500&&r.status!==503)break;
@@ -7647,22 +7712,38 @@ const OA={
   // (1.9.41) a model on this computer, not the internet. No key: the "key" box holds the model's exact
   // name instead (e.g. "gemma:2b"), the same name "ollama list" shows. No picture-reading: most small
   // local models can't do it reliably, so vision is left empty on purpose.
-  ollama:{name:'Ollama',url:'http://localhost:11434/v1/chat/completions',text:[],vision:[],local:true,limit:'whatever your computer can manage',testTokens:60}
+  ollama:{name:'Ollama',url:'http://localhost:11434/v1/chat/completions',text:[],vision:[],local:true,limit:'whatever your computer can manage',testTokens:60},
+  // Paid providers using the OpenAI-compatible chat completions API
+  openai:{name:'ChatGPT / OpenAI',starts:'sk-',url:'https://api.openai.com/v1/chat/completions',
+    text:['gpt-4.1','gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo'],
+    vision:['gpt-4.1','gpt-4o','gpt-4o-mini'],limit:'your plan\'s rate limit'},
+  grok:{name:'Grok / xAI',starts:'xai-',url:'https://api.x.ai/v1/chat/completions',
+    text:['grok-3-fast','grok-3','grok-2-latest','grok-beta'],
+    vision:['grok-2-vision-latest','grok-beta'],limit:'your plan\'s rate limit'}
 };
 const isOA=p=>!!OA[p||aiProv()];
 const oaOrder=(p,extra)=>[extra,WF.store.get(p+'Model'),...OA[p].text].filter((m,i,a)=>m&&a.indexOf(m)===i);
 // One request. The desktop app passes it on (its allow-list has all three hosts); the web version fetches directly.
 async function oaChat(p,key,model,content,maxTokens){
   const A=OA[p],post=window.wfNative&&window.wfNative.aiPost;
-  const body=JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:maxTokens});
+  // For Ollama (local): force stream:false (Ollama streams by default, which breaks JSON.parse);
+  // also cap max_tokens at 2048 since small local models typically have a 2048-token context window.
+  const mt=A.local?Math.min(maxTokens,1024):maxTokens;// small local models: cap at 1024 to halve generation time
+  const body=JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:mt,...(A.local?{stream:false}:{})});
   let status,raw;
   if(post){
     try{const r=await post(A.url,key,body);status=r.status;raw=r.text;}
     catch(e){throw new Error(A.local?'Couldn\'t reach Ollama on this computer. Make sure it\'s running (ollama serve, or just open the Ollama app) and that you pulled the model you typed.':'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
   }else{
     if(A.deskOnly)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini, Groq or OpenRouter (all free) or Claude instead.');
-    try{const r=await fetch(A.url,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},A.local?{}:{Authorization:'Bearer '+key},A.headers||{}),body});status=r.status;raw=await r.text();}
-    catch(e){throw new Error(A.local?'Couldn\'t reach Ollama on this computer. Make sure it\'s running, and that your browser can reach http://localhost:11434 (if not, set OLLAMA_ORIGINS or use the desktop app instead).':'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+    const _oMs=A.local?300000:60000;// local models get 5 min; cloud APIs get 60 s
+    const _oSig=AbortSignal.timeout?AbortSignal.timeout(_oMs):(()=>{const ac=new AbortController();setTimeout(()=>ac.abort(),_oMs);return ac.signal;})();
+    const _t0=A.local?Date.now():0;
+    try{const r=await fetch(A.url,{method:'POST',headers:Object.assign({'Content-Type':'application/json'},A.local?{}:{Authorization:'Bearer '+key},A.headers||{}),body,signal:_oSig});status=r.status;raw=await r.text();}
+    catch(e){console.error('EvenUCan: oaChat fetch failed',p,e);if(e&&(e.name==='AbortError'||e.name==='TimeoutError'))throw new Error((A.local?'Ollama':'The AI ('+A.name+')')+' took too long to reply (over '+(A.local?'5 min':'60 s')+'). '+(A.local?'The model may be too large for your computer. Try a smaller one, e.g. qwen2.5:3b or gemma2:2b (run: ollama pull qwen2.5:3b).':'Try again or switch to another provider.'));throw new Error(A.local?'Couldn\'t reach Ollama on this computer. If it\'s running, the browser may be blocking it. Try opening EvenUCan from http://localhost:8080 instead of file://. Error: '+(e&&e.message||e):'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+    if(A.local&&status===200){// record response time for this model
+      try{const secs=Math.round((Date.now()-_t0)/1000);const all=JSON.parse(WF.store.get('ollamaTimings')||'{}');const arr=(all[model]||[]).slice(-9);arr.push(secs);all[model]=arr;WF.store.set('ollamaTimings',JSON.stringify(all));}catch(e){/* non-critical */}
+    }
   }
   let j={};try{j=JSON.parse(raw);}catch(e){/* intentional: handled below as an empty answer */}
   return {status,j,msg:String(j.detail||j.title||(j.error&&(j.error.message||j.error))||'')};
@@ -8362,6 +8443,33 @@ function renderWiring(c,cw,ch,view,F,exporting){
     for(const pin of i.pins){if(pin.r==='nc'&&i!==ctrl)continue;const [px,py]=pinXY(i,pin);c.beginPath();c.arc(X(px),Y(py),Math.max(1.6,Math.min(3,s*0.5)),0,Math.PI*2);c.fillStyle='#b9a24a';c.fill();}
     c.restore();
   }
+  // zero-connection overlay: parts that are positioned but have no wires at all
+  {const inNets=new Set(nets.flatMap(n=>n.pins.map(p=>p.inst.key)));
+  for(const i of insts){
+    if(i===ctrl||!wr.pos[i.key])continue;
+    if(inNets.has(i.key))continue;
+    // this part has pins but landed on zero nets (usually: no free GPIO left)
+    const [mx,my]=wr.pos[i.key],p=i.part,on=!F||F.insts.has(i.key);
+    c.save();c.globalAlpha=on?0.85:0.2;
+    // hatched warning fill
+    c.beginPath();c.rect(X(mx),Y(my),p.w*s,p.d*s);c.clip();
+    c.strokeStyle='#f97316';c.lineWidth=2;
+    for(let d=-(p.d*s+p.w*s);d<p.w*s+p.d*s;d+=10){
+      c.beginPath();c.moveTo(X(mx)+d,Y(my));c.lineTo(X(mx)+d+p.d*s,Y(my)+p.d*s);c.stroke();
+    }
+    c.restore();
+    c.save();c.globalAlpha=on?1:0.3;
+    // orange border
+    c.beginPath();c.rect(X(mx),Y(my),p.w*s,p.d*s);c.strokeStyle='#f97316';c.lineWidth=2.5;c.stroke();
+    // small warning badge
+    const bw=Math.min(p.w*s-6,100),bh=18,bx=X(mx)+(p.w*s-bw)/2,by=Y(my+p.d)-bh-2;
+    if(bh<p.d*s-4){
+      c.fillStyle='#f97316';c.beginPath();c.roundRect?c.roundRect(bx,by,bw,bh,4):c.rect(bx,by,bw,bh);c.fill();
+      c.fillStyle='#fff';c.font='bold 11px '+WR_FONT;c.textAlign='center';c.textBaseline='middle';
+      c.fillText('⚠ no connections',bx+bw/2,by+bh/2+0.5);
+    }
+    c.restore();
+  }}
   // wires
   nets.forEach((n,k)=>{
     const colr=netColour(n,k);
@@ -8527,8 +8635,8 @@ is <select data-ef="ruleOp"><option value="above"${f.ruleOp!=='below'?' selected
   const unk=r.unknown.map(u=>esc(u.label)).join(', ');
   h+=`<div class="efbox">`+(r.unknown.length?`<div class="warn" style="line-height:1.45;margin-bottom:6px"><b>${r.unknown.length===1?'1 part needs':r.unknown.length+' parts need'} the AI:</b> ${unk}. EvenUCan doesn't know ${r.unknown.length===1?'it':'them'} yet, so click <b>Make it with AI</b> and your AI writes ${r.unknown.length===1?'its':'their'} code from the part's name, part-file details and pins.</div>`:'')+`<b>What should it do?</b> <span class="ewNote">(optional: in your own words; your AI adds it${window.wfNative&&window.wfNative.esphomeCheck?', then ESPHome checks it':''})</span>
 <textarea data-ef="desc" rows="3" style="width:100%;margin-top:4px" placeholder="In your own words, e.g. Light the LED red when the temperature is over 28 °C and green when it's fine, and turn on the relay when it's over 30 °C.">${esc(f.desc||'')}</textarea>
-<div class="ewRow"><label>AI <select id="wrProv">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${aiProv()===k?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></label><button id="wrKey">${keyLabel()}</button></div>
-<div class="ewRow"><button id="wrAi"${esphAiBusy||!canAI?' disabled':''}>${esphAiBusy?'Writing… please wait':'Make it with AI'}</button>${canAI?'':'<span class="ewNote">Needs a key for this AI: click <b>'+esc(keyLabel())+'</b> above.</span>'}</div><div id="wrAiOut">${wr.aiMsg||''}</div></div>`;
+<div class="ewRow"><button id="wrAi"${esphAiBusy||!canAI?' disabled':''}>${esphAiBusy?'Writing… please wait':'Make it with AI'}</button>${canAI?'':'<span class="ewNote">Needs a key for this AI: click <b>'+esc(keyLabel())+'</b> above.</span>'}</div><div id="wrAiOut">${wr.aiMsg||''}</div>
+<div class="ewRow"><label>AI <select id="wrProv">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${aiProv()===k?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></label><button id="wrKey">${keyLabel()}</button></div></div>`;
   h+=`<textarea readonly class="wrCode" id="wrEsp" style="height:200px;margin-top:6px">${esc(esphCurrent(r))}</textarea>
 <div class="ewRow"><button id="wrPfIde" class="primary hoMain" title="Put this device into your ESPHome folder, open ESPHome and show each step to get it on the board">Open in ESPHome</button><button class="sec" data-copy="wrEsp">Copy YAML</button><button class="sec" id="wrEspSave">Save .yaml…</button>${window.wfNative&&window.wfNative.esphomeCheck?'<button class="sec" id="wrEspCheck" title="Check the file with the ESPHome on this computer (the same as Validate in ESPHome Device Builder)">Check with ESPHome</button>':''}</div>
 <div id="wrEspOut"></div>`+ntfyBox(intentTopic())+(r.warn.length?`<ul style="list-style:none;padding:0;margin:6px 0">${r.warn.map(w=>`<li class="warn"><span class="ic">!</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('')}</ul>`:'')+
@@ -8538,6 +8646,23 @@ is <select data-ef="ruleOp"><option value="above"${f.ruleOp!=='below'?' selected
 // ---- (r3) Arduino and Raspberry Pi: the whole program is written by the user's AI from the idea and this wiring.
 // Only when asked (the Generate button, or "Now let's look at the code"); kept until the wiring changes.
 let pfCode=null,pfBusy=false,pfMsg='';// pfCode: {pf, sig, code, notes, warn}
+// ---- AI countdown timer helpers (shared by pfGenerate and esphWithAI)
+let _aiCd=null;
+function _cdStart(spanId,secs){
+  if(_aiCd)clearInterval(_aiCd);
+  let s=secs;
+  const show=()=>{const el=document.getElementById(spanId);if(el)el.textContent=s+'s';};
+  show();// show immediately, don't wait 1 second
+  _aiCd=setInterval(()=>{s--;show();if(s<=0)clearInterval(_aiCd);},1000);
+}
+function _cdStop(){if(_aiCd){clearInterval(_aiCd);_aiCd=null;}}
+// Return a "try a different AI" hint if another provider has a key set up.
+function _otherAiHint(){
+  const cur=aiProv();
+  const others=Object.entries(PROVIDERS).filter(([k])=>k!==cur&&aiKey(k));
+  if(!others.length)return '';
+  return ' You could try switching to '+others.map(([,v])=>v.name).join(' or ')+'.';
+}
 // Arduino/Raspberry Pi need their own software on this computer, which (unlike ESPHome) EvenUCan never
 // installs or runs anything of - just a presence check, so the Wiring window can point at the download page
 // instead of assuming. In the desktop app that's a real check (window.wfNative.checkTool); the web page can't
@@ -8965,11 +9090,18 @@ async function pfGenerate(){
   const pf=pfOfPlan(P);if(pf==='esphome')return;
   if(planIssues(P).some(c=>c.block)){renderWiringSide();return WF.flash('First choose how to fix the problem shown in red.',6000);}// (wizard-r2) checked again before the code
   if(!aiKey()){await askKey();if(!aiKey())return WF.flash('No AI key set up, so nothing was sent. Click "'+keyLabel()+'" to set one up, or click "Make a starter (no AI)".',7000);}
-  pfBusy=true;pfMsg='';renderWiringSide();
+  // (bug-8) Block code generation if any parts still have no pin data.
+  const _pfMissingPins=(P.warn||[]).filter(w=>w.includes('has no pin data yet'));
+  if(_pfMissingPins.length){
+    const _pfMissingNames=_pfMissingPins.map(w=>w.replace(/ has no pin data yet[\s\S]*$/,'')).join(', ');
+    return WF.flash(_pfMissingNames+' '+(_pfMissingPins.length===1?'has':'have')+' no pin data yet — go to Parts and use "Look up online" to fill in the pins before writing code.',9000);
+  }
+  pfBusy=true;pfMsg='';renderWiringSide();_cdStart('pfAiCd',aiProv()==='ollama'?300:60);
   try{const r=await platformCodeAI(pf);pfCode=Object.assign(r,{pf,sig:planSig(P)});}
   catch(e){console.error('EvenUCan: could not write the '+PLATFORMS[pf].code,e);
-    pfMsg=e.refuse?'Your AI says it can\'t do everything you asked with these parts: '+e.refuse+' Change the board or parts above, then try again.':/garbled/.test(e.message||'')?'Sorry, the AI\'s reply couldn\'t be read: click Write the code with AI again.':'The AI couldn\'t be reached: '+(e.message||e)+' Check the key and the internet connection.';}
-  finally{pfBusy=false;if(wrBack.style.display==='grid'&&wr.plan===P)renderWiringSide();drawGuide();}
+    const isTimeout=e&&(e.name==='AbortError'||/abort|timed? ?out/i.test(e.message||''));
+    pfMsg=e.refuse?'Your AI says it can\'t do everything you asked with these parts: '+e.refuse+' Change the board or parts above, then try again.':/garbled/.test(e.message||'')?'Sorry, the AI\'s reply couldn\'t be read: click Write the code with AI again.':isTimeout?'The AI didn\'t reply within 60 seconds.'+_otherAiHint()+' Check your internet connection or try again.':'The AI couldn\'t be reached: '+(e.message||e)+' Check the key and the internet connection.';}
+  finally{_cdStop();pfBusy=false;if(wrBack.style.display==='grid'&&wr.plan===P)renderWiringSide();drawGuide();}
 }
 // The Code tab for a board that doesn't run ESPHome.
 function platformCodePanel(pf){
@@ -8978,7 +9110,7 @@ function platformCodePanel(pf){
   let h=`<h4>${esc(PF.code)} for ${esc(P.ctrl.label)}</h4>`+capHtml(issues)+`<div class="ewNote" style="margin-bottom:6px">Two ways to get the ${isIno(pf)?'sketch':'program'}: your AI writes the whole thing from your idea and this wiring (needs a key and the internet), or EvenUCan makes a <b>starter</b> without AI, with the pins filled in and a note for each part, for you to finish. EvenUCan can't test the code: ${isIno(pf)?'click ✓ Verify in the Arduino IDE before you upload it':'run it on the Pi and read any error it prints'}.</div>
 <div class="ewRow"><label>AI <select id="wrProv">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${aiProv()===k?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></label><button id="wrKey">${keyLabel()}</button></div>
 <div class="ewRow" style="flex-wrap:wrap"><button id="wrPfGen"${canAI?' class="primary"':''}${pfBusy||!canAI||blocked?' disabled':''}>${pfBusy?'Writing... please wait':c&&!c.starter?'Write it again with AI':'Write the code with AI'}</button><button id="wrPfStarter"${canAI?' class="sec"':' class="primary"'}${pfBusy||blocked?' disabled':''}>${c&&c.starter?'Make the starter again':'Make a starter '+(isIno(pf)?'sketch':'program')+' (no AI)'}</button></div>${canAI?'':'<div class="ewNote">Writing it with AI needs a key: click <b>'+esc(keyLabel())+'</b> above. Or make a starter without AI.</div>'}`;
-  if(pfBusy)h+=`<div class="ewNote">Asking your AI (${esc(PROVIDERS[aiProv()].name)})... this usually takes 10–60 seconds.</div>`;
+  if(pfBusy)h+=`<div class="ewNote">Asking your AI (${esc(PROVIDERS[aiProv()].name)})… <span id="pfAiCd"></span> this usually takes 10–60 seconds.</div>`;
   if(pfMsg)h+=`<div class="bad" style="margin:6px 0">${esc(pfMsg)}</div>`;
   if(c){
     if(c.sig!==planSig(P))h+='<div class="warn" style="margin:6px 0">The wiring has changed since this was written, so some pins may be wrong: click <b>Write it again</b>.</div>';
@@ -9017,11 +9149,19 @@ async function esphWithAI(){
   if(!desc&&!base.unknown.length)return WF.flash('Every part is already in the file. Describe what the device should do in the box, then click Make it with AI.',6000);
   if(!aiKey())return WF.flash('Set up a key for this AI first: click "'+keyLabel()+'" next to the AI menu.',6000);
   const check=window.wfNative&&window.wfNative.esphomeCheck,say=h=>{wr.aiMsg=h;const o=$('wrAiOut');if(o)o.innerHTML=h;};
+  // (bug-8) Block code generation if any parts still have no pin data — writing code with missing pins produces broken output.
+  const _missingPins=(P.warn||[]).filter(w=>w.includes('has no pin data yet'));
+  if(_missingPins.length){
+    const _missingNames=_missingPins.map(w=>w.replace(/ has no pin data yet[\s\S]*$/,'')).join(', ');
+    say('<div class="bad">⚠️ <b>'+esc(_missingNames)+'</b> '+(_missingPins.length===1?'has':'have')+' no pin data yet, so the AI can\'t wire '+(_missingPins.length===1?'it':'them')+' up. Go to <b>Parts</b>, click <b>Look up online</b> next to each one to fill in the pins, then come back and click Write it with AI again.</div>');
+    return;
+  }
   esphAiBusy=true;wr.ai=null;renderWiringSide();
   let yaml=base.yaml,notes='',ok=null,errs='',tries=0;
   try{
     for(;tries<3;tries++){
-      say(`<div class="ewNote">${tries?'Fixing what ESPHome found (try '+(tries+1)+' of 3)…':'Asking your AI ('+esc(PROVIDERS[aiProv()].name)+')… this usually takes 10–40 seconds.'}</div>`);
+      say(`<div class="ewNote">${tries?'Fixing what ESPHome found (try '+(tries+1)+' of 3)…':'Asking your AI ('+esc(PROVIDERS[aiProv()].name)+')… <span id="wrAiCd"></span> '+(aiProv()==='ollama'?'Local AI can take 1–5 minutes depending on your model and computer.':'This usually takes 10–40 seconds.')}</div>`);
+      if(!tries)_cdStart('wrAiCd',aiProv()==='ollama'?300:60);
       const text=ESPH_AI_PROMPT+`\n\nThe parts in this device: ${P.insts.map(i=>i.label).join(', ')}.\nReadings (sensor ids): ${base.meas.map(m=>m.id+' = '+m.label+' in '+(m.unit==='cm'?'metres':m.unit)).join(', ')||'none'}.\nLight id: ${base.lightId||'none'}${base.rgb?' (an RGB light)':base.lightId?' (on/off only)':''}.\n\n`+(base.unknown.length?`Parts not in the file yet: write the ESPHome components for each of these, using exactly the GPIO pins given (they are already wired that way). Work out what each module is from its name, part-file details and pin names, then remove the "# Still to add" comment:\n${JSON.stringify(base.unknown,null,1)}\n\n`:'')+`What the user wants the device to do:\n"""${desc||'(nothing extra: just make every part work and report its readings)'}"""\n\n`+intentAINote()+
         (tries?`Your last file failed ESPHome's check with these errors. Fix them and send the whole corrected file:\n${errs}\n\nYour last file:\n${yaml}`:`The current file:\n${yaml}`);
       const {data}=aiProv()==='claude'?await claude([{type:'text',text}],false):isOA()?await oaAI(aiProv(),text):await gemini([{text}],false);
@@ -9039,7 +9179,10 @@ async function esphWithAI(){
     say(ok===false?`<div class="bad">✗ After 3 tries ESPHome still finds a problem in the AI's file. It is shown below so you can see it, but don't flash it: try describing it more simply, or use the Light rule.</div>`:
       `<div class="${ok?'ok':'warn'}" style="margin:4px 0">${ok?'✓ Written by your AI and checked by ESPHome'+(tries?' (fixed after '+tries+' tr'+(tries>1?'ies':'y')+')':''):'Written by your AI. ESPHome isn\'t on this computer, so click Validate in ESPHome Device Builder before installing.'}</div>`+
       (notes?`<div class="ewNote"><b>AI's notes:</b> ${esc(notes)}</div>`:'')+'<div class="ewNote">Read it through before you install it: an AI can misunderstand. <a href="#" id="wrAiUndo">Back to the plain file</a></div>');
-  }catch(e){say('<div class="bad">'+esc(e.message||String(e))+'</div>');}
+  }catch(e){
+    const isTimeout=e&&(e.name==='AbortError'||/abort|timed? ?out/i.test(e.message||''));
+    say('<div class="bad">'+(isTimeout?'The AI didn\'t reply within 60 seconds.'+esc(_otherAiHint())+' Check your internet connection or try again.':esc(e.message||String(e)))+'</div>');
+  }finally{_cdStop();}
   esphAiBusy=false;
   const msg=wr.aiMsg;renderWiringSide();wr.aiMsg=msg;const o=$('wrAiOut');if(o)o.innerHTML=msg;
 }
@@ -9754,7 +9897,33 @@ You must:
 6. Output ONLY valid JSON in the exact format specified, no other text.
 Guidance:
 - Put the board in "microcontroller", not in "parts".
-- Prefer common hobby modules and put their usual names in "search", e.g. "SSD1306 OLED" (small I2C screen), "BME280" (temperature, humidity, pressure), "MPU-6050 accelerometer" (tilt/level), "HC-SR04 ultrasonic" (distance), "HC-SR501 PIR" (motion), "BH1750" (light level), "capacitive soil moisture", "push button", "WS2812 LED", "active buzzer", "relay module", "SG90 servo".
+- RULE 1 – ONLY INCLUDE WHAT WAS ASKED FOR. Read the user's description word by word. Only add a part if the user explicitly mentioned needing that function. Never add parts because they are popular or common. Example: "check soil moisture and light an LED" needs a soil sensor and an LED — it does NOT need a tilt sensor, temperature sensor, display, buzzer, or motion sensor.
+- RULE 2 – USE THE EXACT RIGHT SENSOR. This table is the law; never substitute or add from it unless the user asked for that function:
+  SOIL/PLANT/COMPOST/POT moisture, dry soil, needs watering → "capacitive soil moisture" ONLY. Do NOT add BME280, DHT22, or MPU-6050 for a soil project.
+  AIR temperature or humidity → "BME280" or "DHT22". Only if the user asked for air temperature or humidity.
+  TILT, level, angle → "MPU-6050 accelerometer". Only if the user asked for tilt or levelling.
+  MOTION, person detected → "HC-SR501 PIR". Only if the user asked for motion detection.
+- CRITICAL – use the exact right sensor for the job. Full reference table (only add parts from here if the user asked for that function):
+  SOIL/PLANT/COMPOST/POT moisture, dry soil, needs watering → "capacitive soil moisture" (probe goes IN the soil, NOT enclosed in a box. Cannot measure air, temperature, or motion).
+  MOTION, movement, someone walking, intruder, person detected, animal detected → "HC-SR501 PIR" (passive infrared; detects body heat moving across its field. Cannot detect water, soil, temperature, or distance. Do NOT use for moisture).
+  AIR temperature, air humidity, room climate, weather reading → "BME280" or "DHT22" (measure air only. Cannot measure soil moisture or detect motion).
+  DISTANCE, how far away, range finding, proximity in cm/m → "HC-SR04 ultrasonic" (NOT PIR — PIR cannot measure distance).
+  LIGHT level, brightness, day/night, lux, ambient light → "BH1750" or "LDR photoresistor" (NOT PIR, NOT moisture sensor).
+  VIBRATION, shaking, impact, rattle → "SW-420 vibration sensor" or "KY-002".
+  TILT, level, angle, is it straight → "MPU-6050 accelerometer" (can detect tilt on all axes).
+  MAGNET, door open/closed, lid closed → "reed switch" or "KY-003 hall sensor".
+  WATER LEAK, flooding, rain on a surface, is surface wet → "water leak sensor module" (flat sensor pad placed on a surface, not in soil).
+  FINGER TOUCH, capacitive touch button → "TTP223 capacitive touch".
+  SOUND trigger, clap, loud noise → "KY-037 sound sensor".
+  GAS/smoke/air quality → "MQ-2" (smoke/LPG/H2), "MQ-135" (air quality), "SGP30" (CO2/TVOC).
+  COLOUR, what colour is an object → "TCS34725 colour sensor".
+  HEARTBEAT, pulse, heart rate → "MAX30102 pulse oximeter".
+  FINGERPRINT security → "R307 fingerprint module".
+  BAROMETRIC pressure, altitude → "BMP280" or "BME280".
+  UV index, ultraviolet → "GUVA-S12SD UV sensor".
+- Some sensors cannot go in an enclosure box: a soil moisture probe goes in soil, a waterproof temperature probe goes in liquid. Note this in "function" so the box design can accommodate it.
+- If the user wants both moisture AND temperature, use SEPARATE parts: a soil moisture sensor AND a DHT22/BME280.
+- If in doubt about which sensor to use, prefer the most specific match from the table above over a general-purpose or best-known alternative.
 - Information from the internet (weather, forecasts, prices) needs no part. For weather use the free OpenWeatherMap API and ask for the extra inputs "owm_api_key" (url https://home.openweathermap.org/api_keys) and "location" (e.g. "London,GB").
 - Messages to the user's phone use ntfy.sh (free, no account): notification_method "ntfy" and the extra input "ntfy_topic". Use "none" when the device sends nothing.
 - Power: one part with category "power" and search "USB", "LiPo battery" if it must run without a cable, or "mains adapter" if it stays plugged into a wall socket.
@@ -9997,6 +10166,17 @@ function tidyIntent(d,desc){
   A.code_libraries=(Array.isArray(d.code_libraries)?d.code_libraries:[]).map(x=>str(x,60)).filter(Boolean).slice(0,12);
   if(!/^(ntfy|none|email)$/.test(A.notification_method))A.notification_method='ntfy';
   A.parts=(Array.isArray(d.parts)?d.parts:[]).filter(p=>p&&typeof p==='object').slice(0,12).map(p=>({category:str(p.category,40),function:str(p.function,300),search:str(p.search||p.function,60),required:p.required!==false,why:str(p.why,300)}));
+  // Sanity-filter: remove parts the AI hallucinated that the user never asked for.
+  // Each rule: if the description does NOT mention any of the trigger words, remove parts matching the sensor pattern.
+  const _d=desc.toLowerCase();
+  const _notAsked=(triggers,partPattern)=>!triggers.some(w=>_d.includes(w))&&A.parts.some(p=>partPattern.test(p.search+' '+p.category));
+  const _removeParts=pat=>{ A.parts=A.parts.filter(p=>!pat.test(p.search+' '+p.category)); };
+  if(_notAsked(['tilt','level','angle','balance','lean','gyro','accelero']          ,/mpu.?6050|accelero|tilt/i))      _removeParts(/mpu.?6050|accelero|tilt/i);
+  if(_notAsked(['temperature','temp','hot','cold','heat','climate','weather','humid'],/bme280|bmp280|dht|temperature|humidity|sensors-temp|sensors-humid/i)&&/soil|plant|pot|moist|water/i.test(_d)) _removeParts(/bme280|bmp280|dht22|dht11|temperature|humidity|sensors-temp|sensors-humid/i);
+  if(_notAsked(['light','bright','lux','dark','sun','day','night']                  ,/bh1750|ldr|photo|light.level|sensors-light/i))  _removeParts(/bh1750|ldr|photo.?resistor|light.level|sensors-light/i);
+  if(_notAsked(['motion','movement','person','intruder','detect','pir']             ,/pir|hc.sr501|motion/i))           _removeParts(/pir|hc.sr501|motion/i);
+  if(_notAsked(['distance','range','ultrasonic','how far','proximity']             ,/hc.sr04|ultrasonic|distance/i))   _removeParts(/hc.sr04|ultrasonic|distance/i);
+  if(_notAsked(['display','screen','oled','lcd','show','read out']                 ,/ssd1306|sh1106|oled|lcd|display/i))_removeParts(/ssd1306|sh1106|i2c.*display|oled|lcd/i);
   const alias=k=>{k=str(k,40).toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');return /owm|openweather|weather_api/.test(k)?'owm_api_key':/^(city|town|location|place|weather_location|city_name)$/.test(k)?'location':/ntfy/.test(k)?'ntfy_topic':k;};
   const ins=[];
   for(const x of Array.isArray(d.extra_inputs_needed)?d.extra_inputs_needed:[]){
@@ -10051,7 +10231,7 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
     f.innerHTML='<button id="iwGo" class="primary">Figure it out for me →</button><button id="iwCancel">Close</button>';
     setTimeout(()=>{const t=$('iwDesc');if(t)t.focus();},0);
   }else if(iw.step==='busy'){
-    b.innerHTML=(iw.welcome?'<div style="font-size:18px;font-weight:600;margin:4px 0 8px">🔮 Working out your gadget...</div>':'')+'<div style="margin:6px 0 10px" aria-live="polite">'+IW_STEPS.map((s,i)=>`<div class="${i<iw.prog?'ok':i===iw.prog?'':'ewNote'}" style="font-size:14px;margin:4px 0">${i<iw.prog?'✓':i===iw.prog?'<span class="wcSpin">⟳</span>':'·'} ${esc(s)}</div>`).join('')+'</div><div class="ewNote">Asking an AI usually takes 10–40 seconds.</div>';
+    b.innerHTML=(iw.welcome?'<div style="font-size:18px;font-weight:600;margin:4px 0 8px">🔮 Working out your gadget...</div>':'')+'<div style="margin:6px 0 10px" aria-live="polite">'+IW_STEPS.map((s,i)=>`<div class="${i<iw.prog?'ok':i===iw.prog?'':'ewNote'}" style="font-size:14px;margin:4px 0">${i<iw.prog?'✓':i===iw.prog?'<span class="wcSpin">⟳</span>':'·'} ${esc(s)}</div>`).join('')+'</div><div class="ewNote">'+(aiProv()==='ollama'?'Local AI can take 1–5 minutes depending on your model and computer.':'Asking an AI usually takes 10–40 seconds.')+' <span id="iwAiCd"></span></div>';
     f.innerHTML='<button id="iwCancel">Close</button>';
   }else if(iw.step==='error'){
     b.innerHTML=`<div class="bad" style="font-size:14px;margin-bottom:8px">${esc(iw.err)}</div>`+(iw.raw?`<details><summary>What the AI sent back</summary><textarea readonly class="wrCode" style="height:180px">${esc(iw.raw)}</textarea></details>`:'');
@@ -10128,21 +10308,24 @@ async function intentAnalyse(){
   if(desc.length<8){iw.err='Tell me a little more about what it should do (a sentence or two is plenty).';return renderIntent();}
   if(!aiKey()){iw.nokeyFrom='ask';iw.welcome=true;iw.step='nokey';return renderIntent();}// (1.9.37) a choice, not a dead end
   if(iw.busy)return;
-  await ensureLibraryReady();// (r4 fix) get the parts library ready now, while this click is still fresh - see its comment
-  iw.busy=true;iw.step='busy';iw.prog=0;renderIntent();
+  iw.busy=true;iw.step='busy';iw.prog=0;renderIntent();_cdStart('iwAiCd',aiProv()==='ollama'?300:60);
   try{
     let data=null;
     try{
       const text=INTENT_PROMPT+'\n\nWhat the beginner wants:\n"""'+desc+'"""';
-      ({data}=await callAI(text));
+      // (PNA fix) Start the AI fetch and library load together so the Ollama fetch begins
+      // immediately within Chrome's Private Network Access user-activation window — no await
+      // before this point that could expire it. ensureLibraryReady() runs in parallel.
+      const [{data:_d}]=await Promise.all([callAI(text),ensureLibraryReady()]);data=_d;
       if(!data||typeof data!=='object'||!Array.isArray(data.parts)||!data.parts.length)throw Object.assign(new Error('no parts list'),{intentParse:true});
     }catch(e){
       console.error('EvenUCan: project idea AI call failed',e);
+      const isTimeout=e&&(e.name==='AbortError'||/abort|timed? ?out/i.test(e.message||''));
       const parse=e&&(e.intentParse||/garbled|didn't give sizes|couldn't read sizes/.test(e.message||''));
-      iw.step='error';iw.err=parse?'Sorry, I couldn\'t understand the response — try rephrasing your idea.':'The AI couldn\'t be reached: '+(e&&e.message||e)+' Check the key and the internet connection, then try again.';
+      iw.step='error';iw.err=parse?'Sorry, I couldn\'t understand the response — try rephrasing your idea.':isTimeout?'The AI didn\'t reply within 60 seconds.'+_otherAiHint()+' Check your internet connection or try again.':'The AI couldn\'t be reached: '+(e&&e.message||e)+' Check the key and the internet connection, then try again.';
       iw.raw=parse?aiLastReply:'';return;
     }
-    iw.analysis=tidyIntent(data,desc);iw.prog=1;renderIntent();
+    iw.analysis=tidyIntent(data,desc);iw.prog=1;_cdStop();renderIntent();
     iw.pf=iw.analysis.platform;iw.override=false;iw.missingAdded=[];iw.vals={};
     if(iw.userPf&&PLATFORMS[iw.userPf]){iw.pf=iw.userPf;iw.override=iw.pf!==iw.analysis.platform;}iw.userPf=null;// (r4) the board they said they have
     iw.base=await intentMatch(iw.analysis.parts);iw.matches=pfMatches(iw.base,iw.pf);
@@ -10150,7 +10333,7 @@ async function intentAnalyse(){
     iw.step='result';
     if(iwBack.style.display!=='grid')WF.flash('Your parts list is ready: click 💡 What do I want to build? to see it',8000);
   }catch(e){console.error('EvenUCan: could not match the parts for the project idea',e);iw.step='error';iw.err='Something went wrong while finding the parts: '+(e&&e.message||e);iw.raw='';}
-  finally{iw.busy=false;renderIntent();}
+  finally{_cdStop();iw.busy=false;renderIntent();}
 }
 async function intentApply(){
   const A=iw.analysis,inputs={},pf=pfOk(iw.pf);
@@ -10190,13 +10373,12 @@ async function intentApply(){
     '';
   msg.style.display='block';
 }
-// The code: the ESPHome tab of the Wiring window. When parts or behaviour still need the AI, it starts writing them.
+// The code: the ESPHome tab of the Wiring window. Opens the tab only; user must click to start AI.
 function intentCode(){
   wr=Object.assign(wr||{},{tab:'esphome'});openWiring();
-  const P=wr.plan;if(P.error)return;
-  if(pfOfPlan(P)!=='esphome'){if(aiKey()&&!pfFresh(P))pfGenerate();return;}// (r3) Arduino / Raspberry Pi
-  const r=esphomeYaml(P,esphForm());
-  if(r.yaml&&aiKey()&&(r.unknown.length||!r.weather))esphWithAI();
+  // Do NOT auto-start AI here — let the user click the button when ready.
+  // (Previously pfGenerate() and esphWithAI() were called automatically here, but that
+  //  caused AI to run before the user was ready and ignored any part errors shown on the page.)
 }
 // ---- (r4) Welcome: greets a new drawing and walks a beginner through their idea in the same window
 // (steps welcome, w1 idea, w2 what it does, w3 what they have; then the wizard's own busy / result steps).
