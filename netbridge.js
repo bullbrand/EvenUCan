@@ -4,7 +4,7 @@
 // Rules: http(s) only, a time limit and a size limit on every request, and AI requests only to known AI hosts.
 'use strict';
 
-const AI_HOSTS = new Set(['integrate.api.nvidia.com', 'generativelanguage.googleapis.com', 'api.anthropic.com']);
+const AI_HOSTS = new Set(['integrate.api.nvidia.com', 'generativelanguage.googleapis.com', 'api.anthropic.com', 'api.deepseek.com', 'api.openai.com', 'api.groq.com', 'openrouter.ai']);
 // Ollama: a model running on this same computer, not the internet - http (not https) on its default
 // port only, so this never becomes an open door to some other local service.
 const isOllama = (u) => u.protocol === 'http:' && (u.hostname === 'localhost' || u.hostname === '127.0.0.1') && u.port === '11434';
