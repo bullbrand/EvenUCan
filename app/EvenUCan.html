@@ -8111,8 +8111,10 @@ const WAKE_WORDS={okay_nabu:'Okay Nabu',hey_jarvis:'Hey Jarvis',hey_mycroft:'Hey
 function espBoard(part){
   const t=(part.name+' '+(part.notes||'')).toLowerCase(),mcu=part.mcu||(builtinById(part.id)||{}).mcu;
   if(mcu==='esp32s3'||/esp32-?s3/.test(t)){
-    const flash=/n16/.test(t)||part.id==='b-esp32s3'?'16MB':/n4\b|n4r/.test(t)?'4MB':'8MB';
-    const psram=/r8|n16r8|n8r8/.test(t)||part.id==='b-esp32s3'?'octal':/r2\b|n8r2|n4r2/.test(t)?'quad':null;
+    // Only include flash_size / psram when the variant name explicitly names them —
+    // adding them for a generic board confuses novices (wrong for most boards they own).
+    const flash=/n16/.test(t)?'16MB':/n4\b|n4r/.test(t)?'4MB':null;
+    const psram=/r8|n16r8|n8r8/.test(t)?'octal':/r2\b|n8r2|n4r2/.test(t)?'quad':null;
     return {chip:'esp32',board:'esp32-s3-devkitc-1',flash,psram,s3:true,led:38};
   }
   if(/esp32-?c3/.test(t))return {chip:'esp32',board:'esp32-c3-devkitm-1'};
@@ -10212,6 +10214,7 @@ function tidyIntent(d,desc){
   if(_notAsked(['motion','movement','person','intruder','detect','pir']             ,/pir|hc.sr501|motion/i))           _removeParts(/pir|hc.sr501|motion/i);
   if(_notAsked(['distance','range','ultrasonic','how far','proximity']             ,/hc.sr04|ultrasonic|distance/i))   _removeParts(/hc.sr04|ultrasonic|distance/i);
   if(_notAsked(['display','screen','oled','lcd','show','read out']                 ,/ssd1306|sh1106|oled|lcd|display/i))_removeParts(/ssd1306|sh1106|i2c.*display|oled|lcd/i);
+  if(_notAsked(['rgb','neopixel','led strip','addressable','colour light','color light','ws281','sk68'],/ws281|sk68|neopixel|addressable|rgb.strip|led.strip/i))_removeParts(/ws281|sk68|neopixel|addressable|rgb.strip|led.strip/i);
   const alias=k=>{k=str(k,40).toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');return /owm|openweather|weather_api/.test(k)?'owm_api_key':/^(city|town|location|place|weather_location|city_name)$/.test(k)?'location':/ntfy/.test(k)?'ntfy_topic':k;};
   const ins=[];
   for(const x of Array.isArray(d.extra_inputs_needed)?d.extra_inputs_needed:[]){
