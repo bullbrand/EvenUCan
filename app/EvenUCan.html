@@ -222,6 +222,14 @@ input:focus::placeholder,textarea:focus::placeholder{color:transparent}
 #updateBanner button:hover{opacity:1}
 </style>
 </head>
+<script>
+if(location.protocol==='file:'){
+  document.addEventListener('DOMContentLoaded',function(){
+    document.body.innerHTML='<div style="margin:0;padding:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Segoe UI,system-ui,sans-serif"><div style="background:#fff;border-radius:16px;padding:40px 48px;max-width:480px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.4)"><h1 style="font-size:1.4rem;margin:0 0 12px;color:#1e5af0">⚠️ One extra step needed</h1><p style="font-size:1rem;line-height:1.6;color:#333;margin:0 0 20px">EvenUCan needs to run from a web address — not directly from a file — so its AI connections work properly.</p><div style="display:inline-block;background:#1e5af0;color:#fff;border-radius:8px;padding:10px 24px;font-size:1rem;font-weight:600;margin-bottom:20px">📁 Double-click &nbsp;<strong>Start EvenUCan.bat</strong></div><p style="font-size:1rem;line-height:1.6;color:#333;margin:0 0 20px">That file is in the same folder as this one. It sets everything up and opens EvenUCan automatically.</p><p style="font-size:.85rem;color:#666;margin:0">If you do not have Start EvenUCan.bat, download it from the same place you got EvenUCan.</p></div></div>';
+    document.body.style.cssText='margin:0;padding:0;overflow:auto';
+  });
+}
+</script>
 <body>
 <div id="updateBanner"><span id="updateMsg"></span><button id="updateDismiss" title="Dismiss">✕</button></div>
 <!-- Tool and menu icons (1.9.35): most from FreeCAD (LGPL 2.1+, a few CC BY-SA 4.0 / LGPL 3 / public domain), the rest original EvenUCan icons. See THIRD-PARTY-NOTICES.txt. -->
@@ -3828,7 +3836,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.42';
+const APP_VERSION='1.9.43';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();

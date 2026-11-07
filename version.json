@@ -1,5 +1,5 @@
 {
-  "version": "1.9.42",
-  "notes": "Smarter parts matching: soil moisture sensor now correctly identified, plain LEDs no longer confused with WS2812/NeoPixel, LED wall mounts now cut proper holes in the box, soil sensor correctly placed outside the enclosure",
+  "version": "1.9.43",
+  "notes": "Web version: launcher renamed to Start EvenUCan.bat, file:// direct-open blocked with helpful message, README updated with unblock instructions. New user manual with 19 fresh screenshots.",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }
