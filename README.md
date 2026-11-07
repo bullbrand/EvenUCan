@@ -35,19 +35,26 @@ Go to the **[Releases page](https://github.com/bullbrand/EvenUCan/releases/lates
 
 | You have | Download | How to start it |
 |---|---|---|
-| Any computer with Chrome or Edge | `EvenUCan_1.9.42_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **EvenUCan.html**. Nothing to install. |
-| Windows, and you want it installed | `EvenUCan-Setup-1.9.42.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
-| Windows, without installing | `EvenUCan-Portable-1.9.42.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
-| Mac | `EvenUCan-1.9.42.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
-| Linux | `EvenUCan-1.9.42.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
+| Any computer with Chrome or Edge | `EvenUCan_1.9.43_Web.zip` | Unzip it (right-click → **Extract All**), open the folder and double-click **Start EvenUCan.bat**. Nothing to install. |
+| Windows, and you want it installed | `EvenUCan-Setup-1.9.43.exe` | Double-click it. It installs in a few seconds and puts EvenUCan in the Start menu and on the desktop. |
+| Windows, without installing | `EvenUCan-Portable-1.9.43.exe` | Double-click it. It runs straight away, from any folder or a USB stick. |
+| Mac | `EvenUCan-1.9.43.dmg` | Open it and drag EvenUCan into Applications. The first time, if the Mac says it can't be opened, go to **System Settings → Privacy & Security** and click **Open Anyway**. |
+| Linux | `EvenUCan-1.9.43.AppImage` or `.deb` | AppImage: right-click → Properties → allow running as a program, then double-click it. `.deb`: double-click to install (Ubuntu, Debian, Mint). |
 
 ### "Windows protected your PC"
 
 The programs aren't signed by a big company, so the first time you run one, Windows SmartScreen may show a blue box. Click **More info**, then **Run anyway**. You only need to do this once.
 
+**Web version — Start EvenUCan.bat blocked?** Windows may flag the launcher the first time. Right-click it → **Properties** → tick **Unblock** at the bottom of the General tab → **OK**. Then double-click as normal. One-time only.
+
 ### Checking a download is genuine
 
-The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.42.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+The Release also has **SHA256-checksums.txt**, a list of fingerprints. On Windows, open the folder holding the download, type `powershell` in the address bar and press Enter, then type `Get-FileHash "EvenUCan-Setup-1.9.43.exe"` (or the name of the file you downloaded). The code it shows must match the one in the list.
+
+## New in 1.9.43
+
+- **Fixed: web version now starts correctly from Start EvenUCan.bat.** Opening EvenUCan.html directly now shows a clear message directing you to the launcher instead of silently failing.
+- **Updated user manual** with 19 fresh screenshots throughout.
 
 ## New in 1.9.42
 
