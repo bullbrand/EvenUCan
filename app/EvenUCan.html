@@ -8209,7 +8209,7 @@ function esphomeYaml(P,f){
     sec(`speaker:\n  - platform: i2s_audio\n    id: spk\n    i2s_audio_id: i2s_amp\n    i2s_dout_pin: ${g(amp)}\n    dac_type: external\n    channel: mono`);
     sec(`micro_wake_word:\n  microphone: mic\n  models:\n    - model: ${f.wake in WAKE_WORDS?f.wake:'okay_nabu'}\n  on_wake_word_detected:\n    - voice_assistant.start:\n        wake_word: !lambda return wake_word;`);
     let va=`voice_assistant:\n  microphone: mic\n  speaker: spk\n  noise_suppression_level: 2\n  auto_gain: 31dBFS\n  volume_multiplier: 2.0`;
-    if(lightId)va+=`\n  on_listening:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0%\n        green: 30%\n        blue: 100%`:'')+`\n  on_tts_start:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0%\n        green: 100%\n        blue: 30%`:'');
+    if(lightId)va+=`\n  on_listening:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0.0\n        green: 0.3\n        blue: 1.0`:'')+`\n  on_tts_start:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0.0\n        green: 1.0\n        blue: 0.3`:'');
     va+=`\n  on_end:`+(lightId?`\n    - light.turn_off: ${lightId}`:'')+`\n    - wait_until:\n        not:\n          voice_assistant.is_running:\n    - micro_wake_word.start`;
     sec(va);
   }else if(mic||amp)sec('# The microphone and amplifier are wired, but a sensor node doesn\'t use them.\n# Choose "Voice assistant" in EvenUCan to use them.');
@@ -8223,7 +8223,7 @@ function esphomeYaml(P,f){
     sensors.push(`  - platform: ultrasonic\n    id: distance_${k+1}\n    name: ${yq('Distance'+(trigs.length>1?' '+(k+1):''))}\n    trigger_pin: ${g(t)}\n    echo_pin: ${g(e)}\n    update_interval: ${!voice&&+f.alarm>0?'1s':every}`);// an alarm needs quick readings
     if(!voice&&+f.alarm>0){
       let b=`  - platform: template\n    name: ${yq('Something close'+(trigs.length>1?' '+(k+1):''))}\n    device_class: occupancy\n    lambda: |-\n      return id(distance_${k+1}).state < ${(+f.alarm/100).toFixed(3)};`;
-      if(lightId)b+=`\n    on_press:\n      - light.turn_on:\n          id: ${lightId}`+(lightId==='status_led'?`\n          red: 100%\n          green: 0%\n          blue: 0%`:'')+`\n    on_release:\n      - light.turn_off: ${lightId}`;
+      if(lightId)b+=`\n    on_press:\n      - light.turn_on:\n          id: ${lightId}`+(lightId==='status_led'?`\n          red: 1.0\n          green: 0.0\n          blue: 0.0`:'')+`\n    on_release:\n      - light.turn_off: ${lightId}`;
       bins.push(b);
     }
   });
@@ -8271,12 +8271,12 @@ function esphomeYaml(P,f){
       if(acts.length)b+='\n    on_press:\n'+acts.join('\n');
       bins.push(b);
     }
-    else if(kind==='pixel'){pixelN++;lights.push(`  - platform: esp32_rmt_led_strip\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    pin: ${pin}\n    num_leds: 1  # change to the number of LEDs on the strip\n    rgb_order: GRB\n    chipset: ws2812`);}
+    else if(kind==='pixel'){pixelN++;lights.push(`  - platform: esp32_rmt_led_strip\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    pin: ${pin}\n    num_leds: 1  # change to the number of LEDs on the strip\n    rgb_order: GRB`);}
     else if(kind==='led'){outputs.push(`  - platform: gpio\n    id: led_out_${ledN+1}\n    pin: ${pin}`);lights.push(`  - platform: binary\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    output: led_out_${ledN}`);}
     else if(kind==='relay'||kind==='buzzer')switches.push(`  - platform: gpio\n    id: ${buzz&&buzz.a===a?'buzzer_1':compId(nm)}\n    name: ${yq(nm)}\n    pin: ${pin}`);
     else unk(a.inst,a);
   }
-  if(statusLed)lights.unshift(`  - platform: esp32_rmt_led_strip\n    id: status_led\n    name: "Status light"\n    pin: GPIO${brd.led}\n    num_leds: 1\n    rgb_order: GRB\n    chipset: ws2812`);
+  if(statusLed)lights.unshift(`  - platform: esp32_rmt_led_strip\n    id: status_led\n    name: "Status light"\n    pin: GPIO${brd.led}\n    num_leds: 1\n    rgb_order: GRB`);
   if(sda&&scl){
     // well-known I2C sensors get their own section; anything else is left for the user to add
     const i2cParts=[...new Set(P.assigned.filter(a=>a.role==='sda').map(a=>a.inst))];let unknownI2C=0,n=0;
@@ -9222,10 +9222,11 @@ const ESPH_AI_PROMPT=`You write ESPHome device configuration (ESPHome version 20
 Change the file so the device does what the user describes. Rules:
 - Keep every existing section, pin, id, board, framework, psram, wifi, api, ota, logger and captive_portal setting exactly as it is. Do not change pins or invent new wiring: only the parts already in the file exist.
 - Add behaviour with ESPHome's built-in automations (on_value, on_press, interval, if/then/else, lambda conditions, light.turn_on, switch.turn_on, delay, script). No external_components, no custom C++ files, no new secrets.
-- RGB colours in YAML automations use percentages (red: 100%, green: 0%, blue: 0%). RGB colours inside C++ lambda blocks use floats 0.0–1.0: id(led).turn_on().set_rgb(1.0, 0.0, 0.0).perform() — NEVER use % inside a lambda.
+- RGB colours in light.turn_on actions use floats 0.0–1.0 (red: 1.0, green: 0.0, blue: 0.0). The brightness: field accepts a percentage (brightness: 100%) but red/green/blue NEVER use % — always floats. RGB colours inside C++ lambda blocks also use floats: id(led).turn_on().set_rgb(1.0, 0.0, 0.0).perform().
 - ESPHome substitutions (\${varname}) expand in YAML but NOT inside C++ lambda string literals at runtime. In a lambda, use the numeric value directly (e.g. float threshold = 60.0;) or read a global variable — never atof("\${varname}") inside a lambda string.
 - Every switch, sensor and binary_sensor already in the file has its own id: use that id in your automations. NEVER declare a second switch/sensor/binary_sensor for hardware that already has one in the file (e.g. if a relay or buzzer is already declared with an id, turn that id on/off - don't add a new one on a different, unwired pin). This applies just as much to a part you yourself add under "Every part listed as not in the file yet" below: once you've declared its sensor/binary_sensor, your own automations must read that same id, not a separate pin you make up to match it.
-- If you use http_request.post or http_request.get anywhere in your automations, you MUST also add a top-level http_request:\n  timeout: 10s\n  verify_ssl: false section (ESPHome fails to compile without it).
+- If you use http_request.post or http_request.get anywhere in your automations, you MUST also add a top-level http_request:\n  timeout: 10s\n  verify_ssl: false section (ESPHome fails to compile without it). Inside http_request.post, the key for HTTP headers is "headers:" NOT "request_headers:" — using request_headers: causes a validation error.
+- Do NOT add a "chipset:" key to esp32_rmt_led_strip sections. It is not a valid option and causes a validation error.
 - Every part listed as not in the file yet must get its own working section (sensor, binary_sensor, output, light, switch, uart, display… as the module needs), with a clear friendly name.
 - You MUST make the device do EVERY requirement in the user's description. Never silently leave one out or replace it with a comment. If one truly cannot be done with these parts, return {"refuse":true,"reason":"<one plain-English sentence: which requirement, and why>"} instead of a file.
 Return ONLY a JSON object: {"yaml": "<the complete new file>", "notes": "<one to three short plain-English sentences on what you added, or what you couldn't do>"}.`;
