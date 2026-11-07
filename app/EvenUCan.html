@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.46';
+const APP_VERSION='1.9.47';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -11011,9 +11011,9 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
   };
   function closeCookbook(){cbBack.style.display='none';}
   function renderCookbook(){
-    const owned=new Set(getOwnedIds()),q=cbQuery.toLowerCase().trim();
+    const stock=getStock(),q=cbQuery.toLowerCase().trim();
     const parts=allParts().filter(p=>!q||p.name.toLowerCase().includes(q)||(p.type||'').toLowerCase().includes(q)||p.id.toLowerCase().includes(q));
-    $('cbList').innerHTML=parts.map(p=>`<label class="cbItem"><input type="checkbox" data-cbid="${esc(p.id)}"${owned.has(p.id)?' checked':''}><div><div class="cbName">${esc(p.name)}</div><div class="cbMeta">${esc(typeOf(p).name)}${p.id?' · '+esc(p.id):''}</div></div></label>`).join('');
+    $('cbList').innerHTML=parts.map(p=>{const qty=stock[p.id]||0;return`<div class="cbItem${qty>0?' cbOwned':''}" data-cbid="${esc(p.id)}"><input type="number" class="cbQty" min="0" max="9999" value="${qty}" data-cbid="${esc(p.id)}" title="How many do you have?"><div style="flex:1;min-width:0"><div class="cbName">${esc(p.name)}</div><div class="cbMeta">${esc(typeOf(p).name)}${p.id?' · '+esc(p.id):''}</div></div></div>`;}).join('');
     updateCbCount();
   }
   function updateCbCount(){
