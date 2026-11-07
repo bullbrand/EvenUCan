@@ -7818,10 +7818,16 @@ async function oaChat(p,key,model,content,maxTokens){
   const mt=A.local?Math.min(maxTokens,1024):maxTokens;// small local models: cap at 1024 to halve generation time
   const body=JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:mt,...(A.local?{stream:false}:{})});
   let status,raw;
+  let _bridgeOk=false;
   if(post){
-    try{const r=await post(A.url,key,body);status=r.status;raw=r.text;}
-    catch(e){throw new Error(A.local?'Couldn\'t reach Ollama on this computer. Make sure it\'s running (ollama serve, or just open the Ollama app) and that you pulled the model you typed.':'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
-  }else{
+    try{const r=await post(A.url,key,body);status=r.status;raw=r.text;_bridgeOk=true;}
+    catch(e){
+      if(A.local)throw new Error('Couldn\'t reach Ollama on this computer. Make sure it\'s running (ollama serve, or just open the Ollama app) and that you pulled the model you typed.');
+      // Bridge allow-list may not include this host; fall through to direct fetch.
+      _bridgeOk=false;
+    }
+  }
+  if(!post||!_bridgeOk){
     if(A.deskOnly)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini, Groq or OpenRouter (all free) or Claude instead.');
     const _oMs=A.local?300000:60000;// local models get 5 min; cloud APIs get 60 s
     const _oSig=AbortSignal.timeout?AbortSignal.timeout(_oMs):(()=>{const ac=new AbortController();setTimeout(()=>ac.abort(),_oMs);return ac.signal;})();
