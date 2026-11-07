@@ -7258,7 +7258,7 @@ function finishSide(pins){
 // The key is kept on this computer only and is never exported with parts.
 const AI_MODELS=['gemini-2.5-flash','gemini-3.6-flash','gemini-3.8-flash','gemini-3-flash-preview','gemini-2.5-flash-lite'];
 // Which AI does the reading: Google Gemini, NVIDIA, Groq or OpenRouter (free keys) or Claude (paid key). Each keeps its own key.
-const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'},openai:{name:'ChatGPT / OpenAI (paid per use)',short:'ChatGPT',key:'openaiKey'},grok:{name:'Grok / xAI (paid per use)',short:'Grok',key:'grokKey'},ollama:{name:'Ollama (local, offline)',short:'Ollama',key:'ollamaModel',noKey:true}};
+const PROVIDERS={gemini:{name:'Google Gemini (free)',short:'Gemini',key:'geminiKey'},nvidia:{name:'NVIDIA (free)',short:'NVIDIA',key:'nvidiaKey'},groq:{name:'Groq (free)',short:'Groq',key:'groqKey'},openrouter:{name:'OpenRouter (free)',short:'OpenRouter',key:'openrouterKey'},claude:{name:'Claude (paid per use)',short:'Claude',key:'claudeKey'},openai:{name:'ChatGPT / OpenAI (paid per use)',short:'ChatGPT',key:'openaiKey'},grok:{name:'Grok / xAI (paid per use)',short:'Grok',key:'grokKey'},deepseek:{name:'DeepSeek (paid per use)',short:'DeepSeek',key:'deepseekKey'},ollama:{name:'Ollama (local, offline)',short:'Ollama',key:'ollamaModel',noKey:true}};
 const aiProv=()=>PROVIDERS[WF.store.get('aiProvider')]?WF.store.get('aiProvider'):'gemini';
 const aiKey=p=>WF.store.get(PROVIDERS[p||aiProv()].key);
 const keyLabel=()=>(aiKey()?'Change ':'Set up ')+PROVIDERS[aiProv()].short+(PROVIDERS[aiProv()].noKey?'…':' key…');
@@ -7748,7 +7748,10 @@ const OA={
     vision:['gpt-4.1','gpt-4o','gpt-4o-mini'],limit:'your plan\'s rate limit'},
   grok:{name:'Grok / xAI',starts:'xai-',url:'https://api.x.ai/v1/chat/completions',
     text:['grok-3-fast','grok-3','grok-2-latest','grok-beta'],
-    vision:['grok-2-vision-latest','grok-beta'],limit:'your plan\'s rate limit'}
+    vision:['grok-2-vision-latest','grok-beta'],limit:'your plan\'s rate limit'},
+  deepseek:{name:'DeepSeek',starts:'sk-',url:'https://api.deepseek.com/v1/chat/completions',
+    text:['deepseek-chat','deepseek-reasoner'],
+    vision:[],limit:'your plan\'s rate limit'}
 };
 const isOA=p=>!!OA[p||aiProv()];
 const oaOrder=(p,extra)=>[extra,WF.store.get(p+'Model'),...OA[p].text].filter((m,i,a)=>m&&a.indexOf(m)===i);
