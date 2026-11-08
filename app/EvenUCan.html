@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.82';
+const APP_VERSION='1.9.79';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5741,14 +5741,7 @@ const LIB_KEY='parts';
 // them all. Keep a copy under 'parts.damaged', stop saving over them this session, and tell the user.
 let libDamaged=false;
 function readCustom(){
-  // Support chunked storage: opensketch.parts.0, .1, … assembled in order
-  let raw=WF.store.get(LIB_KEY);
-  if(raw==null){
-    // try chunked
-    let chunks=[],i=0;
-    while(true){const c=WF.store.get(LIB_KEY+'.'+i);if(c==null)break;chunks.push(c);i++;}
-    if(chunks.length)raw='['+chunks.map(c=>c.slice(1,-1)).join(',')+']';
-  }
+  const raw=WF.store.get(LIB_KEY);
   try{const a=JSON.parse(raw||'[]');libDamaged=false;return Array.isArray(a)?a.filter(p=>p&&p.id):[];}
   catch(e){
     console.error('EvenUCan: the saved parts could not be read',e);libDamaged=true;
@@ -5766,20 +5759,7 @@ function injectPhotos(parts){parts.forEach(p=>{if(!p.photo){const ph=photoGet(p.
 let custom=readCustom();injectPhotos(custom);
 function saveLib(){
   if(libDamaged){WF.flash('⚠ Not saved: your saved parts could not be read, so EvenUCan won\'t write over them.',7000);return false;}
-  // Strip in-memory photos before serialising (photos live in sidecar keys)
-  const toSave=custom.map(p=>{if(!p.photo)return p;const{photo,...rest}=p;return rest;});
-  // Split into chunks of ~400 parts to stay well under the 5 MB localStorage limit per key
-  const CSIZE=400;
-  try{
-    // Remove old single-key save
-    localStorage.removeItem('opensketch.'+LIB_KEY);
-    // Remove old chunks beyond what we're about to write
-    for(let i=Math.ceil(toSave.length/CSIZE);;i++){const k='opensketch.'+LIB_KEY+'.'+i;if(localStorage.getItem(k)==null)break;localStorage.removeItem(k);}
-    for(let i=0;i<Math.ceil(toSave.length/CSIZE)||i===0;i++){
-      localStorage.setItem('opensketch.'+LIB_KEY+'.'+i,JSON.stringify(toSave.slice(i*CSIZE,(i+1)*CSIZE)));
-    }
-    return true;
-  }
+  try{localStorage.setItem('opensketch.'+LIB_KEY,JSON.stringify(custom));return true;}
   catch(e){WF.flash('Could not save the parts library: this computer\'s storage for the app is full. Remove some photos or parts.',7000);return false;}
 }
 const builtinById=id=>BUILTIN.find(b=>b.id===id);
@@ -7161,7 +7141,7 @@ async function fetchAndResize(url){
 async function bgFindPhotos(){
   if(bgPhotoState&&bgPhotoState.running)return;
   if(!aiKey('gemini')){WF.flash('Set up a Gemini key first (the AI → Set up Google Gemini key… button in any part).',6000);return;}
-  const todo=custom.filter(p=>!p.photo||!p.photo.startsWith('data:'));
+  const todo=custom.filter(p=>!p.photo);
   if(!todo.length){WF.flash('All custom parts already have photos.');return;}
   bgPhotoState={running:true,found:0,done:0,total:todo.length,stop:false};
   updateBgBar();
