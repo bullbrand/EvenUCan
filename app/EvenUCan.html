@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.56';
+const APP_VERSION='1.9.57';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -11260,6 +11260,8 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
 // User ticks the parts they own at home; AI suggests projects and prioritises those parts.
 {
   const COOKBOOK_KEY='cookbook';
+  // localStorage wrapper (store may be out of scope here depending on script structure)
+  const store={get:k=>{ try{return localStorage.getItem('opensketch.'+k);}catch(e){return null;} },set:(k,v)=>{ try{localStorage.setItem('opensketch.'+k,v);}catch(e){} }};
   // stock: {partId: qty}  — 0 or absent means not owned
   const getStock=()=>{try{const v=JSON.parse(store.get(COOKBOOK_KEY)||'{}');return(Array.isArray(v)?Object.fromEntries(v.map(id=>[id,1])):v);}catch(e){return {};}};
   const setStock=obj=>{store.set(COOKBOOK_KEY,JSON.stringify(obj));};
