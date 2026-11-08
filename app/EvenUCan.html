@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.57';
+const APP_VERSION='1.9.58';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -11342,8 +11342,10 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
       const prompt=`You are an expert electronics engineer and maker. The user has these electronic parts in their stock at home (name · quantity available):\n${ownedList.map((x,i)=>`${i+1}. ${x.name} × ${x.qty}`).join('\n')}\n\nSuggest up to 6 fun projects they could build RIGHT NOW using only parts from this list (quantities matter — never require more of a part than the user has). For each project:\n- Give it a short catchy name\n- One clear sentence explaining what it does and why it is useful\n- List which parts from their stock it uses, with quantities needed\n\nOutput ONLY valid JSON (no other text): {"projects":[{"name":"...","description":"...","parts":["part name",...]},...]}\``;
       const {data}=await callAI(prompt);
       if(!data||!Array.isArray(data.projects)||!data.projects.length)throw new Error('No projects in response — try rephrasing or check your AI key.');
-      const html=`<h4>Here are ${data.projects.length} project${data.projects.length>1?'s':''} you can build today:</h4><ol>${data.projects.map(p=>`<li><span class="cbIdeaTitle">${esc(p.name||'')}</span> — ${esc(p.description||'')}${p.parts&&p.parts.length?'<br><small style="color:var(--muted)">Uses: '+p.parts.map(n=>esc(n)).join(', ')+'</small>':''}</li>`).join('')}</ol>`;
+      const html=`<h4>Here are ${data.projects.length} project${data.projects.length>1?'s':''} you can build today:</h4><ol>${data.projects.map((p,i)=>`<li style="margin-bottom:10px"><span class="cbIdeaTitle">${esc(p.name||'')}</span> — ${esc(p.description||'')}${p.parts&&p.parts.length?'<br><small style="color:var(--muted)">Uses: '+p.parts.map(n=>esc(n)).join(', ')+'</small>':''}<br><button class="cbBuildBtn" data-cbidx="${i}" style="margin-top:5px;padding:3px 10px;font-size:12px;border-radius:5px;border:1px solid #7048e8;background:color-mix(in srgb,#7048e8 12%,var(--bg2));color:#7048e8;cursor:pointer">Build this →</button></li>`).join('')}</ol>`;
       $('cbAiResult').innerHTML=html;$('cbAiResult').classList.add('on');
+      // store projects for click handler
+      $('cbAiResult')._cbProjects=data.projects;
     }catch(e){
       console.error('Cookbook AI error',e);
       $('cbAiResult').innerHTML=`<div style="color:var(--err,#b03a3a)">Couldn't get ideas: ${esc(e&&e.message||'AI error')}. Check your AI key and internet connection.</div>`;
@@ -11352,6 +11354,21 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
       cbBusy=false;$('cbAsk').disabled=false;$('cbAsk').textContent='💡 What can I build?';
     }
   };
+
+  // "Build this →" click handler — opens intent wizard pre-filled with the chosen project
+  $('cbAiResult').addEventListener('click',e=>{
+    const btn=e.target.closest('.cbBuildBtn');if(!btn)return;
+    const idx=parseInt(btn.dataset.cbidx,10);
+    const projects=$('cbAiResult')._cbProjects;
+    if(!projects||!projects[idx])return;
+    const p=projects[idx];
+    const text=(p.name?p.name+': ':'')+p.description;
+    // pre-fill the intent wizard description
+    iw.w={text,does:[],pf:'auto',noShow:false};iw.err='';iw.step='w1';
+    closeCookbook();
+    iwBack.style.display='grid';renderIntent();
+    WF.flash('💡 Project loaded — describe it more if you like, then click Next →');
+  });
 
   // Expose owned-parts note for injection into other AI prompts
   window.ownedPartsNote=function(){
