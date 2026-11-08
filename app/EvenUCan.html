@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.58';
+const APP_VERSION='1.9.59';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -8331,7 +8331,7 @@ function planWiring(){
   const insts=instances().map((i,k)=>({key:'w'+k,part:i.part,pins:pinsOf(i.part)}));
   const same=i=>insts.filter(j=>j.part.id===i.part.id);
   for(const i of insts)i.label=i.part.name+(same(i).length>1?' #'+(same(i).indexOf(i)+1):'');
-  const warn=[],info=[];
+  const warn=[],info=[],noPinParts=[];
   if(!insts.length)return {error:'Add parts in the Enclosure Wizard first: the wiring is worked out for the parts in your box.'};
   const mcuOf=p=>p.mcu||(builtinById(p.id)||{}).mcu;// (an edited copy of a built-in board keeps its type)
   const ctrl=insts.find(i=>mcuOf(i.part))||insts.find(i=>i.pins.filter(p=>p.r==='gpio').length>=8);
@@ -8384,7 +8384,7 @@ function planWiring(){
   const i2c={};
   for(const i of insts){
     if(i===ctrl||i===bat||i===chg||i===sw)continue;
-    if(!i.pins.length){warn.push(i.label+' has no pin data yet, so it isn\'t in the diagram. Add its pins in Parts (or use Import pins…).');continue;}
+    if(!i.pins.length){warn.push(i.label+' has no pin data yet, so it isn\'t in the diagram. Add its pins in Parts (or use Import pins…).');noPinParts.push({label:i.label,id:i.part.id});continue;}
     const sonar=P(i,'trig').length&&P(i,'echo').length;
     for(const pin of i.pins){
       const pp={inst:i,pin};
@@ -8426,7 +8426,7 @@ function planWiring(){
   }
   if(s3)info.push('Pins kept free on the ESP32-S3: '+[0,3,45,46].map(g=>'GPIO'+g).join(', ')+' (start-up), 19/20 (USB), 43/44 (serial), 35–37 (PSRAM), 38/48 (RGB LED).');
   const live=nets.filter(n=>n.pins.length>=2);
-  return {insts,ctrl,nets:live,warn,info,assigned,s3,bat:!!bat,batSense,power,code:wiringCode(ctrl,assigned,s3)};
+  return {insts,ctrl,nets:live,warn,info,noPinParts,assigned,s3,bat:!!bat,batSense,power,code:wiringCode(ctrl,assigned,s3)};
 }
 
 // ---- ESPHome device file: a complete YAML for the controller, from the wiring plan and a few answers.
@@ -8956,7 +8956,7 @@ function renderWiringSide(){
   const s=$('wrSide'),P=wr.plan;
   if(P.error){s.innerHTML='<h4>Nothing to wire yet</h4><p>'+esc(P.error)+'</p><div class="ewRow"><button id="wrToWiz">Open the Enclosure Wizard</button></div>';return;}
   const tab=wr.tab,pf=pfOfPlan(P),tabs=['list','code','esphome','ai'].map(t=>`<button data-wrtab="${t}" class="${tab===t?'on':''}">${{list:'Wiring list',code:'Code pins',esphome:(PLATFORMS[pf]||PLATFORMS.esphome).code,ai:'Ask AI'}[t]}</button>`).join('');
-  const warn=P.warn.map(w=>`<li class="warn"><span class="ic">!</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('');
+  const warn=P.warn.map(w=>{const np=(P.noPinParts||[]).find(p=>w.startsWith(p.label+' has no pin data'));return`<li class="warn"><span class="ic">!</span><span style="color:var(--text)">${esc(w)}</span>${np?` <button class="wrFixPins" data-partid="${esc(np.id)}" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid #e67700;background:color-mix(in srgb,#e67700 12%,var(--bg2));color:#e67700;cursor:pointer">Fix: add pins →</button>`:''}</li>`;}).join('');
   const info=P.info.map(w=>`<li class="ok"><span class="ic">✓</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('');
   let body='';
   if(tab==='list'){
@@ -9719,6 +9719,7 @@ $('wrSide').addEventListener('click',e=>{
   if(el.dataset.wrtab){if(el.dataset.wrtab==='esphome'&&!hasParts())WF.flash(NEED_PARTS,5000);wr.tab=el.dataset.wrtab;renderWiringSide();return;}
   if(el.dataset.copy){const ta=$(el.dataset.copy);ta.select();navigator.clipboard.writeText(ta.value).then(()=>WF.flash('Copied'),()=>{document.execCommand('copy');WF.flash('Copied');});return;}
   if(el.id==='wrToWiz'){closeWiring();openWizard();}
+  if(el.classList&&el.classList.contains('wrFixPins')){closeWiring();openLibrary(el.dataset.partid);return;}
   if(el.id==='wrAi'){esphWithAI();return;}
   if(el.id==='wrPfGen'){pfGenerate();return;}
   if(el.id==='wrPfStarter'){makeStarter();return;}

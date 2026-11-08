@@ -1,5 +1,5 @@
 {
-  "version": "1.9.58",
-  "notes": "Cookbook now saves quantities, What can I build? works, and you can click Build this → on any suggestion to jump straight into the project wizard.",
+  "version": "1.9.59",
+  "notes": "Wiring screen: parts with missing pin data now show a Fix: add pins → button that opens Parts Library directly for that part.",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }
