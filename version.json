@@ -1,5 +1,5 @@
 {
-  "version": "1.9.60",
-  "notes": "Wiring screen: missing-pin warnings now show on all tabs (not just List). Ask AI now knows which parts are missing pin data and can guide you to fix them.",
+  "version": "1.9.61",
+  "notes": "Parts Library: added Analog Out (AO) and Digital Out (DO) as pin roles — MQ gas/CO sensors and similar now wire correctly.",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }

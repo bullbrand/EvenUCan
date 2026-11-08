@@ -7940,7 +7940,7 @@ Return ONLY a JSON object:
  "pcb": board thickness in mm (0 for a solid block such as a battery or enclosed speaker), "h": height of the tallest part above the board top in mm (for a block: its full height),
  "below": height of pins or parts under the board in mm (0 if none),
  "mount": "wall" if the part must face out through a side of the box (microphones, speakers, ultrasonic or distance sensors, cameras), "outside" if the part lives entirely outside the enclosure (soil moisture probes, buried or submerged sensors, outdoor weather sensors, anything that goes into soil, water or the environment), otherwise "floor",
- "features": [ ... ], "pins": [ {"name": exact printed label e.g. "SDA" or "D7", "x", "y": centre of that pin/pad in mm (same frame as above), "role": "gnd"|"3v3"|"5v"|"vcc"|"vin"|"sda"|"scl"|"gpio"|"sig"|"trig"|"echo"|"nc"} ], "uncertain": [short strings], "notes": short string}
+ "features": [ ... ], "pins": [ {"name": exact printed label e.g. "SDA" or "D7", "x", "y": centre of that pin/pad in mm (same frame as above), "role": "gnd"|"3v3"|"5v"|"vcc"|"vin"|"sda"|"scl"|"gpio"|"sig"|"trig"|"echo"|"ao"|"do"|"nc"} ], "uncertain": [short strings], "notes": short string}
 Coordinates: looking down on the top (component side), origin at the bottom-left corner, x to the right along w, y up along d, all in mm, positions are centres.
 Feature objects:
  {"t":"hole","x","y","dia"} mounting hole
@@ -7953,7 +7953,7 @@ Feature objects:
  {"t":"button","x","y","dia"}, {"t":"led","x","y","dia"}
  {"t":"window","x","y","fw","fd"} display active area
  {"t":"switch","side","u","zc"} switch lever on an edge
-Pin roles: gnd=ground, 3v3=3.3V power, 5v=5V power, vcc=power at another or unclear voltage, vin=power in before the board's own regulator, sda/scl=I2C data/clock, gpio=a general-purpose digital pin on a microcontroller/dev board that code can use freely (Arduino/ESP32/Pi-style D0, D7, GPIO14, IO2, A0 and so on - put the pin number in its name exactly as printed, e.g. "D7" or "GPIO14"), sig=a single fixed-purpose signal pin on a sensor or other module (not a GPIO a sketch chooses what to do with), trig/echo=ultrasonic trigger/echo, nc=not connected/do not use. Use gpio only for a dev board's own general I/O pins, not for a sensor's dedicated pins.
+Pin roles: gnd=ground, 3v3=3.3V power, 5v=5V power, vcc=power at another or unclear voltage, vin=power in before the board's own regulator, sda/scl=I2C data/clock, gpio=a general-purpose digital pin on a microcontroller/dev board that code can use freely (Arduino/ESP32/Pi-style D0, D7, GPIO14, IO2, A0 and so on - put the pin number in its name exactly as printed, e.g. "D7" or "GPIO14"), sig=a single fixed-purpose signal pin on a sensor or other module (not a GPIO a sketch chooses what to do with), trig/echo=ultrasonic trigger/echo, ao=analog output (a voltage proportional to the measured value, connects to an ADC GPIO, e.g. MQ gas sensor AO pin), do=digital output (a comparator-driven high/low output, connects to any GPIO, e.g. MQ gas sensor DO pin), nc=not connected/do not use. Use gpio only for a dev board's own general I/O pins, not for a sensor's dedicated pins.
 Rules: use numbers stated on the drawing or clearly worked out from it. Do not invent features that are not shown. If something needed is not shown, give your best estimate and add it to "uncertain". If there are several views, combine them. Turn the frame if needed so that w >= d. If a pinout (a header, connector or row of pads with printed names) is shown, list every individual pin with its own name, position and role - not just the header's outline as a "header" feature. Never return anything except the JSON.`;
 const fileB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(f);});
 // Big photos are shrunk before sending (drawings stay readable at 3000 px).
@@ -8177,7 +8177,7 @@ function applyDrawing(d,src,sources){
   // and places every pin, so there's no reason the AI assist shouldn't fill those in too, not just the
   // header's outline. Replaced wholesale like features: only kept if the AI actually found some.
   if(Array.isArray(d.pins)&&d.pins.length){
-    const roles=new Set(['gnd','3v3','5v','vcc','vin','sda','scl','gpio','sig','trig','echo','nc']);
+    const roles=new Set(['gnd','3v3','5v','vcc','vin','sda','scl','gpio','sig','trig','echo','ao','do','nc']);
     ed.pins=d.pins.filter(p=>p&&typeof p==='object').slice(0,64)
       .map(p=>{
         const nm=String(p.name||p.n||'?').slice(0,16),r=roles.has(p.role)?p.role:'sig',q={n:nm,r,x:n(p.x,0),y:n(p.y,0)};
@@ -8319,14 +8319,15 @@ const ROLES={gnd:'Ground (GND)','3v3':'3.3 V power in','5v':'5 V power',vin:'Pow
   mic_sck:'I2S mic clock (SCK)',mic_ws:'I2S mic word select (WS)',mic_sd:'I2S mic data out (SD)',mic_lr:'Mic channel select (L/R)',
   amp_bclk:'I2S amp bit clock (BCLK)',amp_lrc:'I2S amp word select (LRC)',amp_din:'I2S amp data in (DIN)',amp_gain:'Amp gain (leave open)',amp_sd:'Amp shutdown (leave open)',
   trig:'Trigger (to a GPIO)',echo:'Echo, 5 V output (to a GPIO via a divider)',sda:'I2C data (SDA)',scl:'I2C clock (SCL)',uart_tx:'Serial TX (its output)',uart_rx:'Serial RX (its input)',
+  ao:'Analog out (to an ADC GPIO)',do:'Digital out (to a GPIO)',
   sig:'Signal (to any free GPIO)',gpio:'Controller GPIO',nc:'Not connected'};
 // ESP32-S3: pins not to use (Espressif user guide; strapping pins from the ESP32-S3 datasheet)
 const S3_AVOID={0:'BOOT strapping pin',3:'strapping pin',45:'strapping pin',46:'strapping pin',19:'USB D−',20:'USB D+',43:'USB-serial TX',44:'USB-serial RX',
   35:'used by the PSRAM on R8 modules',36:'used by the PSRAM on R8 modules',37:'used by the PSRAM on R8 modules',38:'RGB LED (board v1.1)',48:'RGB LED (board v1.0)',26:'flash',27:'flash',28:'flash',29:'flash',30:'flash',31:'flash',32:'flash'};
 const S3_ORDER=[4,5,6,7,15,16,17,18,8,9,10,11,12,13,14,1,2,42,41,40,39,47,21];
 const pinsOf=p=>(p&&p.pins&&p.pins.length?p.pins:(builtinById(p&&p.id)||{}).pins)||[];
-const SIG_ROLES=['mic_sck','mic_ws','mic_sd','amp_bclk','amp_lrc','amp_din','trig','echo','uart_tx','uart_rx','sig'];
-const SIG_NAMES={mic_sck:'MIC_SCK',mic_ws:'MIC_WS',mic_sd:'MIC_SD',amp_bclk:'AMP_BCLK',amp_lrc:'AMP_LRC',amp_din:'AMP_DIN',trig:'TRIG',echo:'ECHO',uart_tx:'RX_FROM',uart_rx:'TX_TO',sig:'PIN'};
+const SIG_ROLES=['mic_sck','mic_ws','mic_sd','amp_bclk','amp_lrc','amp_din','trig','echo','uart_tx','uart_rx','ao','do','sig'];
+const SIG_NAMES={mic_sck:'MIC_SCK',mic_ws:'MIC_WS',mic_sd:'MIC_SD',amp_bclk:'AMP_BCLK',amp_lrc:'AMP_LRC',amp_din:'AMP_DIN',trig:'TRIG',echo:'ECHO',uart_tx:'RX_FROM',uart_rx:'TX_TO',ao:'AO',do:'DO',sig:'PIN'};
 function planWiring(){
   const insts=instances().map((i,k)=>({key:'w'+k,part:i.part,pins:pinsOf(i.part)}));
   const same=i=>insts.filter(j=>j.part.id===i.part.id);
@@ -8411,7 +8412,8 @@ function planWiring(){
           if(!SIG_ROLES.includes(pin.r))break;
           {const c=take();if(!c){warn.push('No free controller pin left for '+i.label+' '+pin.n+'.');break;}
            add(net(i.label+' '+pin.n+' → '+c.n,'sig'),pp,{inst:ctrl,pin:c});assigned.push({inst:i,role:pin.r,c,pin});
-           if(pin.r==='echo')warn.push(i.label+': ECHO is a 5 V signal but the '+ctrl.label+' pins take 3.3 V. Put a divider in that wire: 1 kΩ from ECHO to the GPIO, and 2 kΩ from the GPIO to GND.');}
+           if(pin.r==='echo')warn.push(i.label+': ECHO is a 5 V signal but the '+ctrl.label+' pins take 3.3 V. Put a divider in that wire: 1 kΩ from ECHO to the GPIO, and 2 kΩ from the GPIO to GND.');
+           if(pin.r==='ao')info.push(i.label+': AO is an analog output — make sure the GPIO it is wired to supports ADC (avoid GPIO19, 20 on ESP32-S3).');}
       }
     }
     if(P(i,'amp_gain').length||P(i,'amp_sd').length)info.push(i.label+': GAIN and SD are left unconnected (9 dB gain, left and right mixed to mono).');
