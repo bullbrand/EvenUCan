@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.65';
+const APP_VERSION='1.9.66';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5313,6 +5313,7 @@ markDirty();
 </div></div>
 <input type="file" id="plFile" accept=".json,application/json" style="display:none">
 <input type="file" id="plPhotoIn" accept="image/*" style="display:none">
+<input type="file" id="plImgIn" accept="image/*" style="display:none">
 <input type="file" id="plDrawIn" accept="image/*,application/pdf,.pdf" style="display:none">
 <div id="cbBack" class="ewBack"><div class="ewWin" role="dialog" aria-modal="true" aria-label="Cookbook" style="width:min(620px,calc(100vw - 20px));height:min(640px,calc(100vh - 20px));display:flex;flex-direction:column">
   <div class="ewHead"><h2>🍳 Cookbook</h2><span class="ewNote">Tick the parts you have at home — the AI tells you what you can build today.</span>
@@ -7027,7 +7028,7 @@ function selectPart(id,force){
 function thumb(cv,p){
   const c=cv.getContext('2d'),W=cv.width,H=cv.height;c.clearRect(0,0,W,H);
   const s=Math.min((W-6)/p.w,(H-6)/p.d),ox=(W-p.w*s)/2,oy=(H+p.d*s)/2;
-  const im=imgOf(p.photo,()=>thumb(cv,p));
+  const im=imgOf(p.photo||p.img,()=>thumb(cv,p));
   if(im)c.drawImage(im,ox,oy-p.d*s,p.w*s,p.d*s);
   c.strokeStyle=typeOf(p).color;c.lineWidth=1.5;c.fillStyle=im?'transparent':typeOf(p).color+'40';c.beginPath();
   if(p.shape==='round')c.ellipse(ox+p.w*s/2,oy-p.d*s/2,p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(ox,oy-p.d*s,p.w*s,p.d*s);
@@ -7074,7 +7075,12 @@ ${p.shape==='round'?'':`<label class="f"><span>Width (bottom → top)</span><inp
 <label>Notes<textarea data-p="notes">${esc(p.notes||'')}</textarea></label>
 <h4>Photo</h4>
 <div class="ewRow"><button id="plTop">${p.photo?'Replace top photo…':'Top photo…'}</button>${p.photo?'<button id="plTurn" title="Turn the photo upside down, if it came out the wrong way round">Turn photo 180°</button><button id="plNoPhoto">Remove photo</button>':''}</div>
-<div class="ewRow"><button id="plSide">Side photo for heights…</button><label>shows the <select id="plSideRef"><option value="w"${sideRef==='w'?' selected':''}>long side</option><option value="d"${sideRef==='d'?' selected':''}>short side</option></select></label></div><h4>Features <span class="ewNote">(${p.features.length})</span></h4>
+<div class="ewRow"><button id="plSide">Side photo for heights…</button><label>shows the <select id="plSideRef"><option value="w"${sideRef==='w'?' selected':''}>long side</option><option value="d"${sideRef==='d'?' selected':''}>short side</option></select></label></div>
+<h4>Product image</h4>
+<div class="ewNote" style="margin-bottom:6px">A catalog or datasheet photo — stored with the part, shown in the list when there is no calibrated top photo.</div>
+<div class="ewRow">${p.img?`<button id="plImgReplace">Replace image…</button><button id="plNoImg">Remove image</button>`:`<button id="plImgAdd">Add product image…</button>`}</div>
+${p.img?`<div style="margin:4px 0 2px"><img src="${esc(p.img)}" style="max-height:88px;max-width:200px;border:1px solid var(--line);border-radius:4px;object-fit:contain;background:#f5f5f5"></div>`:''}
+<h4>Features <span class="ewNote">(${p.features.length})</span></h4>
 <label class="f" title="Where the X and Y numbers of features and pins are measured from (the red 0,0 mark on the picture). It only changes the numbers shown, not the part."><span>Measure from</span><select id="plOrigin">${opt(ORIGINS,orig())}</select></label>
 <div id="plFeats"></div>
 <div class="ewRow" style="margin-top:10px"><button id="plTypical" title="Add the features this type of part usually has">Add typical features</button></div>
@@ -7161,6 +7167,8 @@ $('plEdit').addEventListener('click',async e=>{
   if(id==='plSide'){pickPhoto('side');return;}
   if(id==='plNoPhoto'){delete ed.photo;markDirty();renderEditor();return;}
   if(id==='plTurn'){turnPhoto();return;}
+  if(id==='plImgAdd'||id==='plImgReplace'){$('plImgIn').click();return;}
+  if(id==='plNoImg'){delete ed.img;markDirty();renderEditor();renderList();return;}
   if(id==='plTurn90'){turnPart(ed).then(()=>{markDirty();renderEditor();WF.flash('Part turned a quarter turn: its sizes, picture, features and pins all moved together. Click again to keep turning.',6000);});return;}
   if(el.dataset.pdel!==undefined){ed.pins.splice(+el.dataset.pdel,1);edPin=-1;markDirty();renderEditor();return;}
   if(id==='plPinAdd'){(ed.pins=ed.pins||[]).push({n:'PIN '+(ed.pins.length+1),r:'sig'});markDirty();renderEditor();return;}
@@ -7224,10 +7232,10 @@ function choose(message,buttons){
 $('plExport').onclick=async()=>{
   if(!custom.length)return WF.flash('You have no parts of your own yet (built-in parts are already in every copy of the app)');
   let parts=custom;
-  if(custom.some(p=>p.photo)){
-    const c=await choose('Some of your parts have photos.\n\nPhotos you took yourself are fine to share. Photos downloaded from websites belong to whoever took them, so leave them out when giving parts to other people.',['Export without photos','Export with photos','Cancel']);
+  if(custom.some(p=>p.photo||p.img)){
+    const c=await choose('Some of your parts have photos or product images.\n\nPhotos you took yourself are fine to share. Images downloaded from websites belong to whoever took them, so leave them out when giving parts to other people.',['Export without images','Export with images','Cancel']);
     if(c<0||c===2)return;
-    if(c===0)parts=custom.map(p=>{const q=clone(p);delete q.photo;return q;});
+    if(c===0)parts=custom.map(p=>{const q=clone(p);delete q.photo;delete q.img;return q;});
   }
   WF.download('EvenUCan parts.json',JSON.stringify({app:'EvenUCan',kind:'parts',version:1,parts},null,1),'application/json');
 };
@@ -7271,7 +7279,7 @@ function drawEd(){
   const p=ed,s=Math.min((cw-70)/p.w,(ch-60)/p.d);
   pv={s,ox:(cw-p.w*s)/2,oy:(ch+p.d*s)/2};
   const X=x=>pv.ox+x*s,Y=y=>pv.oy-y*s;
-  const im=imgOf(p.photo,drawEd);
+  const im=imgOf(p.photo||p.img,drawEd);
   c.save();c.beginPath();
   if(p.shape==='round')c.ellipse(X(p.w/2),Y(p.d/2),p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(X(0),Y(p.d),p.w*s,p.d*s);
   if(im){c.clip();c.drawImage(im,X(0),Y(p.d),p.w*s,p.d*s);c.restore();c.save();c.beginPath();if(p.shape==='round')c.ellipse(X(p.w/2),Y(p.d/2),p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(X(0),Y(p.d),p.w*s,p.d*s);}
@@ -7523,6 +7531,20 @@ $('plPhotoIn').addEventListener('change',e=>{
       ['Got it'],0);
   };
   im.onerror=()=>WF.flash('Could not read that picture');
+  im.src=url;
+});
+// Product image: resize to max 600 px on the longest side, store as JPEG in ed.img.
+$('plImgIn').addEventListener('change',e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+    URL.revokeObjectURL(url);
+    const K=Math.min(1,600/Math.max(im.naturalWidth,im.naturalHeight));
+    const oc=document.createElement('canvas');oc.width=Math.round(im.naturalWidth*K);oc.height=Math.round(im.naturalHeight*K);
+    oc.getContext('2d').drawImage(im,0,0,oc.width,oc.height);
+    ed.img=oc.toDataURL('image/jpeg',0.82);markDirty();renderEditor();renderList();
+  };
+  im.onerror=()=>{URL.revokeObjectURL(url);WF.flash('Could not read that picture');};
   im.src=url;
 });
 function solve(A,b){
