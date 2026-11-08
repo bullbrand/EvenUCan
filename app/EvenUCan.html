@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.81';
+const APP_VERSION='1.9.82';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -7161,7 +7161,7 @@ async function fetchAndResize(url){
 async function bgFindPhotos(){
   if(bgPhotoState&&bgPhotoState.running)return;
   if(!aiKey('gemini')){WF.flash('Set up a Gemini key first (the AI → Set up Google Gemini key… button in any part).',6000);return;}
-  const todo=custom.filter(p=>!p.photo);
+  const todo=custom.filter(p=>!p.photo||!p.photo.startsWith('data:'));
   if(!todo.length){WF.flash('All custom parts already have photos.');return;}
   bgPhotoState={running:true,found:0,done:0,total:todo.length,stop:false};
   updateBgBar();
