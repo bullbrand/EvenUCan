@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.78';
+const APP_VERSION='1.9.79';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5313,9 +5313,10 @@ markDirty();
 </div></div>
 <div id="plBack" class="ewBack"><div class="ewWin">
   <div class="ewHead"><h2>Parts Library</h2><span class="ewNote">Built-in parts plus your own, saved on this computer. Add a part from a photo, or just type its sizes.</span>
-    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plFzBulk" title="Import one or more Fritzing part files (.fzpz) all at once — select as many as you like">Import Fritzing parts…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
+    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plFzBulk" title="Import one or more Fritzing part files (.fzpz) all at once — select as many as you like">Import Fritzing parts…</button><button id="plFzPhoto" title="Use Google Gemini (free) to find a top-down photo for each custom part that has none — runs in the background">Find photos…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
     <button id="plX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
   <div id="plSelBar" class="plSelBar"><span id="plSelCount"></span><button class="plSelDelBtn" id="plSelDelBtn">Delete selected</button><button class="plSelClrBtn" id="plSelClrBtn">Clear</button></div>
+  <div id="plBgBar" style="display:none;padding:5px 10px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;font-size:12px;align-items:center;gap:8px;flex-shrink:0"><span id="plBgMsg" style="flex:1"></span><button id="plBgStop" style="background:#fff;border:1px solid #ccc;color:#555;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px">Stop</button></div>
   <div class="plBody"><div class="plList" id="plList"></div><div class="plEdit" id="plEdit"></div></div>
 </div></div>
 <input type="file" id="plFile" accept=".json,application/json" style="display:none">
@@ -5749,7 +5750,13 @@ function readCustom(){
     return [];
   }
 }
-let custom=readCustom();
+// Photo sidecar: photos stored per-part under separate localStorage keys so the main lib save stays small
+const EVP='evp.';
+function photoGet(id){try{return localStorage.getItem(EVP+id)||null;}catch(e){return null;}}
+function photoSave(id,url){try{localStorage.setItem(EVP+id,url);return true;}catch(e){return false;}}
+function photoDel(id){try{localStorage.removeItem(EVP+id);}catch(e){}}
+function injectPhotos(parts){parts.forEach(p=>{if(!p.photo){const ph=photoGet(p.id);if(ph)p.photo=ph;}});}
+let custom=readCustom();injectPhotos(custom);
 function saveLib(){
   if(libDamaged){WF.flash('⚠ Not saved: your saved parts could not be read, so EvenUCan won\'t write over them.',7000);return false;}
   try{localStorage.setItem('opensketch.'+LIB_KEY,JSON.stringify(custom));return true;}
@@ -7095,10 +7102,74 @@ $('plList').addEventListener('click',e=>{
 $('plSelDelBtn').onclick=()=>{
   if(!plSelected.size)return;
   if(!confirm('Delete '+plSelected.size+' part'+(plSelected.size===1?'':'s')+'? This cannot be undone.'))return;
-  plSelected.forEach(id=>{const idx=custom.findIndex(c=>c.id===id);if(idx>=0){custom.splice(idx,1);thumbInvalidate(id);if(ed&&ed.id===id)ed=null;}});
+  plSelected.forEach(id=>{const idx=custom.findIndex(c=>c.id===id);if(idx>=0){custom.splice(idx,1);photoDel(id);thumbInvalidate(id);if(ed&&ed.id===id)ed=null;}});
   plSelected.clear();saveLib();renderList();
 };
 $('plSelClrBtn').onclick=()=>{plSelected.clear();renderList();};
+let bgPhotoState=null;
+function updateBgBar(){
+  const bar=$('plBgBar');if(!bar)return;
+  if(!bgPhotoState){bar.style.display='none';return;}
+  const {found,done,total,running}=bgPhotoState;
+  bar.style.display='flex';
+  $('plBgMsg').textContent=(running?'Finding photos: ':'Done — ')+(done||0)+' of '+total+(found?' · '+found+' found':'');
+  $('plBgStop').style.display=running?'':'none';
+}
+async function fetchPhotoUrl(name){
+  const ask=`Search the web for a top-down photo of this electronic component: "${name}". Return JSON only — no other text: {"image":"<direct URL to a .jpg .jpeg .png or .webp image showing the component from straight above, component side visible>"} or {"image":null} if no suitable photo was found.`;
+  const r=await gemini([{text:ask}],[{google_search:{}},{url_context:{}}]);
+  return r&&r.data&&typeof r.data.image==='string'&&/^https?:\/\/.+\.(jpg|jpeg|png|webp)/i.test(r.data.image)?r.data.image:null;
+}
+async function fetchAndResize(url){
+  return new Promise(res=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    const done=v=>res(v);
+    const t=setTimeout(()=>done(null),12000);
+    img.onload=()=>{
+      clearTimeout(t);
+      try{
+        const W=200,H=150,c=document.createElement('canvas');c.width=W;c.height=H;
+        const cx=c.getContext('2d'),sc=Math.min(W/img.width,H/img.height),sw=img.width*sc,sh=img.height*sc;
+        cx.fillStyle='#fff';cx.fillRect(0,0,W,H);cx.drawImage(img,(W-sw)/2,(H-sh)/2,sw,sh);
+        done(c.toDataURL('image/jpeg',0.72));
+      }catch(e){done(null);}
+    };
+    img.onerror=()=>{clearTimeout(t);done(null);};
+    img.src=url;
+  });
+}
+async function bgFindPhotos(){
+  if(bgPhotoState&&bgPhotoState.running)return;
+  if(!aiKey('gemini')){WF.flash('Set up a Gemini key first (the AI → Set up Google Gemini key… button in any part).',6000);return;}
+  const todo=custom.filter(p=>!p.photo);
+  if(!todo.length){WF.flash('All custom parts already have photos.');return;}
+  bgPhotoState={running:true,found:0,done:0,total:todo.length,stop:false};
+  updateBgBar();
+  for(const part of todo){
+    if(bgPhotoState.stop)break;
+    try{
+      const url=await fetchPhotoUrl(part.name);
+      if(url){
+        const dataUrl=await fetchAndResize(url);
+        if(dataUrl&&custom.some(p=>p.id===part.id)){
+          if(photoSave(part.id,dataUrl)){
+            part.photo=dataUrl;
+            thumbInvalidate(part.id);
+            bgPhotoState.found++;
+          }
+        }
+      }
+    }catch(e){/* skip */}
+    bgPhotoState.done++;
+    updateBgBar();
+  }
+  bgPhotoState.running=false;
+  if(bgPhotoState.found){renderList();}
+  updateBgBar();
+  if(bgPhotoState.found)WF.flash('Found '+bgPhotoState.found+' photo'+(bgPhotoState.found===1?'':'s')+' — saved.');
+}
+$('plFzPhoto').onclick=bgFindPhotos;
+$('plBgStop').onclick=()=>{if(bgPhotoState)bgPhotoState.stop=true;};
 function renderEditor(){
   const p=ed,isB=!!builtinById(p.id),overridden=isB&&custom.some(c=>c.id===p.id);
   const opt=(o,v)=>Object.entries(o).map(([k,n])=>`<option value="${k}"${v===k?' selected':''}>${esc(n)}</option>`).join('');
@@ -7224,7 +7295,7 @@ $('plEdit').addEventListener('click',async e=>{
   if(el.dataset.fsel!==undefined&&el.tagName!=='INPUT'&&el.tagName!=='SELECT'){edSel=+el.dataset.fsel;renderFeats();drawEd();return;}
   if(id==='plTop'){pickPhoto('top');return;}
   if(id==='plSide'){pickPhoto('side');return;}
-  if(id==='plNoPhoto'){delete ed.photo;markDirty();renderEditor();return;}
+  if(id==='plNoPhoto'){delete ed.photo;photoDel(ed.id);markDirty();renderEditor();return;}
   if(id==='plTurn'){turnPhoto();return;}
   if(id==='plImgAdd'||id==='plImgReplace'){$('plImgIn').click();return;}
   if(id==='plNoImg'){delete ed.img;markDirty();renderEditor();renderList();return;}
@@ -7254,7 +7325,7 @@ $('plEdit').addEventListener('click',async e=>{
   if(id==='plTypical'){addTypical();return;}
   if(id==='plSave'){savePart();return;}
   if(id==='plDup'){const c=clone(ed);c.id=newPartId();c.name=ed.name+' (copy)';delete c.builtin;ed=c;edDirty=true;savePart();return;}
-  if(id==='plDel'){if(!confirm('Delete "'+ed.name+'" from your library?'))return;const _delId=ed.id;custom=custom.filter(c=>c.id!==_delId);saveLib();thumbInvalidate(_delId);edDirty=false;selectPart(allParts()[0].id,true);return;}
+  if(id==='plDel'){if(!confirm('Delete "'+ed.name+'" from your library?'))return;const _delId=ed.id;custom=custom.filter(c=>c.id!==_delId);photoDel(_delId);saveLib();thumbInvalidate(_delId);edDirty=false;selectPart(allParts()[0].id,true);return;}
   if(id==='plReset'){if(!confirm('Put "'+ed.name+'" back to the original built-in part?'))return;custom=custom.filter(c=>c.id!==ed.id);saveLib();edDirty=false;selectPart(ed.id,true);return;}
   if(id==='plUse'){if(edDirty&&!savePart())return;wiz.items.push({pid:ed.id,qty:1,mount:'auto',wall:'auto'});saveWiz();lay=null;WF.flash(ed.name+' added to the Enclosure Wizard');openWizard();}
 });
@@ -11611,7 +11682,7 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
 
 // (r1) Read the wizard settings and own parts again after a saved project (version 2 file) put its own back.
 function reloadState(){
-  custom=readCustom();wiz=readWiz();lay=null;WF.setGhosts([]);
+  custom=readCustom();injectPhotos(custom);wiz=readWiz();lay=null;WF.setGhosts([]);
   if(ewBack.style.display==='grid')openWizard();
   if(wrBack.style.display==='grid')openWiring();
   if(plBack.style.display==='grid'&&!edDirty)renderList();
