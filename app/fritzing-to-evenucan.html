@@ -71,12 +71,47 @@ td input:focus,td select:focus{outline:1px solid var(--accent)}
 .missing b{color:var(--warn)}
 .missing ul{margin:4px 0 0 18px}
 .missing li{margin-bottom:2px}
+
+/* tabs */
+.tab-bar{display:flex;gap:0;margin:0 20px 0;border-bottom:2px solid var(--line)}
+.tab-btn{padding:8px 20px;border:none;background:transparent;color:var(--muted);font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
+.tab-btn:hover:not(.active){color:var(--fg)}
+
+/* batch drop */
+#batch-drop{margin:0 20px 20px;border:2px dashed var(--line);border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg2)}
+#batch-drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--bg2))}
+#batch-drop input{display:none}
+#batch-drop .ico{font-size:2.4rem;margin-bottom:8px}
+#batch-drop p{color:var(--muted);font-size:13px}
+#batch-drop b{color:var(--fg)}
+#batch-drop button{margin-top:12px;padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font:inherit;cursor:pointer;font-size:13px}
+#batch-drop button:hover{background:var(--accent2)}
+#batch-status{margin:0 20px 10px;font-size:13px;color:var(--muted);min-height:1.4em}
+.batch-progress{width:100%;height:4px;background:var(--line);border-radius:2px;margin:0 0 12px}
+.batch-progress-bar{height:4px;background:var(--accent);border-radius:2px;transition:width .25s}
+#batch-results{margin:0 20px 20px;display:none}
+#batch-results table{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+#batch-results th{background:var(--bg);color:var(--muted);font-weight:600;text-align:left;padding:7px 10px;border-bottom:2px solid var(--line)}
+#batch-results td{padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent);vertical-align:middle}
+#batch-results tr:last-child td{border-bottom:none}
+.b-ok{color:var(--ok)}
+.b-warn{color:var(--warn)}
+.b-err{color:var(--red)}
+#batch-sec-sub{padding-top:14px}
 </style>
 </head>
 <body>
 
 <h1>Fritzing → EvenUCan Converter</h1>
-<p class="sub">Drop a Fritzing part file (.fzpz) to convert it to an EvenUCan part. Fields the converter can't fill in are marked — add them by hand before exporting.</p>
+
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-single" onclick="showTab('single')">📄 Single File</button>
+  <button class="tab-btn" id="tab-batch" onclick="showTab('batch')">📦 Batch</button>
+</div>
+
+<div id="sec-single">
+<p class="sub" style="padding-top:14px">Drop a Fritzing part file (.fzpz) to convert it to an EvenUCan part. Fields the converter can't fill in are marked — add them by hand before exporting.</p>
 
 <div id="drop">
   <input type="file" id="fileIn" accept=".fzpz">
@@ -178,6 +213,30 @@ td input:focus,td select:focus{outline:1px solid var(--accent)}
     <button class="btn sec" onclick="resetUI()">Load another file</button>
   </div>
 </div>
+</div><!-- /#sec-single -->
+
+<div id="sec-batch" style="display:none">
+  <p class="sub" id="batch-sec-sub">Drop multiple <code style="font-family:monospace;font-size:12px">.fzpz</code> files and they'll be converted and downloaded automatically — no manual review required.</p>
+  <div id="batch-drop">
+    <input type="file" id="batchFileIn" accept=".fzpz" multiple>
+    <div class="ico">📦</div>
+    <b>Drop multiple .fzpz files here</b>
+    <p>All files will be converted and saved without manual review</p>
+    <button onclick="document.getElementById('batchFileIn').click()">Browse for files…</button>
+  </div>
+  <div style="margin:0 20px">
+    <div class="batch-progress" id="batch-prog-wrap" style="display:none">
+      <div class="batch-progress-bar" id="batch-prog" style="width:0%"></div>
+    </div>
+  </div>
+  <div id="batch-status"></div>
+  <div id="batch-results">
+    <table>
+      <thead><tr><th>File</th><th>Part name</th><th>Type</th><th>W × D (mm)</th><th>Pins</th><th>Status</th></tr></thead>
+      <tbody id="batch-tbody"></tbody>
+    </table>
+  </div>
+</div>
 
 <script>
 // ---- constants ----
@@ -257,12 +316,23 @@ function parseFzp(xml, svgText, filename) {
   getAll('property').forEach(p => { props[p.getAttribute('name')] = p.textContent.trim(); });
 
   // connectors
-  const connectors = getAll('connector').map(c => ({
+  // Fritzing parts can represent each physical pin multiple times in the .fzp — a
+  // primary connector plus " outer" and " screw" variants for breakout boards.
+  // Strip those suffix duplicates so EvenUCan only sees each pin once.
+  const allConnectors = getAll('connector').map(c => ({
     id: c.getAttribute('id') || '',
     name: c.getAttribute('name') || c.getAttribute('id') || '',
     type: c.getAttribute('type') || 'male',
     desc: c.querySelector('description')?.textContent?.trim() || ''
   }));
+  const seenNames = new Set();
+  const connectors = allConnectors.filter(c => {
+    const base = c.name.replace(/\s+(outer|screw|inner)$/i, '').trim();
+    if (seenNames.has(base.toLowerCase())) return false;
+    seenNames.add(base.toLowerCase());
+    c.name = base;   // normalise to base name
+    return true;
+  });
 
   // guess type from taxonomy/tags/family
   const taxStr = (get('taxonomy') + ' ' + tags + ' ' + family + ' ' + title).toLowerCase();
@@ -275,27 +345,40 @@ function parseFzp(xml, svgText, filename) {
   else if (/relay/.test(taxStr)) type = 'relay';
   else if (/led|neopixel|ws281/.test(taxStr)) type = 'led';
 
-  // dimensions from SVG viewBox
+  // dimensions from SVG width/height attrs or viewBox
+  // Fritzing breadboard SVGs commonly use width="X.XXXin" / height="Y.YYYin" with
+  // a viewBox whose units are 1/1000 inch — NOT pixels.  Reading the viewBox and
+  // applying the px→mm factor (÷90×25.4) therefore gives ~10× too large a result.
+  // Priority: read the width/height attrs with their unit suffix first; fall back to
+  // viewBox-as-pixels only when no recognised unit is present.
   let w = 0, d = 0;
   if (svgText) {
     const svgDoc = new DOMParser().parseFromString(svgText, 'image/svg+xml');
     const svgEl = svgDoc.querySelector('svg');
     if (svgEl) {
-      const vb = svgEl.getAttribute('viewBox');
-      if (vb) {
-        const parts = vb.trim().split(/[\s,]+/).map(Number);
-        if (parts.length >= 4) {
-          w = +(parts[2] * MM_PER_PX).toFixed(2);
-          d = +(parts[3] * MM_PER_PX).toFixed(2);
-        }
+      const uw = svgEl.getAttribute('width')  || '';
+      const uh = svgEl.getAttribute('height') || '';
+      if (/in$/i.test(uw)) {
+        // explicit inch units — convert directly
+        w = +(parseFloat(uw) * 25.4).toFixed(2);
+        d = +(parseFloat(uh) * 25.4).toFixed(2);
+      } else if (/mm$/i.test(uw)) {
+        // explicit mm units — use as-is
+        w = +parseFloat(uw).toFixed(2);
+        d = +parseFloat(uh).toFixed(2);
       } else {
-        // fallback: use width/height attrs
-        const pw = parseFloat(svgEl.getAttribute('width') || 0);
-        const ph = parseFloat(svgEl.getAttribute('height') || 0);
-        // strip 'px','mm','in' suffix
-        const uw = svgEl.getAttribute('width') || '';
-        if (/mm$/.test(uw)) { w = +pw.toFixed(2); d = +(parseFloat(svgEl.getAttribute('height'))).toFixed(2); }
-        else { w = +(pw * MM_PER_PX).toFixed(2); d = +(ph * MM_PER_PX).toFixed(2); }
+        // no unit or px: read viewBox and treat as pixels at FZ_DPI
+        const vb = svgEl.getAttribute('viewBox');
+        if (vb) {
+          const parts = vb.trim().split(/[\s,]+/).map(Number);
+          if (parts.length >= 4) {
+            w = +(parts[2] * MM_PER_PX).toFixed(2);
+            d = +(parts[3] * MM_PER_PX).toFixed(2);
+          }
+        } else {
+          w = +(parseFloat(uw) * MM_PER_PX).toFixed(2);
+          d = +(parseFloat(uh) * MM_PER_PX).toFixed(2);
+        }
       }
       // sanity: if SVG looks very small (icon), ignore
       if (w < 1 || d < 1) { w = 0; d = 0; }
@@ -384,7 +467,7 @@ function renderResult(part, svgText) {
 function guessRole(name, role) {
   const n = name.toLowerCase();
   if (role === 'gnd' && /gnd|ground/.test(n)) return true;
-  if (role === '3v3' && /3\.?3/.test(n)) return true;
+  if (role === '3v3' && /\b3\.?3\b|^3v3$/.test(n)) return true;
   if (role === '5v' && /5v|vcc5/.test(n)) return true;
   if (role === 'vin' && /vin|v_in/.test(n)) return true;
   if (role === 'vcc' && /vcc|vdd/.test(n)) return true;
@@ -394,6 +477,7 @@ function guessRole(name, role) {
   if (role === 'uart_rx' && /rx/.test(n)) return true;
   if (role === 'ao' && /ao|aout|a_out/.test(n)) return true;
   if (role === 'do' && /^do$|dout|d_out/.test(n)) return true;
+  if (role === 'sig' && /^(sig|out|i\/o|io|dat|data)$/.test(n)) return true;
   if (role === 'nc' && /nc|n\.c|no.connect/.test(n)) return true;
   return false;
 }
@@ -487,6 +571,173 @@ function exportPart() {
 
   showMsg('Exported! Open EvenUCan → Parts Library → Import to load it.', 'ok');
 }
+
+// ---- tabs ----
+function showTab(name) {
+  document.getElementById('sec-single').style.display = name === 'single' ? '' : 'none';
+  document.getElementById('sec-batch').style.display  = name === 'batch'  ? '' : 'none';
+  document.getElementById('tab-single').classList.toggle('active', name === 'single');
+  document.getElementById('tab-batch').classList.toggle('active',  name === 'batch');
+}
+
+// ---- batch: SVG → data URL helper ----
+function svgToDataUrl(svgText) {
+  return new Promise(resolve => {
+    const blob = new Blob([svgText], { type: 'image/svg+xml' });
+    const url  = URL.createObjectURL(blob);
+    const img  = new Image();
+    const MAX  = 600;
+    img.onload = () => {
+      const nw = img.naturalWidth  || 200;
+      const nh = img.naturalHeight || 200;
+      const k  = Math.min(1, MAX / Math.max(nw, nh));
+      const cv = document.createElement('canvas');
+      cv.width  = Math.round(nw * k);
+      cv.height = Math.round(nh * k);
+      const ctx = cv.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 0, 0, cv.width, cv.height);
+      resolve(cv.toDataURL('image/png'));
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => { resolve(null); URL.revokeObjectURL(url); };
+    img.src = url;
+  });
+}
+
+// ---- batch: download blob helper ----
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+// ---- batch: main runner ----
+async function runBatch(files) {
+  const fzpzFiles = [...files].filter(f => /\.fzpz$/i.test(f.name));
+  if (!fzpzFiles.length) return;
+
+  const statusEl   = document.getElementById('batch-status');
+  const resultsEl  = document.getElementById('batch-results');
+  const tbody      = document.getElementById('batch-tbody');
+  const progWrap   = document.getElementById('batch-prog-wrap');
+  const prog       = document.getElementById('batch-prog');
+
+  tbody.innerHTML = '';
+  resultsEl.style.display = '';
+  progWrap.style.display  = '';
+  prog.style.width        = '0%';
+  statusEl.textContent    = `Starting — 0 / ${fzpzFiles.length}…`;
+
+  let done = 0, errors = 0;
+
+  for (let i = 0; i < fzpzFiles.length; i++) {
+    const file = fzpzFiles[i];
+
+    // placeholder row
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${esc(file.name)}</td><td colspan="5" style="color:var(--muted);font-style:italic">processing…</td>`;
+    tbody.appendChild(tr);
+
+    try {
+      // unzip
+      const zip     = await JSZip.loadAsync(file);
+      const fzpName = Object.keys(zip.files).find(n => /\.fzp$/i.test(n) && !zip.files[n].dir);
+      if (!fzpName) throw new Error('No .fzp XML inside archive');
+      const fzpXml  = await zip.files[fzpName].async('text');
+
+      const bbName   = Object.keys(zip.files).find(n => /breadboard.*\.svg$/i.test(n) || /\.breadboard\.svg$/i.test(n));
+      const iconName = Object.keys(zip.files).find(n => /icon.*\.svg$/i.test(n)        || /\.icon\.svg$/i.test(n));
+      const svgName  = bbName || iconName || Object.keys(zip.files).find(n => /\.svg$/i.test(n));
+      const svgText  = svgName ? await zip.files[svgName].async('text') : null;
+
+      const part     = parseFzp(fzpXml, svgText, file.name);
+      const warnings = [];
+      if (!part.w || !part.d) warnings.push('dims unknown');
+
+      // render breadboard image
+      const imgData = svgText ? await svgToDataUrl(svgText) : null;
+
+      // build part object (use safe defaults for fields needing manual input)
+      const id = 'fz-' + part.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '-' + Date.now().toString(36);
+      const exportObj = {
+        id,
+        name:     part.title,
+        type:     part.type,
+        shape:    'rect',
+        w:        part.w || 20,
+        d:        part.d || 15,
+        pcb:      1.6,
+        h:        3,
+        belowOn:  0,
+        belowBare:0,
+        hdr:      'off',
+        below:    0,
+        mount:    'floor',
+        acc:      'approx',
+        notes:    (part.notes || '') + '\nConverted from Fritzing .fzpz by fritzing-to-evenucan. Review dims and heights.',
+        features: [],
+        pins:     part.connectors.map(c => ({
+          name: c.name,
+          role: ROLES.find(r => guessRole(c.name, r)) || undefined,
+          x: 0,
+          y: 0
+        })).filter(p => p.name)
+      };
+      if (imgData) exportObj.img = imgData;
+
+      // download
+      const json     = JSON.stringify({ app: 'EvenUCan', kind: 'parts', version: 1, parts: [exportObj] }, null, 1);
+      const dlName   = part.title.replace(/[^a-z0-9 _-]/gi, '_').trim() + ' (EvenUCan).json';
+      downloadBlob(new Blob([json], { type: 'application/json' }), dlName);
+
+      done++;
+      const dimStr  = part.w > 0 ? `${part.w} × ${part.d}` : '<span class="b-warn">—</span>';
+      const statStr = warnings.length
+        ? `<span class="b-warn">⚠ ${warnings.join(', ')}</span>`
+        : `<span class="b-ok">✓ saved</span>`;
+      tr.innerHTML = `<td>${esc(file.name)}</td><td>${esc(part.title)}</td><td>${esc(part.type)}</td><td>${dimStr}</td><td>${exportObj.pins.length}</td><td>${statStr}</td>`;
+
+    } catch (e) {
+      errors++;
+      tr.innerHTML = `<td>${esc(file.name)}</td><td colspan="5" class="b-err">✗ ${esc(e.message)}</td>`;
+    }
+
+    const pct = Math.round(((i + 1) / fzpzFiles.length) * 100);
+    prog.style.width     = pct + '%';
+    statusEl.textContent = `Processed ${i + 1} / ${fzpzFiles.length}…`;
+
+    // small pause so the browser can flush downloads between files
+    if (i < fzpzFiles.length - 1) await new Promise(r => setTimeout(r, 350));
+  }
+
+  statusEl.textContent = done === fzpzFiles.length
+    ? `✓ All ${done} files exported — open EvenUCan → Parts Library → Import to load them.`
+    : `Done — ${done} exported, ${errors} failed.`;
+  statusEl.style.color = errors ? 'var(--warn)' : 'var(--ok)';
+}
+
+// ---- batch: wire up drop zone ----
+const batchDrop = document.getElementById('batch-drop');
+batchDrop.addEventListener('dragover',  e => { e.preventDefault(); batchDrop.classList.add('over'); });
+batchDrop.addEventListener('dragleave', ()=> batchDrop.classList.remove('over'));
+batchDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  batchDrop.classList.remove('over');
+  const files = [...e.dataTransfer.files].filter(f => /\.fzpz$/i.test(f.name));
+  if (files.length) runBatch(files);
+});
+document.getElementById('batchFileIn').addEventListener('change', e => {
+  const files = [...e.target.files];
+  e.target.value = '';
+  if (files.length) runBatch(files);
+});
 </script>
 </body>
 </html>
