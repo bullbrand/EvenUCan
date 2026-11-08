@@ -216,7 +216,11 @@ td input:focus,td select:focus{outline:1px solid var(--accent)}
 </div><!-- /#sec-single -->
 
 <div id="sec-batch" style="display:none">
-  <p class="sub" id="batch-sec-sub">Drop multiple <code style="font-family:monospace;font-size:12px">.fzpz</code> files and they'll be converted and downloaded automatically — no manual review required.</p>
+  <p class="sub" id="batch-sec-sub">Drop multiple <code style="font-family:monospace;font-size:12px">.fzpz</code> files and they'll be converted and saved automatically — no popups per file.</p>
+  <div style="margin:4px 20px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span id="batch-dir-label" style="font-size:13px;color:var(--muted)">No folder chosen yet — you'll be asked when you start.</span>
+    <button class="btn sec" style="padding:4px 12px;font-size:12px" onclick="pickSaveDir()">📁 Change folder</button>
+  </div>
   <div id="batch-drop">
     <input type="file" id="batchFileIn" accept=".fzpz" multiple>
     <div class="ico">📦</div>
@@ -606,16 +610,27 @@ function svgToDataUrl(svgText) {
   });
 }
 
-// ---- batch: download blob helper ----
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a   = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+// ---- batch: save-folder state ----
+// User picks a folder once; all files in this session write there silently.
+let batchSaveDir = null;
+
+async function pickSaveDir() {
+  try {
+    batchSaveDir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'downloads' });
+    document.getElementById('batch-dir-label').textContent = '📁 Saving to: ' + batchSaveDir.name;
+    return true;
+  } catch {
+    batchSaveDir = null;
+    return false; // user cancelled
+  }
+}
+
+async function saveToDir(blob, filename) {
+  if (!batchSaveDir) throw new Error('No save folder selected');
+  const fh       = await batchSaveDir.getFileHandle(filename, { create: true });
+  const writable = await fh.createWritable();
+  await writable.write(blob);
+  await writable.close();
 }
 
 // ---- batch: main runner ----
@@ -629,10 +644,19 @@ async function runBatch(files) {
   const progWrap   = document.getElementById('batch-prog-wrap');
   const prog       = document.getElementById('batch-prog');
 
+  // pick save folder if not already chosen
+  if (!batchSaveDir) {
+    statusEl.style.color = '';
+    statusEl.textContent = 'Pick a folder to save into…';
+    const ok = await pickSaveDir();
+    if (!ok) { statusEl.textContent = 'Cancelled — no folder chosen.'; return; }
+  }
+
   tbody.innerHTML = '';
   resultsEl.style.display = '';
   progWrap.style.display  = '';
   prog.style.width        = '0%';
+  statusEl.style.color    = '';
   statusEl.textContent    = `Starting — 0 / ${fzpzFiles.length}…`;
 
   let done = 0, errors = 0;
@@ -692,10 +716,10 @@ async function runBatch(files) {
       };
       if (imgData) exportObj.img = imgData;
 
-      // download
+      // save silently to chosen folder
       const json     = JSON.stringify({ app: 'EvenUCan', kind: 'parts', version: 1, parts: [exportObj] }, null, 1);
       const dlName   = part.title.replace(/[^a-z0-9 _-]/gi, '_').trim() + ' (EvenUCan).json';
-      downloadBlob(new Blob([json], { type: 'application/json' }), dlName);
+      await saveToDir(new Blob([json], { type: 'application/json' }), dlName);
 
       done++;
       const dimStr  = part.w > 0 ? `${part.w} × ${part.d}` : '<span class="b-warn">—</span>';
@@ -713,8 +737,6 @@ async function runBatch(files) {
     prog.style.width     = pct + '%';
     statusEl.textContent = `Processed ${i + 1} / ${fzpzFiles.length}…`;
 
-    // small pause so the browser can flush downloads between files
-    if (i < fzpzFiles.length - 1) await new Promise(r => setTimeout(r, 350));
   }
 
   statusEl.textContent = done === fzpzFiles.length
