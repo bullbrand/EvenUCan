@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.59';
+const APP_VERSION='1.9.63';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5478,7 +5478,7 @@ const BUILTIN=[
     notes:'Stainless-steel probe with 1-wire bus. 1 m cable. The probe body is Ø6 × 30 mm.',features:[]},
   {id:'b-hcsr04',name:'HC-SR04 ultrasonic sensor',type:'sensor',shape:'rect',w:45,d:20,pcb:1.6,h:15,below:0,mount:'wall',acc:'approx',
     notes:'Two cylindrical transducers (Ø16 mm) on the front face. 4-pin 2.54 mm header on the back.',
-    features:[{t:'hole',x:2.5,y:2.5,dia:3},{t:'hole',x:42.5,y:2.5,dia:3}]},
+    features:[{t:'opening',x:11.5,y:10,dia:16},{t:'opening',x:33.5,y:10,dia:16},{t:'hole',x:2.5,y:2.5,dia:3},{t:'hole',x:42.5,y:2.5,dia:3}]},
   {id:'b-pirsr501',name:'PIR motion sensor (HC-SR501)',type:'sensor',shape:'round',w:32,d:32,pcb:1.6,h:25,below:0,mount:'wall',acc:'approx',
     notes:'White Fresnel dome on a 32 × 24 mm PCB. 3-pin header. Dome is Ø24 × 23 mm; allow clearance in the wall.',features:[]},
   {id:'b-mpu6050',name:'MPU-6050 IMU (gyro + accel)',type:'sensor',shape:'rect',w:21,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
@@ -5886,7 +5886,7 @@ function prep(inst,st){
   if(mount==='outside')return Object.assign(o,{outside:true});
   if(mount==='wall'){
     o.cone=F.some(f=>f.t==='cone');
-    o.tk=o.below+o.pcb+o.h+(o.cone&&o.pcb===0?2.8:0);// speakers get a rib behind them
+    o.tk=o.below+o.pcb+o.h+(o.cone&&o.pcb===0?2.8:0)+(F.some(f=>f.t==='opening')&&o.pcb>0?1:0);// +1 for locating-pin tip beyond PCB
     o.floorOnly=o.cone;// heavy: sits on the floor
     o.portSides=[];o.ant=[];return o;
   }
@@ -6348,7 +6348,8 @@ async function buildSolids(L){
           const clear=F.filter(q=>q.t==='opening').map(q=>cylN(wallU(it,q.x),it.z0+q.y,-0.5,o.h+0.5,q.dia/2+1.4));
           for(const s of wallStandoffs(it)){
             const u=wallU(it,s.f.x),post=cylN(u,s.z,-0.1,o.h,s.r);
-            let brace=K(M.hull([post,cube(u-s.r,-0.1,Math.max(-0.1,s.z-s.r-o.h),u+s.r,0,s.z)]));
+            const braceDepth=Math.min(s.z+s.r+1,o.h);// only as deep as needed for a 45° base; floor supports the rest
+            let brace=K(M.hull([cylN(u,s.z,-0.1,braceDepth,s.r),cube(u-s.r,-0.1,Math.max(-0.1,s.z-s.r),u+s.r,0,s.z)]));
             for(const c of clear)brace=K(brace.subtract(c));
             adds.push(toWall(post,it.wall),toWall(brace,it.wall),toWall(cylN(u,s.z,o.h-0.1,o.h+o.pcb+1,Math.max(0.6,s.f.dia/2-0.2)),it.wall));
           }

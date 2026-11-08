@@ -1,5 +1,5 @@
 {
-  "version": "1.9.62",
-  "notes": "Fix: device name no longer truncated mid-word (e.g. "Dashboard" stayed "Dashboard"); fix: "Still to add" comment removed from AI-generated YAML.",
+  "version": "1.9.63",
+  "notes": "Fix: HC-SR04 standoff braces no longer block adjacent floor parts; brace depth limited to minimum needed for 45° printing support. HC-SR04 built-in definition now includes transducer openings automatically.",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }
