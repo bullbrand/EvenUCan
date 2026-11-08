@@ -87,7 +87,7 @@ td input:focus,td select:focus{outline:1px solid var(--accent)}
 #batch-drop b{color:var(--fg)}
 #batch-drop button{margin-top:12px;padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font:inherit;cursor:pointer;font-size:13px}
 #batch-drop button:hover{background:var(--accent2)}
-#batch-status{margin:0 20px 10px;font-size:13px;color:var(--muted);min-height:1.4em}
+#batch-status{margin:0 20px 14px;font-size:13px;color:var(--muted);min-height:1.4em}
 .batch-progress{width:100%;height:4px;background:var(--line);border-radius:2px;margin:0 0 12px}
 .batch-progress-bar{height:4px;background:var(--accent);border-radius:2px;transition:width .25s}
 #batch-results{margin:0 20px 20px;display:none}
@@ -216,11 +216,7 @@ td input:focus,td select:focus{outline:1px solid var(--accent)}
 </div><!-- /#sec-single -->
 
 <div id="sec-batch" style="display:none">
-  <p class="sub" id="batch-sec-sub">Drop multiple <code style="font-family:monospace;font-size:12px">.fzpz</code> files and they'll be converted and saved automatically — no popups per file.</p>
-  <div style="margin:4px 20px 12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <span id="batch-dir-label" style="font-size:13px;color:var(--muted)">No folder chosen yet — you'll be asked when you start.</span>
-    <button class="btn sec" style="padding:4px 12px;font-size:12px" onclick="pickSaveDir()">📁 Change folder</button>
-  </div>
+  <p class="sub" id="batch-sec-sub">Drop all your <code style="font-family:monospace;font-size:12px">.fzpz</code> files at once — they'll all be converted and merged into a single importable JSON.</p>
   <div id="batch-drop">
     <input type="file" id="batchFileIn" accept=".fzpz" multiple>
     <div class="ico">📦</div>
@@ -236,7 +232,7 @@ td input:focus,td select:focus{outline:1px solid var(--accent)}
   <div id="batch-status"></div>
   <div id="batch-results">
     <table>
-      <thead><tr><th>File</th><th>Part name</th><th>Type</th><th>W × D (mm)</th><th>Pins</th><th>Status</th></tr></thead>
+      <thead><tr><th>File</th><th>Part name</th><th>Type</th><th>W × D (mm)</th><th>Pins</th><th></th></tr></thead>
       <tbody id="batch-tbody"></tbody>
     </table>
   </div>
@@ -610,67 +606,36 @@ function svgToDataUrl(svgText) {
   });
 }
 
-// ---- batch: save-folder state ----
-// User picks a folder once; all files in this session write there silently.
-let batchSaveDir = null;
-
-async function pickSaveDir() {
-  try {
-    batchSaveDir = await window.showDirectoryPicker({ mode: 'readwrite', startIn: 'downloads' });
-    document.getElementById('batch-dir-label').textContent = '📁 Saving to: ' + batchSaveDir.name;
-    return true;
-  } catch {
-    batchSaveDir = null;
-    return false; // user cancelled
-  }
-}
-
-async function saveToDir(blob, filename) {
-  if (!batchSaveDir) throw new Error('No save folder selected');
-  const fh       = await batchSaveDir.getFileHandle(filename, { create: true });
-  const writable = await fh.createWritable();
-  await writable.write(blob);
-  await writable.close();
-}
-
 // ---- batch: main runner ----
+// Converts all .fzpz files, merges every part into one JSON, one save at the end.
 async function runBatch(files) {
   const fzpzFiles = [...files].filter(f => /\.fzpz$/i.test(f.name));
   if (!fzpzFiles.length) return;
 
-  const statusEl   = document.getElementById('batch-status');
-  const resultsEl  = document.getElementById('batch-results');
-  const tbody      = document.getElementById('batch-tbody');
-  const progWrap   = document.getElementById('batch-prog-wrap');
-  const prog       = document.getElementById('batch-prog');
-
-  // pick save folder if not already chosen
-  if (!batchSaveDir) {
-    statusEl.style.color = '';
-    statusEl.textContent = 'Pick a folder to save into…';
-    const ok = await pickSaveDir();
-    if (!ok) { statusEl.textContent = 'Cancelled — no folder chosen.'; return; }
-  }
+  const statusEl  = document.getElementById('batch-status');
+  const resultsEl = document.getElementById('batch-results');
+  const tbody     = document.getElementById('batch-tbody');
+  const progWrap  = document.getElementById('batch-prog-wrap');
+  const prog      = document.getElementById('batch-prog');
 
   tbody.innerHTML = '';
   resultsEl.style.display = '';
   progWrap.style.display  = '';
   prog.style.width        = '0%';
   statusEl.style.color    = '';
-  statusEl.textContent    = `Starting — 0 / ${fzpzFiles.length}…`;
+  statusEl.textContent    = `Converting 0 / ${fzpzFiles.length}…`;
 
-  let done = 0, errors = 0;
+  const allParts = [];
+  let errors = 0;
 
   for (let i = 0; i < fzpzFiles.length; i++) {
     const file = fzpzFiles[i];
 
-    // placeholder row
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${esc(file.name)}</td><td colspan="5" style="color:var(--muted);font-style:italic">processing…</td>`;
+    tr.innerHTML = `<td>${esc(file.name)}</td><td colspan="5" style="color:var(--muted);font-style:italic">converting…</td>`;
     tbody.appendChild(tr);
 
     try {
-      // unzip
       const zip     = await JSZip.loadAsync(file);
       const fzpName = Object.keys(zip.files).find(n => /\.fzp$/i.test(n) && !zip.files[n].dir);
       if (!fzpName) throw new Error('No .fzp XML inside archive');
@@ -685,47 +650,39 @@ async function runBatch(files) {
       const warnings = [];
       if (!part.w || !part.d) warnings.push('dims unknown');
 
-      // render breadboard image
       const imgData = svgText ? await svgToDataUrl(svgText) : null;
 
-      // build part object (use safe defaults for fields needing manual input)
       const id = 'fz-' + part.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '-' + Date.now().toString(36);
       const exportObj = {
         id,
-        name:     part.title,
-        type:     part.type,
-        shape:    'rect',
-        w:        part.w || 20,
-        d:        part.d || 15,
-        pcb:      1.6,
-        h:        3,
-        belowOn:  0,
-        belowBare:0,
-        hdr:      'off',
-        below:    0,
-        mount:    'floor',
-        acc:      'approx',
-        notes:    (part.notes || '') + '\nConverted from Fritzing .fzpz by fritzing-to-evenucan. Review dims and heights.',
-        features: [],
-        pins:     part.connectors.map(c => ({
+        name:      part.title,
+        type:      part.type,
+        shape:     'rect',
+        w:         part.w || 20,
+        d:         part.d || 15,
+        pcb:       1.6,
+        h:         3,
+        belowOn:   0,
+        belowBare: 0,
+        hdr:       'off',
+        below:     0,
+        mount:     'floor',
+        acc:       'approx',
+        notes:     (part.notes || '') + '\nConverted from Fritzing .fzpz. Review dims and heights.',
+        features:  [],
+        pins:      part.connectors.map(c => ({
           name: c.name,
           role: ROLES.find(r => guessRole(c.name, r)) || undefined,
-          x: 0,
-          y: 0
+          x: 0, y: 0
         })).filter(p => p.name)
       };
       if (imgData) exportObj.img = imgData;
+      allParts.push(exportObj);
 
-      // save silently to chosen folder
-      const json     = JSON.stringify({ app: 'EvenUCan', kind: 'parts', version: 1, parts: [exportObj] }, null, 1);
-      const dlName   = part.title.replace(/[^a-z0-9 _-]/gi, '_').trim() + ' (EvenUCan).json';
-      await saveToDir(new Blob([json], { type: 'application/json' }), dlName);
-
-      done++;
       const dimStr  = part.w > 0 ? `${part.w} × ${part.d}` : '<span class="b-warn">—</span>';
       const statStr = warnings.length
         ? `<span class="b-warn">⚠ ${warnings.join(', ')}</span>`
-        : `<span class="b-ok">✓ saved</span>`;
+        : `<span class="b-ok">✓</span>`;
       tr.innerHTML = `<td>${esc(file.name)}</td><td>${esc(part.title)}</td><td>${esc(part.type)}</td><td>${dimStr}</td><td>${exportObj.pins.length}</td><td>${statStr}</td>`;
 
     } catch (e) {
@@ -735,13 +692,44 @@ async function runBatch(files) {
 
     const pct = Math.round(((i + 1) / fzpzFiles.length) * 100);
     prog.style.width     = pct + '%';
-    statusEl.textContent = `Processed ${i + 1} / ${fzpzFiles.length}…`;
-
+    statusEl.textContent = `Converting ${i + 1} / ${fzpzFiles.length}…`;
   }
 
-  statusEl.textContent = done === fzpzFiles.length
-    ? `✓ All ${done} files exported — open EvenUCan → Parts Library → Import to load them.`
-    : `Done — ${done} exported, ${errors} failed.`;
+  if (!allParts.length) {
+    statusEl.textContent = 'No parts converted — nothing to save.';
+    statusEl.style.color = 'var(--red)';
+    return;
+  }
+
+  // ---- save one merged JSON ----
+  const json     = JSON.stringify({ app: 'EvenUCan', kind: 'parts', version: 1, parts: allParts }, null, 1);
+  const blob     = new Blob([json], { type: 'application/json' });
+  const filename = 'EvenUCan Parts (fritzing).json';
+
+  statusEl.textContent = `Converted ${allParts.length} part${allParts.length!==1?'s':''} — saving…`;
+
+  if (window.showSaveFilePicker) {
+    try {
+      const fh = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
+      });
+      const w = await fh.createWritable();
+      await w.write(blob);
+      await w.close();
+      statusEl.textContent = `✓ Saved "${fh.name}" — ${allParts.length} part${allParts.length!==1?'s':''}${errors?' ('+errors+' file'+(errors!==1?'s':'')+' failed)':''}.  Import it in EvenUCan → Parts Library → Import.`;
+      statusEl.style.color = errors ? 'var(--warn)' : 'var(--ok)';
+      return;
+    } catch { /* user cancelled picker — fall through */ }
+  }
+
+  // fallback: browser download
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  statusEl.textContent = `✓ Downloaded "${filename}" — ${allParts.length} part${allParts.length!==1?'s':''}${errors?' ('+errors+' failed)':''}.  Import it in EvenUCan → Parts Library → Import.`;
   statusEl.style.color = errors ? 'var(--warn)' : 'var(--ok)';
 }
 
