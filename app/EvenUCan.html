@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.83';
+const APP_VERSION='1.9.84';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5764,6 +5764,8 @@ function photoSave(id,url){try{localStorage.setItem(EVP+id,url);return true;}cat
 function photoDel(id){try{localStorage.removeItem(EVP+id);}catch(e){}}
 function injectPhotos(parts){parts.forEach(p=>{if(!p.photo){const ph=photoGet(p.id);if(ph)p.photo=ph;}});}
 let custom=readCustom();injectPhotos(custom);
+// Migrate: if parts loaded with embedded photos (from older WaughForm 3D format), save to sidecar keys
+(()=>{let migrated=0;custom.forEach(p=>{if(p.photo&&p.photo.startsWith('data:')&&!photoGet(p.id)){photoSave(p.id,p.photo);migrated++;}});if(migrated)console.log('EvenUCan: migrated '+migrated+' embedded photos to sidecar keys');})();
 function saveLib(){
   if(libDamaged){WF.flash('⚠ Not saved: your saved parts could not be read, so EvenUCan won\'t write over them.',7000);return false;}
   // Strip in-memory photos before serialising (photos live in sidecar keys)
