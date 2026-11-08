@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>EvenUCan Parts Merger</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f8fa;--bg2:#fff;--fg:#1a1a1a;--muted:#666;--line:#dde1e8;
+  --accent:#5a4ff3;--accent2:#4039c2;--ok:#1a9e5a;--warn:#d6830a;
+  --red:#c0392b;--radius:8px;
+}
+@media(prefers-color-scheme:dark){
+  :root{--bg:#1a1b1e;--bg2:#25262a;--fg:#e8eaf0;--muted:#8a8fa8;--line:#383a44;--accent:#7b72f7;--accent2:#6560d6;--ok:#22b96e;--warn:#e69530;--red:#e05252;}
+}
+body{font:14px/1.5 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--fg);min-height:100vh;padding:0 0 60px}
+h1{font-size:1.4rem;font-weight:700;padding:18px 20px 4px}
+.sub{color:var(--muted);font-size:13px;padding:0 20px 20px}
+
+#drop{margin:0 20px 16px;border:2px dashed var(--line);border-radius:var(--radius);padding:40px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg2)}
+#drop.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--bg2))}
+#drop input{display:none}
+#drop .ico{font-size:2.4rem;margin-bottom:8px}
+#drop p{color:var(--muted);font-size:13px;margin-top:4px}
+#drop b{color:var(--fg)}
+#drop button{margin-top:12px;padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:6px;font:inherit;cursor:pointer;font-size:13px}
+#drop button:hover{background:var(--accent2)}
+
+#state{margin:0 20px 16px;font-size:13px;color:var(--muted)}
+#list{margin:0 20px 16px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:none}
+#list table{width:100%;border-collapse:collapse;font-size:12.5px}
+#list th{background:var(--bg);color:var(--muted);font-weight:600;text-align:left;padding:7px 10px;border-bottom:2px solid var(--line)}
+#list td{padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
+#list tr:last-child td{border-bottom:none}
+.ok{color:var(--ok)}
+.err{color:var(--red)}
+
+.actions{margin:0 20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{padding:8px 20px;border:none;border-radius:6px;font:inherit;font-size:13.5px;cursor:pointer;font-weight:600}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent2)}
+.btn.primary:disabled{opacity:.4;cursor:default}
+.btn.sec{background:var(--bg2);color:var(--fg);border:1px solid var(--line)}
+.btn.sec:hover{border-color:var(--accent);color:var(--accent)}
+#summary{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<h1>EvenUCan Parts Merger</h1>
+<p class="sub">Drop multiple EvenUCan JSON files here — they'll be merged into a single file ready to import in one go.</p>
+
+<div id="drop">
+  <input type="file" id="fileIn" accept=".json" multiple>
+  <div class="ico">🔗</div>
+  <b>Drop EvenUCan JSON files here</b>
+  <p>All <code style="font-family:monospace;font-size:12px">*&nbsp;(EvenUCan).json</code> files from the batch converter</p>
+  <button onclick="document.getElementById('fileIn').click()">Browse for files…</button>
+</div>
+
+<div id="state"></div>
+
+<div id="list">
+  <table>
+    <thead><tr><th>File</th><th>Parts</th><th>Status</th></tr></thead>
+    <tbody id="list-body"></tbody>
+  </table>
+</div>
+
+<div class="actions" id="actions" style="display:none">
+  <button class="btn primary" id="mergeBtn" onclick="saveMerged()">💾 Save merged JSON</button>
+  <button class="btn sec" onclick="reset()">Clear &amp; start over</button>
+  <span id="summary"></span>
+</div>
+
+<script>
+let loadedFiles = []; // { name, parts[] }
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// drag & drop
+const drop = document.getElementById('drop');
+drop.addEventListener('dragover', e=>{ e.preventDefault(); drop.classList.add('over'); });
+drop.addEventListener('dragleave', ()=> drop.classList.remove('over'));
+drop.addEventListener('drop', e=>{ e.preventDefault(); drop.classList.remove('over'); loadFiles([...e.dataTransfer.files]); });
+document.getElementById('fileIn').addEventListener('change', e=>{ loadFiles([...e.target.files]); e.target.value=''; });
+
+async function loadFiles(files) {
+  const jsonFiles = files.filter(f => /\.json$/i.test(f.name));
+  if (!jsonFiles.length) { document.getElementById('state').textContent = 'No .json files found.'; return; }
+
+  for (const file of jsonFiles) {
+    // skip duplicates
+    if (loadedFiles.find(f => f.name === file.name)) continue;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      if (!data.parts || !Array.isArray(data.parts)) throw new Error('No parts array — not an EvenUCan file');
+      loadedFiles.push({ name: file.name, parts: data.parts });
+      addRow(file.name, data.parts.length, true, '');
+    } catch(e) {
+      addRow(file.name, 0, false, e.message);
+    }
+  }
+
+  refresh();
+}
+
+function addRow(name, count, ok, err) {
+  const tbody = document.getElementById('list-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td>${esc(name)}</td><td>${count || '—'}</td><td class="${ok?'ok':'err'}">${ok ? '✓ ' + count + ' part' + (count!==1?'s':'') : '✗ ' + esc(err)}</td>`;
+  tbody.appendChild(tr);
+}
+
+function refresh() {
+  const total = loadedFiles.reduce((s,f)=>s+f.parts.length, 0);
+  document.getElementById('list').style.display = '';
+  document.getElementById('actions').style.display = '';
+  document.getElementById('summary').textContent = loadedFiles.length + ' file' + (loadedFiles.length!==1?'s':'') + ' — ' + total + ' part' + (total!==1?'s':'') + ' total';
+  document.getElementById('mergeBtn').disabled = total === 0;
+}
+
+async function saveMerged() {
+  if (!loadedFiles.length) return;
+  const allParts = loadedFiles.flatMap(f => f.parts);
+  const json = JSON.stringify({ app: 'EvenUCan', kind: 'parts', version: 1, parts: allParts }, null, 1);
+  const blob = new Blob([json], { type: 'application/json' });
+  const filename = 'EvenUCan Parts (merged).json';
+
+  // try silent save via File System Access API
+  if (window.showSaveFilePicker) {
+    try {
+      const fh = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [{ description: 'JSON file', accept: { 'application/json': ['.json'] } }]
+      });
+      const writable = await fh.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      document.getElementById('state').textContent = '✓ Saved as ' + fh.name;
+      document.getElementById('state').style.color = 'var(--ok)';
+      return;
+    } catch { /* user cancelled — fall through to download */ }
+  }
+
+  // fallback: browser download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 3000);
+  document.getElementById('state').textContent = '✓ Downloaded as ' + filename;
+  document.getElementById('state').style.color = 'var(--ok)';
+}
+
+function reset() {
+  loadedFiles = [];
+  document.getElementById('list-body').innerHTML = '';
+  document.getElementById('list').style.display = 'none';
+  document.getElementById('actions').style.display = 'none';
+  document.getElementById('state').textContent = '';
+  document.getElementById('state').style.color = '';
+}
+</script>
+</body>
+</html>
