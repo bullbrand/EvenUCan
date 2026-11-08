@@ -1,5 +1,5 @@
 {
-  "version": "1.9.43",
-  "notes": "Web version: launcher renamed to Start EvenUCan.bat, file:// direct-open blocked with helpful message, README updated with unblock instructions. New user manual with 19 fresh screenshots.",
+  "version": "1.9.58",
+  "notes": "Cookbook now saves quantities, What can I build? works, and you can click Build this → on any suggestion to jump straight into the project wizard.",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }
