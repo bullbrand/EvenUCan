@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.63';
+const APP_VERSION='1.9.65';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5951,7 +5951,15 @@ function setBounds(it,box){
       case 'xmin':b={x0:0,x1:tk,y0:it.u0,y1:it.u0+L};break;
       default:b={x0:box.W-tk,x1:box.W,y0:it.u0,y1:it.u0+L};
     }
-    b.z0=it.z0;b.z1=it.z0+o.d;it.b=b;it.keep=[];it.ant=[];return it;
+    b.z0=it.z0;b.z1=it.z0+o.d;
+    // Extend along-wall bounds to cover standoff cylinder footprints (standoff radius can
+    // protrude slightly beyond the part's footprint, causing near-misses with floor items).
+    for(const s of wallStandoffs(it)){
+      const u=wallU(it,s.f.x);
+      if(it.wall==='xmin'||it.wall==='xmax'){b.y0=Math.min(b.y0,u-s.r);b.y1=Math.max(b.y1,u+s.r);}
+      else{b.x0=Math.min(b.x0,u-s.r);b.x1=Math.max(b.x1,u+s.r);}
+    }
+    it.b=b;it.keep=[];it.ant=[];return it;
   }
   const fw=it.rot%2?o.fd:o.fw,fd=it.rot%2?o.fw:o.fd;
   it.b={x0:it.x0,y0:it.y0,x1:it.x0+fw,y1:it.y0+fd,z0:0,z1:o.top};
@@ -6033,8 +6041,8 @@ function valid(it,placed,box,st){
     if(b.x0<m('xmin')||b.y0<m('ymin')||box.W-b.x1<m('xmax')||box.D-b.y1<m('ymax'))return false;
   }
   for(const q of placed){
-    if(ov3(b,q.b,q.kind==='post'?0.3:st.gap-1e-6,0.8))return false;
-    if(q.kind==='post')continue;
+    if(ov3(b,q.b,q.kind==='post'?0.3:q.kind==='brace'?2:st.gap-1e-6,q.kind==='brace'?2:0.8))return false;
+    if(q.kind==='post'||q.kind==='brace')continue;
     for(const k of q.keep)if(ov2(b,k,0))return false;
     for(const k of it.keep)if(ov2(q.b,k,0))return false;
     if(!awayOK(it,q))return false;
@@ -6064,7 +6072,9 @@ function score(it,placed,box,st){
 }
 function tryPack(box,order,st){
   const placed=postsFor(box,st);
-  for(const o of order){
+  // Wall items first so their brace keep-out zones are registered before floor items are placed.
+  const sortedOrder=[...order].sort((a,b)=>(a.mount==='wall'?0:1)-(b.mount==='wall'?0:1));
+  for(const o of sortedOrder){
     let best=null,bs=Infinity;
     for(const it of candidates(o,placed,box,st)){
       if(!valid(it,placed,box,st))continue;
@@ -6072,6 +6082,21 @@ function tryPack(box,order,st){
     }
     if(!best)return null;
     placed.push(best);
+    // After placing a wall item, register each standoff brace as a keep-out zone so
+    // floor items are placed with ≥2 mm clearance from the 45° brace geometry.
+    if(best.kind==='wall'){
+      for(const s of wallStandoffs(best)){
+        const u=wallU(best,s.f.x);
+        const bd=Math.min(s.z+s.r+1,best.o.h);
+        const zlo=Math.max(0,s.z-s.r),zhi=s.z+s.r;
+        let bb;
+        if(best.wall==='xmin')      bb={x0:0,        x1:bd,        y0:u-s.r,y1:u+s.r,z0:zlo,z1:zhi};
+        else if(best.wall==='xmax') bb={x0:box.W-bd,  x1:box.W,     y0:u-s.r,y1:u+s.r,z0:zlo,z1:zhi};
+        else if(best.wall==='ymin') bb={x0:u-s.r,     x1:u+s.r,     y0:0,     y1:bd,   z0:zlo,z1:zhi};
+        else                        bb={x0:u-s.r,     x1:u+s.r,     y0:box.D-bd,y1:box.D,z0:zlo,z1:zhi};
+        placed.push({kind:'brace',b:bb});
+      }
+    }
   }
   return placed;
 }
@@ -6079,7 +6104,7 @@ function tryPack(box,order,st){
 function heightFor(items,box,st){
   let top=0,nearWall=0;const m=LIP_T+LID_CLEAR+0.3;
   for(const it of items){
-    if(it.kind==='post')continue;
+    if(it.kind==='post'||it.kind==='brace')continue;
     top=Math.max(top,it.b.z1);
     if(it.b.x0<m||it.b.y0<m||it.b.x1>box.W-m||it.b.y1>box.D-m)nearWall=Math.max(nearWall,it.b.z1);
   }
