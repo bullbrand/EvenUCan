@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.84';
+const APP_VERSION='1.9.85';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -7405,6 +7405,8 @@ $('plFile').addEventListener('change',async e=>{
       if(!raw||typeof raw!=='object')continue;
       const p=tidyPart(clone(raw));p.name=String(p.name||'Imported part');
       if(!p.id||(custom.some(c=>c.id===p.id)&&!builtinById(p.id)))p.id=newPartId();
+      // Save any embedded photo to sidecar before saveLib strips it
+      if(p.photo&&p.photo.startsWith('data:'))photoSave(p.id,p.photo);
       const i=custom.findIndex(c=>c.id===p.id);if(i>=0)custom[i]=p;else custom.push(p);n++;
     }
     saveLib();lay=null;renderList();WF.flash('Imported '+n+' part'+(n===1?'':'s'));
