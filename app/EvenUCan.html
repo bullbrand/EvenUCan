@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.55';
+const APP_VERSION='1.9.56';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5325,6 +5325,7 @@ markDirty();
     <div class="cbFoot">
       <span class="cbCount" id="cbCount"></span>
       <button id="cbClear">Clear all</button>
+      <button id="cbSave" title="Save all quantities now">💾 Save</button>
       <button id="cbAsk" class="primary">💡 What can I build?</button>
       <button id="cbClose">Close</button>
     </div>
@@ -11298,6 +11299,17 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
   });
   $('cbSearch').addEventListener('input',()=>{cbQuery=$('cbSearch').value;renderCookbook();});
   $('cbClear').onclick=()=>{if(getOwnedIds().length&&confirm('Clear all quantities?')){setStock({});renderCookbook();}};
+  $('cbSave').onclick=()=>{
+    const stock={};
+    document.querySelectorAll('#cbList .cbQty').forEach(inp=>{
+      if(!inp.dataset.cbid)return;
+      const qty=Math.max(0,parseInt(inp.value,10)||0);
+      if(qty>0)stock[inp.dataset.cbid]=qty;
+    });
+    setStock(stock);
+    renderCookbook();
+    WF.flash('✅ Cookbook saved — '+Object.keys(stock).length+' part'+(Object.keys(stock).length===1?'':'s')+' stored.');
+  };
   $('cbClose').onclick=closeCookbook;
   $('cbX').onclick=closeCookbook;
   cbBack.addEventListener('keydown',e=>{if(e.key==='Escape')closeCookbook();e.stopPropagation();});
