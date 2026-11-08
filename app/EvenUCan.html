@@ -8971,8 +8971,9 @@ function renderWiringSide(){
     body=`<h4>ESPHome</h4><textarea readonly class="wrCode" id="wrYml">${esc(P.code.esphome)}</textarea><div class="ewRow"><button data-copy="wrYml">Copy</button></div>
 <h4>Arduino</h4><textarea readonly class="wrCode" id="wrIno">${esc(P.code.arduino)}</textarea><div class="ewRow"><button data-copy="wrIno">Copy</button></div>`;
   }
-  // tabs first; the warnings and notes belong with the wiring list
-  s.innerHTML=`<div class="ewRow" style="margin-top:6px">${tabs}</div>`+(tab==='list'?`<ul style="list-style:none;padding:0;margin:8px 0">${warn}${info}</ul>`:'')+body;
+  // tabs first; warnings always shown so the Fix button is accessible on any tab
+  const warnHtml=warn||info?`<ul style="list-style:none;padding:0;margin:8px 0">${warn}${info}</ul>`:'';
+  s.innerHTML=`<div class="ewRow" style="margin-top:6px">${tabs}</div>`+warnHtml+body;
 }
 // The ESPHome device tab: a few questions, then the whole file to copy, save or check.
 function esphPanel(){
@@ -9615,6 +9616,7 @@ const CHAT_SCOPE=`You are built into EvenUCan, a program that designs 3D-printed
 function chatProjectNote(){
   const P=wr.plan;
   let t='Parts in this build: '+(P.insts.map(i=>i.label).join(', ')||'none yet')+'.\n';
+  if(P.noPinParts&&P.noPinParts.length)t+='Parts with NO pin data yet (not in the wiring diagram): '+(P.noPinParts.map(p=>p.label).join(', '))+'. The user needs to add pin data for these in the Parts Library before they can be wired. Suggest they click the "Fix: add pins →" button next to the warning, or go to Parts and use "Look up online".\n';
   const sig=P.assigned.filter(a=>['sig','uart_tx','uart_rx','trig','echo','sda','scl'].includes(a.role)&&a.pin);
   if(sig.length)t+='Signal pins wired so far: '+sig.map(a=>a.inst.label+' on '+a.pin.n).join(', ')+'.\n';
   const ta=$('wrEsp');
