@@ -11,7 +11,7 @@
 //
 // Bump CACHE when a release changes any file, so old copies are cleaned up on activate.
 
-const CACHE = 'evenucan-1.9.61-pwa3';
+const CACHE = 'evenucan-1.9.62-pwa3';
 const PAGE = 'EvenUCan.html';
 const WARM = [PAGE, 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
 // Big files: fetched in the background after activation (best effort) and kept for offline use.

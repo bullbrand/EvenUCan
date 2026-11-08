@@ -1,5 +1,5 @@
 {
-  "version": "1.9.61",
-  "notes": "Parts Library: added Analog Out (AO) and Digital Out (DO) as pin roles — MQ gas/CO sensors and similar now wire correctly.",
+  "version": "1.9.62",
+  "notes": "Fix: device name no longer truncated mid-word (e.g. "Dashboard" stayed "Dashboard"); fix: "Still to add" comment removed from AI-generated YAML.",
   "downloadUrl": "https://github.com/bullbrand/EvenUCan/releases/latest"
 }
