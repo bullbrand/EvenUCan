@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.68';
+const APP_VERSION='1.9.78';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5189,6 +5189,12 @@ markDirty();
 .plItem .t{font-size:12px;line-height:1.25;min-width:0}
 .plItem .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .plItem .t small{color:var(--muted)}
+.plCheck{margin-left:auto;flex:none;width:16px;height:16px;cursor:pointer;accent-color:#c33}
+.plSelBar{display:none;padding:5px 10px;background:#fff3cd;border-bottom:1px solid #ffe08a;font-size:12px;align-items:center;gap:8px;flex-shrink:0}
+.plSelBar span{flex:1}
+.plSelDelBtn{background:#fde;border:1px solid #f99;color:#c33;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:12px}
+.plSelDelBtn:hover{background:#fcc}
+.plSelClrBtn{background:#fff;border:1px solid #ccc;color:#555;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px}
 .plEdit{display:grid;grid-template-columns:350px minmax(0,1fr);min-height:0}
 .plForm{overflow:auto;padding:8px 10px;border-right:1px solid #eee}
 .plForm label.f{display:flex;align-items:center;gap:6px;margin:4px 0}
@@ -5307,8 +5313,9 @@ markDirty();
 </div></div>
 <div id="plBack" class="ewBack"><div class="ewWin">
   <div class="ewHead"><h2>Parts Library</h2><span class="ewNote">Built-in parts plus your own, saved on this computer. Add a part from a photo, or just type its sizes.</span>
-    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
+    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plFzBulk" title="Import one or more Fritzing part files (.fzpz) all at once — select as many as you like">Import Fritzing parts…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
     <button id="plX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
+  <div id="plSelBar" class="plSelBar"><span id="plSelCount"></span><button class="plSelDelBtn" id="plSelDelBtn">Delete selected</button><button class="plSelClrBtn" id="plSelClrBtn">Clear</button></div>
   <div class="plBody"><div class="plList" id="plList"></div><div class="plEdit" id="plEdit"></div></div>
 </div></div>
 <input type="file" id="plFile" accept=".json,application/json" style="display:none">
@@ -7017,7 +7024,7 @@ function openLibrary(id){
 }
 function closeLibrary(){
   if(edDirty&&!confirm('Close without saving the changes to "'+ed.name+'"?'))return;
-  edDirty=false;plBack.style.display='none';setBig(false);
+  edDirty=false;plBack.style.display='none';setBig(false);plSelected.clear();
 }
 function selectPart(id,force){
   if(!force&&edDirty&&!confirm('Discard the changes to "'+ed.name+'"?'))return;
@@ -7025,21 +7032,73 @@ function selectPart(id,force){
   ed=tidyPart(clone(p));if(!ed.pins||!ed.pins.length)ed.pins=clone(pinsOf(p));edDirty=false;edSel=-1;edPin=-1;edMode='select';clicks=[];rawImg=null;clearRef();
   renderList();renderEditor();
 }
+const thumbCache=new Map();// id → dataURL, cleared when a part is saved/deleted
+function thumbInvalidate(id){thumbCache.delete(id);}
 function thumb(cv,p){
   const c=cv.getContext('2d'),W=cv.width,H=cv.height;c.clearRect(0,0,W,H);
   const s=Math.min((W-6)/p.w,(H-6)/p.d),ox=(W-p.w*s)/2,oy=(H+p.d*s)/2;
-  const im=imgOf(p.photo||p.img,()=>thumb(cv,p));
+  const im=imgOf(p.photo||p.img,()=>{thumb(cv,p);thumbCache.set(p.id,cv.toDataURL());});
   if(im)c.drawImage(im,ox,oy-p.d*s,p.w*s,p.d*s);
   c.strokeStyle=typeOf(p).color;c.lineWidth=1.5;c.fillStyle=im?'transparent':typeOf(p).color+'40';c.beginPath();
   if(p.shape==='round')c.ellipse(ox+p.w*s/2,oy-p.d*s/2,p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(ox,oy-p.d*s,p.w*s,p.d*s);
   c.fill();c.stroke();
+  thumbCache.set(p.id,cv.toDataURL());
 }
+// IntersectionObserver: only draw thumbnails that scroll into view; uses cached dataURLs on revisit.
+let _thumbObs=null;
+function getThumbObs(){
+  if(_thumbObs)return _thumbObs;
+  _thumbObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      _thumbObs.unobserve(e.target);
+      const id=e.target.closest('.plItem')?.dataset.id;
+      if(!id)return;
+      const p=_plPartsMap.get(id);
+      if(p)thumb(e.target,p);
+    });
+  },{root:$('plList'),rootMargin:'120px'});
+  return _thumbObs;
+}
+let _plPartsMap=new Map();// built once per renderList, reused by the observer
+let _rlPending=false;
+let plSelected=new Set();
+function updateSelBar(){const bar=$('plSelBar'),n=plSelected.size;if(!bar)return;bar.style.display=n?'flex':'none';const sc=$('plSelCount');if(sc)sc.textContent=n+' part'+(n===1?'':'s')+' selected';}
 function renderList(){
-  const L=$('plList');
-  L.innerHTML=allParts().map(p=>`<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}"><canvas width="64" height="44"></canvas><div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div></div>`).join('');
-  L.querySelectorAll('.plItem').forEach(el=>thumb(el.querySelector('canvas'),partById(el.dataset.id)));
+  if(_rlPending)return;// coalesce rapid calls into one frame
+  _rlPending=true;
+  requestAnimationFrame(()=>{
+    _rlPending=false;
+    const L=$('plList'),parts=allParts();
+    _plPartsMap=new Map(parts.map(p=>[p.id,p]));
+    if(_thumbObs){_thumbObs.disconnect();}
+    const obs=getThumbObs();
+    L.innerHTML=parts.map(p=>{
+      const cached=thumbCache.get(p.id);
+      const thumb_el=cached?`<img width="64" height="44" src="${cached}" class="plThumb">`:`<canvas width="64" height="44"></canvas>`;
+      const canDel=!p.builtin&&!builtinById(p.id);
+      return `<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}">${thumb_el}<div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div>${canDel?`<input type="checkbox" class="plCheck" data-id="${esc(p.id)}" title="Tick to select for deletion"${plSelected.has(p.id)?' checked':''}>`:''}</div>`;
+    }).join('');
+    L.querySelectorAll('.plItem canvas').forEach(cv=>obs.observe(cv));
+    updateSelBar();
+  });
 }
-$('plList').addEventListener('click',e=>{const el=e.target.closest('.plItem');if(el)selectPart(el.dataset.id);});
+$('plList').addEventListener('change',e=>{
+  const cb=e.target.closest('.plCheck');if(!cb)return;
+  const id=cb.dataset.id;if(cb.checked)plSelected.add(id);else plSelected.delete(id);
+  updateSelBar();
+});
+$('plList').addEventListener('click',e=>{
+  if(e.target.closest('.plCheck'))return;
+  const el=e.target.closest('.plItem');if(el)selectPart(el.dataset.id);
+});
+$('plSelDelBtn').onclick=()=>{
+  if(!plSelected.size)return;
+  if(!confirm('Delete '+plSelected.size+' part'+(plSelected.size===1?'':'s')+'? This cannot be undone.'))return;
+  plSelected.forEach(id=>{const idx=custom.findIndex(c=>c.id===id);if(idx>=0){custom.splice(idx,1);thumbInvalidate(id);if(ed&&ed.id===id)ed=null;}});
+  plSelected.clear();saveLib();renderList();
+};
+$('plSelClrBtn').onclick=()=>{plSelected.clear();renderList();};
 function renderEditor(){
   const p=ed,isB=!!builtinById(p.id),overridden=isB&&custom.some(c=>c.id===p.id);
   const opt=(o,v)=>Object.entries(o).map(([k,n])=>`<option value="${k}"${v===k?' selected':''}>${esc(n)}</option>`).join('');
@@ -7195,7 +7254,7 @@ $('plEdit').addEventListener('click',async e=>{
   if(id==='plTypical'){addTypical();return;}
   if(id==='plSave'){savePart();return;}
   if(id==='plDup'){const c=clone(ed);c.id=newPartId();c.name=ed.name+' (copy)';delete c.builtin;ed=c;edDirty=true;savePart();return;}
-  if(id==='plDel'){if(!confirm('Delete "'+ed.name+'" from your library?'))return;custom=custom.filter(c=>c.id!==ed.id);saveLib();edDirty=false;selectPart(allParts()[0].id,true);return;}
+  if(id==='plDel'){if(!confirm('Delete "'+ed.name+'" from your library?'))return;const _delId=ed.id;custom=custom.filter(c=>c.id!==_delId);saveLib();thumbInvalidate(_delId);edDirty=false;selectPart(allParts()[0].id,true);return;}
   if(id==='plReset'){if(!confirm('Put "'+ed.name+'" back to the original built-in part?'))return;custom=custom.filter(c=>c.id!==ed.id);saveLib();edDirty=false;selectPart(ed.id,true);return;}
   if(id==='plUse'){if(edDirty&&!savePart())return;wiz.items.push({pid:ed.id,qty:1,mount:'auto',wall:'auto'});saveWiz();lay=null;WF.flash(ed.name+' added to the Enclosure Wizard');openWizard();}
 });
@@ -7206,6 +7265,7 @@ function savePart(){
   const c=clone(p);delete c.builtin;
   const i=custom.findIndex(x=>x.id===c.id);if(i>=0)custom[i]=c;else custom.push(c);
   if(!saveLib()){if(i<0)custom.pop();return false;}
+  thumbInvalidate(c.id);
   edDirty=false;lay=null;renderList();renderEditor();WF.flash('Saved "'+p.name+'"');return true;
 }
 $('plNew').onclick=()=>{
@@ -7240,6 +7300,7 @@ $('plExport').onclick=async()=>{
   WF.download('EvenUCan parts.json',JSON.stringify({app:'EvenUCan',kind:'parts',version:1,parts},null,1),'application/json');
 };
 $('plImport').onclick=()=>$('plFile').click();
+$('plFzBulk').onclick=()=>{$('fzImLog').innerHTML='';$('fzImBack').style.display='grid';};// opens in-app drop dialog
 $('plBrowse').onclick=browseParts;
 $('plFile').addEventListener('change',async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
@@ -8350,6 +8411,22 @@ $('plEdit').addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfe
 $('plEdit').addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(!f)return;e.preventDefault();
   if(/\.fzpz?$/i.test(f.name)){const dt=new DataTransfer();for(const x of e.dataTransfer.files)dt.items.add(x);const inp=$('plFzIn');inp.files=dt.files;inp.dispatchEvent(new Event('change'));return;}// a part file: import its pins, size and picture
   readDrawing(f);});
+// Drop .fzpz files onto the parts list (left panel) → bulk import all at once
+$('plList').addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault();});
+$('plList').addEventListener('drop',e=>{
+  const files=[...( e.dataTransfer&&e.dataTransfer.files||[])].filter(f=>/\.fzpz$/i.test(f.name));
+  if(!files.length){e.preventDefault();return;}e.preventDefault();
+  if(files.length===1){const dt=new DataTransfer();dt.items.add(files[0]);const inp=$('plFzIn');inp.files=dt.files;inp.dispatchEvent(new Event('change'));return;}
+  bulkImportFzpz(files);
+});
+// Prevent browser from opening dropped files as tabs — catch everything the element handlers miss
+document.addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault();});
+document.addEventListener('drop',e=>{
+  if(!e.dataTransfer||!e.dataTransfer.files.length)return;
+  e.preventDefault();// stop browser opening files as new tabs
+  const fzpz=[...e.dataTransfer.files].filter(f=>/\.fzpz$/i.test(f.name));
+  if(fzpz.length)bulkImportFzpz(fzpz);
+});
 document.addEventListener('paste',e=>{
   if(plBack.style.display!=='grid'||!ed)return;
   const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return;
@@ -9893,6 +9970,60 @@ new ResizeObserver(()=>{if(wrBack.style.display==='grid')drawWiring();}).observe
 // A .fzpz file (or .fzp + .svg) works in the desktop app and in a web browser.
 // Fritzing's part graphics and data are © Fritzing contributors, CC BY-SA 3.0 (noted on the imported part).
 document.body.insertAdjacentHTML('beforeend','<input type="file" id="plFzIn" accept=".fzpz,.fzp,.svg" multiple style="display:none">');
+// ---- Fritzing bulk import dialog
+(function(){
+  document.body.insertAdjacentHTML('beforeend',`
+<div id="fzImBack" class="ewBack"><div class="ewWin" style="width:min(560px,95vw);min-height:300px">
+  <div class="ewHead"><h2>Import Fritzing Parts</h2><button id="fzImX" class="x" title="Close">✕</button></div>
+  <div id="fzImDrop" style="margin:16px;border:3px dashed #aab4cc;border-radius:12px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;cursor:pointer;transition:background .15s;user-select:none">
+    <span style="font-size:2rem">📦</span>
+    <b style="font-size:1.1em;color:#334">Drop .fzpz files here</b>
+    <small style="color:#778">Or click to browse — you can drop hundreds at once</small>
+  </div>
+  <input type="file" id="fzImIn" accept=".fzpz" multiple style="display:none">
+  <div id="fzImLog" style="margin:0 16px 8px;max-height:220px;overflow-y:auto;font-size:0.82em;font-family:monospace;background:#f6f8ff;border-radius:6px;padding:6px 10px;display:none"></div>
+  <div class="ewFoot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px">
+    <button id="fzImDone" class="primary" disabled>Done</button>
+  </div>
+</div></div>`);
+  const back=$('fzImBack'),drop=$('fzImDrop'),inp=$('fzImIn'),log=$('fzImLog'),done=$('fzImDone'),closeBtn=$('fzImX');
+  function closeDialog(){back.style.display='none';inp.value='';}
+  closeBtn.onclick=closeDialog;
+  back.addEventListener('click',e=>{if(e.target===back)closeDialog();});
+  done.onclick=closeDialog;
+  drop.onclick=()=>inp.click();
+  drop.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files')){e.preventDefault();drop.style.background='#e8eeff';}});
+  drop.addEventListener('dragleave',()=>{drop.style.background='';});
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.style.background='';const files=[...e.dataTransfer.files].filter(f=>/\.fzpz$/i.test(f.name));if(files.length)startImport(files);});
+  inp.addEventListener('change',e=>{const files=[...e.target.files].filter(f=>/\.fzpz$/i.test(f.name));e.target.value='';if(files.length)startImport(files);});
+  const rows=new Map();
+  async function startImport(zFiles){
+    drop.style.display='none';log.style.display='block';done.disabled=true;rows.clear();
+    log.innerHTML='<div style="color:#556">Starting import of <b>'+zFiles.length+'</b> file'+(zFiles.length===1?'':'s')+'…</div>';
+    // Pre-create a row for each file so progress appears immediately
+    zFiles.forEach((z,i)=>{
+      const row=document.createElement('div');
+      row.style.cssText='padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#778';
+      row.textContent=(i+1)+'/'+zFiles.length+' '+z.name;
+      log.appendChild(row);rows.set(i,row);
+    });
+    log.scrollTop=log.scrollHeight;
+    const result=await bulkImportFzpz(zFiles,(i,total,fname,ok,detail)=>{
+      if(i<0){// storage full signal
+        const r=document.createElement('div');r.style.cssText='color:#c44;font-weight:bold';r.textContent='⚠ Could not save: storage is full';log.appendChild(r);return;}
+      const row=rows.get(i);if(!row)return;
+      if(ok){row.style.color='#2a7';row.textContent=(i+1)+'/'+total+' '+fname+' ✓ '+String(detail).slice(0,50);}
+      else{row.style.color='#c44';row.textContent=(i+1)+'/'+total+' '+fname+' — '+detail;}
+      log.scrollTop=log.scrollHeight;
+    });
+    if(result){lay=null;renderList();}
+    const summary=document.createElement('div');
+    summary.style.cssText='margin-top:6px;font-weight:bold;color:'+((result&&result.failed)?'#884':'#2a7');
+    summary.textContent='Done: '+(result?result.saved:0)+' part'+(result&&result.saved===1?'':'s')+' imported'+(result&&result.failed?' · '+result.failed+' failed':'');
+    log.appendChild(summary);log.scrollTop=log.scrollHeight;
+    done.disabled=false;drop.style.display='';
+  }
+})();
 function guessRole(name,desc,title){
   const l=String(name||'').trim().toLowerCase(),d=String(desc||'').toLowerCase();
   if(/^(gnd|g|vss|ground|0v|v-|-|gnd\d+|agnd|dgnd)$/.test(l)||(/^ground/.test(d)&&l.length<6))return {r:'gnd'};
@@ -10020,6 +10151,48 @@ async function applyFritzingData(d){
       :'Part data and picture © Fritzing contributors, CC BY-SA 3.0. Check the pin roles before wiring. The picture keeps the pin spacing exact but is sometimes drawn smaller than the real board: measure the board before designing a box.')+'\n'+(ed.notes||'')).slice(0,2000);
   edDirty=true;edSel=-1;renderEditor();
   WF.flash(pins.length+' pins'+(all&&holes.length?' and '+holes.length+' mounting hole'+(holes.length>1?'s':''):'')+' imported'+(g?'':' (no picture found, so pin positions are unknown)')+(turned?', turned so the long side runs left to right':'')+'. Check each pin\'s role in the Pins list'+(all&&g?', and measure the board: these pictures are sometimes drawn smaller than the real board':'')+'. Then Save part.',9000);
+}
+async function bulkImportFzpz(zFiles,onProgress){
+  let saved=0,failed=0;
+  if(!onProgress)WF.flash('Importing '+zFiles.length+' part'+(zFiles.length===1?'':'s')+'…',60000);
+  for(let _i=0;_i<zFiles.length;_i++){const z=zFiles[_i];
+    try{
+      const all=await WF.readZip(await z.arrayBuffer()),names=Object.keys(all),td=new TextDecoder();
+      const fzpName=names.find(n=>/\.fzp$/i.test(n));
+      if(!fzpName){failed++;if(onProgress)onProgress(_i,zFiles.length,z.name,false,'no .fzp inside');continue;}
+      const svgName=names.find(n=>/breadboard.*\.svg$/i.test(n))||names.find(n=>/\.svg$/i.test(n));
+      const d=await fritzingData(td.decode(all[fzpName]),svgName?td.decode(all[svgName]):null,z.name);
+      if(d.error){failed++;if(onProgress)onProgress(_i,zFiles.length,z.name,false,d.error);continue;}
+      const {title,conns,info}=d,g=d.g?{...d.g}:null;
+      const dd=g?g.h:20;
+      const pins=conns.map(c=>{
+        const r=guessRole(c.name,c.desc,title),q={n:c.name,r:r.r};if(r.g!==undefined)q.g=r.g;
+        if(c.desc&&c.desc.trim()&&c.desc.trim()!==c.name)q.d=c.desc.trim().slice(0,100);
+        const p=g&&g.pos[c.svgId];if(p){q.x=+p[0].toFixed(2);q.y=+(dd-p[1]).toFixed(2);}
+        return q;
+      });
+      const ctrl=pins.filter(p=>p.r==='gpio').length>=8;
+      if(!ctrl)for(const p of pins)if(p.r==='gpio'){p.r='sig';delete p.g;}
+      const holes=g?(d.features||[]).filter(f=>f&&f.t==='hole').map(f=>({t:'hole',x:+(+f.x).toFixed(2),y:+(dd-f.y).toFixed(2),dia:+f.dia||3})):[];
+      if(g&&g.h>g.w*1.02){const t={w:g.w,d:g.h,pins,photo:g.photo,features:holes};await turnPart(t);g.w=t.w;g.h=t.d;g.photo=t.photo;}
+      const tl=title.toLowerCase();
+      const type=ctrl?'board':/speaker/.test(tl)?'speaker':/batter|lipo/.test(tl)?'battery':/switch/.test(tl)?'switch':/display|oled|lcd|tft/.test(tl)?'display':/mic/.test(tl)?'mic':/amp/.test(tl)?'amp':/charg/.test(tl)?'charger':/sensor|sonar|ultrason/.test(tl)?'sensor':'other';
+      const part=tidyPart({id:newPartId(),name:title.slice(0,80),type,mount:TYPES[type].mount,
+        shape:'rect',w:g?+g.w.toFixed(2):30,d:g?+g.h.toFixed(2):20,pcb:1.6,h:3,below:0,
+        features:holes,acc:g?(info&&info.credit?'drawing':'approx'):undefined,
+        photo:(g&&g.photo&&!onProgress)?g.photo:undefined,pins,info:clone(info),notes:
+        ('Pins, size and picture imported from "'+title+'" ('+(z.name||'parts library')+').'+
+        (info&&info.credit?' Part data from an Eagle library: '+info.credit+' Check pin roles.'
+          :' Part data and picture © Fritzing contributors, CC BY-SA 3.0. Check pin roles.')).slice(0,2000)});
+      if(ctrl&&/esp32-?s3/i.test(title))part.mcu='esp32s3';
+      custom.push(part);saved++;
+      if(onProgress)onProgress(_i,zFiles.length,z.name,true,title);
+    }catch(e){failed++;if(onProgress)onProgress(_i,zFiles.length,z.name,false,'error');}
+  }
+  if(saved&&!saveLib()){if(onProgress)onProgress(-1,0,'','storage full','');else WF.flash('Imported but could not save: storage is full');return;}
+  if(onProgress)return{saved,failed};
+  if(saved){lay=null;renderList();WF.flash('Saved '+saved+' part'+(saved===1?'':'s')+(failed?' ('+failed+' could not be read)':''));}
+  else WF.flash('Could not read '+(failed===1?'that part file':'any of those part files'));
 }
 // ---- Parts browser: search the parts library (or the Fritzing parts on this computer) by name, by kind,
 // or by plain words for what a part does ("gyroscope", "air quality", "screen"), with a picture of each.
@@ -10237,7 +10410,9 @@ async function fritzingImport(){
 $('plFzIn').addEventListener('change',async e=>{
   const files=[...e.target.files];e.target.value='';if(!files.length)return;
   try{
-    const z=files.find(f=>/\.fzpz$/i.test(f.name));
+    const fzpzFiles=files.filter(f=>/\.fzpz$/i.test(f.name));
+    if(fzpzFiles.length>1)return bulkImportFzpz(fzpzFiles);
+    const z=fzpzFiles[0];
     if(z){
       const all=await WF.readZip(await z.arrayBuffer()),names=Object.keys(all),td=new TextDecoder();
       const fzp=names.find(n=>/\.fzp$/i.test(n)),svg=names.find(n=>/breadboard.*\.svg$/i.test(n))||names.find(n=>/\.svg$/i.test(n));

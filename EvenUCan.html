@@ -249,6 +249,7 @@ if(location.protocol==='file:'){
     </nav>
     <span class="mspace"></span>
     <button id="bBuild" title="Start a new gadget: describe what it should do and EvenUCan plans the parts, the box and the code, step by step">💡 <span class="bl">Start a project</span></button>
+    <button id="bCookbook" title="Cookbook: tick the parts you own at home, then ask the AI what you can build today" style="padding:4px 10px">🍳 <span class="bl">Cookbook</span></button>
     <!-- The old menu-bar buttons stay here, hidden, so every id and handler keeps working; the menus click them. -->
     <div id="legacyBtns" hidden aria-hidden="true">
       <button id="bNew" title="New (Ctrl+N)">New</button>
@@ -3836,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.43';
+const APP_VERSION='1.9.78';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -4735,7 +4736,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
       pick('proj','persp','Perspective (natural)'),pick('proj','ortho','Parallel (no perspective)'),null,
       {head:'Units'},pick('units','mm','Millimetres'),pick('units','cm','Centimetres'),pick('units','m','Metres'),pick('units','in','Inches'),pick('units','ft','Feet & inches')],
     Tools:[{label:'Start a project (step by step)...',fn:BTN('bBuild')},null,
-      {label:'Parts library...',fn:BTN('bParts')},{label:'Box designer (Enclosure)...',fn:BTN('bEnclosure')},
+      {label:'Parts library...',fn:BTN('bParts')},{label:'Open Cookbook...',fn:()=>openCookbook()},{label:'Box designer (Enclosure)...',fn:BTN('bEnclosure')},
       tt('standoff','Stand-off for a heat-set insert'),tt('boardmount','Board mount (platform for a board)'),
       {label:'Wiring...',fn:BTN('bWiring')},{label:'Code for your board...',fn:EN('openCodeGated')},null,
       {label:'AI helper key...',fn:EN('askKey')},null,{label:'Check model for printing',fn:BTN('bCheck'),checked:()=>!!check}],
@@ -4749,7 +4750,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
     'Delete':'delete','Select all':'selall','Select none':'selnone','Hide selected':'hide','Unhide all':'unhide','Delete guides':'guides',
     'Join':'join','Subtract':'subtract','Intersect':'intersect','Group':'group','Ungroup':'ungroup','Resize to an exact size...':'resize',
     'Lay all flat':'layall','Arrange on bed':'arrange','Zoom to fit everything':'extents','Perspective (natural)':'persp','Parallel (no perspective)':'ortho',
-    'Parts library...':'parts','Box designer (Enclosure)...':'enclosure','Wiring...':'wiring','Code for your board...':'code','AI helper key...':'aikey',
+    'Parts library...':'parts','Open Cookbook...':'parts','Box designer (Enclosure)...':'enclosure','Wiring...':'wiring','Code for your board...':'code','AI helper key...':'aikey',
     'Quick guide and shortcuts':'help','User manual (PDF)':'manual','EvenUCan on GitHub':'web','About EvenUCan':'about'};
   for(const L of Object.values(MENUS))for(const it of L)if(it&&!it.head&&!it.ic)it.ic=MENU_IC[it.label]||(/^(Flip|Turn|Mirror)/.test(it.label)?'flip':'');
   window.EvenUCanMenus=MENUS;// (for tests and add-ons)
@@ -4773,7 +4774,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
     ['View',[['View','v-iso','3D'],['View','v-top','Top'],['View','v-front','Front'],['View','v-right','Right'],['View','v-back','Back'],['View','v-left','Left'],
       ['View','Zoom to fit everything','Fit all'],['View','orbit','Orbit'],['View','pan','Pan'],['View','zoom','Zoom'],
       ['View','Perspective (natural)','Natural'],['View','Parallel (no perspective)','Parallel']]],
-    ['Electronics',[['Tools','Start a project (step by step)...','Project'],['Tools','Parts library...','Parts'],['Tools','Box designer (Enclosure)...','Box'],
+    ['Electronics',[['Tools','Start a project (step by step)...','Project'],['Tools','Parts library...','Parts'],['Tools','Open Cookbook...','Cookbook'],['Tools','Box designer (Enclosure)...','Box'],
       ['Tools','standoff','Stand-off'],['Tools','boardmount','Board'],['Tools','Wiring...','Wiring'],['Tools','Code for your board...','Code'],['Tools','AI helper key...','AI key']]],
     ['Help',[['Help','Quick guide and shortcuts','Guide'],['Help','User manual (PDF)','Manual']]]
   ];
@@ -5188,6 +5189,12 @@ markDirty();
 .plItem .t{font-size:12px;line-height:1.25;min-width:0}
 .plItem .t b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .plItem .t small{color:var(--muted)}
+.plCheck{margin-left:auto;flex:none;width:16px;height:16px;cursor:pointer;accent-color:#c33}
+.plSelBar{display:none;padding:5px 10px;background:#fff3cd;border-bottom:1px solid #ffe08a;font-size:12px;align-items:center;gap:8px;flex-shrink:0}
+.plSelBar span{flex:1}
+.plSelDelBtn{background:#fde;border:1px solid #f99;color:#c33;border-radius:4px;padding:2px 10px;cursor:pointer;font-size:12px}
+.plSelDelBtn:hover{background:#fcc}
+.plSelClrBtn{background:#fff;border:1px solid #ccc;color:#555;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px}
 .plEdit{display:grid;grid-template-columns:350px minmax(0,1fr);min-height:0}
 .plForm{overflow:auto;padding:8px 10px;border-right:1px solid #eee}
 .plForm label.f{display:flex;align-items:center;gap:6px;margin:4px 0}
@@ -5225,13 +5232,7 @@ markDirty();
 .fzBar{display:flex;gap:6px;margin:6px 0}.fzBar input{flex:1}
 .fzMain{display:grid;grid-template-columns:1fr 340px;gap:10px;height:min(62vh,560px)}
 .fzList{overflow:auto;border:1px solid var(--line);border-radius:5px}
-.fzRow{padding:5px 8px;border-bottom:1px solid #eee;cursor:pointer;display:flex;flex-direction:column;position:relative}.fzRow:hover{background:#f3f6fc}.fzRow.on{background:#d5e1ff}.fzRow.inv-owned{border-left:3px solid #16a34a}.fzStar{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;padding:2px 4px;line-height:1;color:#aaa;z-index:2}.fzStar:hover{color:#f59e0b}.fzStar.inv-on{color:#f59e0b}
-.inv-filter{display:flex;gap:6px;align-items:center;margin:4px 0;font-size:13px}
-.cookbookPanel{padding:12px;display:flex;flex-direction:column;gap:10px}
-.cookbookCard{border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff}
-.cookbookCard h4{margin:0 0 4px;font-size:14px}
-.cookbookCard .ck-match{font-size:12px;color:#16a34a;margin-bottom:6px}
-.cookbookCard .ck-missing{font-size:12px;color:#888;margin-bottom:6px}
+.fzRow{padding:5px 8px;border-bottom:1px solid #eee;cursor:pointer;display:flex;flex-direction:column}.fzRow:hover{background:#f3f6fc}.fzRow.on{background:#d5e1ff}
 .fzPrev{overflow:auto;border:1px solid var(--line);border-radius:5px;padding:8px}
 .fzPic{margin:8px 0;text-align:center}.fzPic img{max-width:100%;max-height:220px;border:1px solid #eee;border-radius:4px;background:#fff}
 .fzDesc{max-height:120px;overflow:auto;margin-bottom:8px}
@@ -5268,6 +5269,29 @@ markDirty();
 #plBigBtn{position:absolute;right:8px;bottom:8px;z-index:3;font-size:12px;padding:3px 9px;box-shadow:0 1px 4px #0002}
 #plBack.plBig .plBody,#plBack.plBig .plEdit{grid-template-columns:minmax(0,1fr)}
 #plBack.plBig .plList,#plBack.plBig .plForm{display:none}
+/* ---- Cookbook panel (1.9.44) ---- */
+#cbBack .cbBody{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+#cbBack .cbDesc{padding:10px 16px 8px;font-size:13px;color:var(--muted);line-height:1.5;border-bottom:1px solid var(--line)}
+#cbBack .cbSearch{padding:7px 12px;border-bottom:1px solid var(--line)}
+#cbBack .cbSearch input{width:100%;box-sizing:border-box;padding:5px 10px;border:1px solid var(--line);border-radius:5px;font-size:13px;background:var(--bg2);color:var(--fg)}
+#cbBack .cbList{flex:1;overflow-y:auto;padding:4px 0}
+#cbBack .cbItem{display:flex;align-items:center;gap:10px;padding:5px 14px;cursor:pointer;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
+#cbBack .cbItem:hover{background:color-mix(in srgb,#7048e8 6%,transparent)}
+#cbBack .cbItem.cbOwned{background:color-mix(in srgb,#7048e8 9%,transparent)}
+#cbBack .cbItem.cbOwned:hover{background:color-mix(in srgb,#7048e8 14%,transparent)}
+#cbBack .cbQty{width:54px;padding:3px 6px;border:1px solid var(--line);border-radius:5px;font-size:13px;font-weight:600;background:var(--bg2);color:var(--fg);text-align:center;flex-shrink:0}
+#cbBack .cbQty:focus{outline:2px solid #7048e8;border-color:#7048e8}
+#cbBack .cbItem.cbOwned .cbQty{border-color:#7048e8;background:color-mix(in srgb,#7048e8 12%,var(--bg2))}
+#cbBack .cbName{font-size:13px;font-weight:600}
+#cbBack .cbMeta{font-size:11px;color:var(--muted)}
+#cbBack .cbFoot{border-top:1px solid var(--line);padding:9px 12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#cbBack .cbCount{font-size:12px;color:var(--muted);flex:1;min-width:0}
+#cbBack .cbAiResult{padding:12px 16px;background:var(--bg2);border-top:2px solid #7048e8;font-size:13px;line-height:1.6;display:none;max-height:280px;overflow-y:auto}
+#cbBack .cbAiResult.on{display:block}
+#cbBack .cbAiResult h4{margin:0 0 8px;font-size:13px;color:#7048e8}
+#cbBack .cbAiResult ol{margin:0;padding-left:20px}
+#cbBack .cbAiResult li{margin-bottom:9px}
+#cbBack .cbAiResult .cbIdeaTitle{font-weight:700}
 </style>
 <div id="ewBack" class="ewBack"><div class="ewWin">
   <div class="ewHead"><h2>Enclosure Wizard</h2><span class="ewNote">Pick your parts and a style, check the layout, then Generate. Everything is worked out on this computer.</span>
@@ -5289,13 +5313,32 @@ markDirty();
 </div></div>
 <div id="plBack" class="ewBack"><div class="ewWin">
   <div class="ewHead"><h2>Parts Library</h2><span class="ewNote">Built-in parts plus your own, saved on this computer. Add a part from a photo, or just type its sizes.</span>
-    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plMyParts" title="Tick the parts you already own so AI designs around them">★ My parts</button><button id="plCookbook" title="Tell me what I could build with the parts I already own">🍳 What can I make?</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
+    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plFzBulk" title="Import one or more Fritzing part files (.fzpz) all at once — select as many as you like">Import Fritzing parts…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
     <button id="plX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
+  <div id="plSelBar" class="plSelBar"><span id="plSelCount"></span><button class="plSelDelBtn" id="plSelDelBtn">Delete selected</button><button class="plSelClrBtn" id="plSelClrBtn">Clear</button></div>
   <div class="plBody"><div class="plList" id="plList"></div><div class="plEdit" id="plEdit"></div></div>
 </div></div>
 <input type="file" id="plFile" accept=".json,application/json" style="display:none">
 <input type="file" id="plPhotoIn" accept="image/*" style="display:none">
+<input type="file" id="plImgIn" accept="image/*" style="display:none">
 <input type="file" id="plDrawIn" accept="image/*,application/pdf,.pdf" style="display:none">
+<div id="cbBack" class="ewBack"><div class="ewWin" role="dialog" aria-modal="true" aria-label="Cookbook" style="width:min(620px,calc(100vw - 20px));height:min(640px,calc(100vh - 20px));display:flex;flex-direction:column">
+  <div class="ewHead"><h2>🍳 Cookbook</h2><span class="ewNote">Tick the parts you have at home — the AI tells you what you can build today.</span>
+    <button id="cbX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
+  <div class="cbBody">
+    <div class="cbDesc">Tick every part you own and set how many you have. The list is saved on this computer. This shows <b>EvenUCan's own built-in parts</b> plus any you've added — it is <b>not</b> a Fritzing, Eagle or KiCad database. When you're ready, press <b>💡 What can I build?</b> and the AI will suggest up to 6 projects you can start right now using parts you already own. The AI will also prioritise your stock whenever you describe a new project.</div>
+    <div class="cbSearch"><input id="cbSearch" type="search" placeholder="Search by name, type or part number…" autocomplete="off"></div>
+    <div class="cbList" id="cbList"></div>
+    <div class="cbAiResult" id="cbAiResult"></div>
+    <div class="cbFoot">
+      <span class="cbCount" id="cbCount"></span>
+      <button id="cbClear">Clear all</button>
+      <button id="cbSave" title="Save all quantities now">💾 Save</button>
+      <button id="cbAsk" class="primary">💡 What can I build?</button>
+      <button id="cbClose">Close</button>
+    </div>
+  </div>
+</div></div>
 <script>
 // ================================================================ Enclosure Wizard + Parts Library
 // Designs a printable box (base + lid) around electronic parts: a parts library (with photo measuring),
@@ -5385,10 +5428,93 @@ const EDGE_NAME={xmin:'left',xmax:'right',ymin:'bottom',ymax:'top'};
 
 // ---------------------------------------------------------------- built-in parts
 const BUILTIN=[
+  // ── Microcontrollers & dev boards ──────────────────────────────────────────
   {id:'b-esp32s3',name:'ESP32-S3-DevKitC-1 N16R8',type:'board',shape:'rect',w:63.5,d:27.94,pcb:1.6,h:3.5,below:8.5,mount:'floor',
     notes:'Two USB-C ports on the short end opposite the antenna. Header pins point down (8.5 mm). No mounting holes, so it sits on rails with end stops.',
     features:[{t:'port',kind:'2× USB-C',side:'xmin',u:13.97,zc:1.6,pw:25,ph:8},{t:'antenna',side:'xmax',u:13.97,len:6.35,width:18},
       {t:'header',x:31.4,y:1.27,fw:55.9,fd:2.54,dir:'down'},{t:'header',x:31.4,y:26.67,fw:55.9,fd:2.54,dir:'down'}]},
+  {id:'b-esp32devkit',name:'ESP32 DevKit V1 (38-pin)',type:'board',shape:'rect',w:55,d:28,pcb:1.6,h:3.5,below:8,mount:'floor',acc:'approx',
+    notes:'Common 38-pin ESP32 module on a DevKit board. Two rows of 19 pins, 2.54 mm pitch. USB-micro on the short end. Sizes approximate — measure yours.',
+    features:[{t:'port',kind:'USB-micro',side:'xmin',u:14,zc:1.6,pw:12,ph:6}]},
+  {id:'b-wemosd1mini',name:'Wemos D1 Mini (ESP8266)',type:'board',shape:'rect',w:34.2,d:25.6,pcb:1.6,h:3,below:7.5,mount:'floor',acc:'approx',
+    notes:'Compact ESP8266 board with USB-micro. 8 pins per side, 2.54 mm pitch. Very popular for small Wi-Fi projects.',
+    features:[{t:'port',kind:'USB-micro',side:'xmin',u:12.8,zc:1.6,pw:9,ph:5}]},
+  {id:'b-nodemcuv3',name:'NodeMCU v3 (ESP8266)',type:'board',shape:'rect',w:58,d:31,pcb:1.6,h:3,below:8,mount:'floor',acc:'approx',
+    notes:'Larger ESP8266 board. USB-micro on one short end. 15 pins per side, 2.54 mm pitch.',
+    features:[{t:'port',kind:'USB-micro',side:'xmin',u:15.5,zc:1.6,pw:9,ph:5}]},
+  {id:'b-arduinonano',name:'Arduino Nano (classic)',type:'board',shape:'rect',w:45,d:18,pcb:1.6,h:3,below:7,mount:'floor',acc:'approx',
+    notes:'Classic Arduino Nano. Mini-USB on one short end, 15 pins per side at 2.54 mm pitch. Fits a 45 × 18 mm cutout.',
+    features:[{t:'port',kind:'USB-mini',side:'xmin',u:9,zc:1.6,pw:9,ph:5}]},
+  {id:'b-arduinonano33',name:'Arduino Nano 33 BLE / IoT',type:'board',shape:'rect',w:45,d:18,pcb:1.6,h:3,below:7,mount:'floor',acc:'approx',
+    notes:'Same footprint as the classic Nano but with USB-C and antenna overhang. Measure your exact variant.',
+    features:[{t:'port',kind:'USB-C',side:'xmin',u:9,zc:1.6,pw:9,ph:6}]},
+  {id:'b-arduinouno',name:'Arduino Uno R3',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:3.5,below:0,mount:'floor',acc:'approx',
+    notes:'Standard Arduino Uno. USB-B on one short end, DC barrel jack beside it. Four mounting holes (3.2 mm dia) near the corners.',
+    features:[{t:'port',kind:'USB-B',side:'xmin',u:15,zc:1.6,pw:12,ph:11},{t:'hole',x:2.5,y:50.8,dia:3.2},{t:'hole',x:66.1,y:50.8,dia:3.2},{t:'hole',x:66.1,y:7.6,dia:3.2},{t:'hole',x:15.3,y:2.5,dia:3.2}]},
+  {id:'b-pico',name:'Raspberry Pi Pico / Pico W',type:'board',shape:'rect',w:51,d:21,pcb:1.6,h:3.5,below:7,mount:'floor',acc:'drawing',
+    notes:'21 × 51 mm. USB-micro on one short end. 20 pads per side (castellated + through-hole). Two mounting holes 2 mm dia near the USB end.',
+    features:[{t:'port',kind:'USB-micro',side:'xmin',u:10.5,zc:1.6,pw:9,ph:5},{t:'hole',x:4,y:4,dia:2},{t:'hole',x:4,y:17,dia:2}]},
+  {id:'b-promicro',name:'Pro Micro (ATmega32U4)',type:'board',shape:'rect',w:33,d:18,pcb:1.6,h:3.5,below:7.5,mount:'floor',acc:'approx',
+    notes:'Popular 33 × 18 mm board. Micro-USB on one short end. 12 pins per side.',
+    features:[{t:'port',kind:'USB-micro',side:'xmin',u:9,zc:1.6,pw:9,ph:5}]},
+  // ── Displays ───────────────────────────────────────────────────────────────
+  {id:'b-oled096',name:'0.96″ OLED (SSD1306) I²C',type:'display',shape:'rect',w:27,d:27,pcb:1,h:3.7,below:0,mount:'wall',acc:'approx',
+    notes:'128×64 pixel OLED. 4-pin I²C header on one edge. Screen active area ≈ 21.7 × 10.9 mm. Adhesive or M2 screws.',
+    features:[{t:'screen',x:3,y:8,sw:21.7,sh:10.9}]},
+  {id:'b-oled130',name:'1.3″ OLED (SH1106) I²C',type:'display',shape:'rect',w:36,d:33,pcb:1,h:4,below:0,mount:'wall',acc:'approx',
+    notes:'128×64 OLED, slightly larger than 0.96″. 4-pin I²C header. Active area ≈ 29.4 × 14.7 mm.',
+    features:[{t:'screen',x:3,y:9,sw:29.4,sh:14.7}]},
+  {id:'b-tft18',name:'1.8″ TFT (ST7735) SPI',type:'display',shape:'rect',w:51,d:35,pcb:1.6,h:3,below:0,mount:'wall',acc:'approx',
+    notes:'128×160 colour TFT. 8-pin SPI header on one edge. SD card slot on the back.',
+    features:[{t:'screen',x:7,y:3,sw:28,sh:35}]},
+  {id:'b-tft24',name:'2.4″ TFT (ILI9341) SPI',type:'display',shape:'rect',w:71,d:52,pcb:1.6,h:4,below:0,mount:'wall',acc:'approx',
+    notes:'240×320 colour TFT with touch. 14-pin header. 4 mounting holes.',
+    features:[{t:'screen',x:9,y:5,sw:49,sh:37},{t:'hole',x:2.5,y:2.5,dia:3},{t:'hole',x:68.5,y:2.5,dia:3},{t:'hole',x:2.5,y:49.5,dia:3},{t:'hole',x:68.5,y:49.5,dia:3}]},
+  {id:'b-lcd1602',name:'16×2 LCD (HD44780)',type:'display',shape:'rect',w:80,d:36,pcb:1.6,h:7,below:0,mount:'wall',acc:'approx',
+    notes:'Standard 16-character, 2-row LCD. 16-pin 2.54 mm header on the top edge. 4 mounting holes 3 mm dia.',
+    features:[{t:'screen',x:7,y:5,sw:66,sh:16},{t:'hole',x:2.5,y:2.5,dia:3},{t:'hole',x:77.5,y:2.5,dia:3},{t:'hole',x:2.5,y:33.5,dia:3},{t:'hole',x:77.5,y:33.5,dia:3}]},
+  {id:'b-tm1637',name:'TM1637 4-digit 7-segment',type:'display',shape:'rect',w:40,d:24,pcb:1.6,h:8,below:0,mount:'wall',acc:'approx',
+    notes:'4-digit red 7-segment display driven by TM1637 (2-wire). 4-pin header on the back.',features:[]},
+  // ── Sensors ────────────────────────────────────────────────────────────────
+  {id:'b-dht22',name:'DHT22 temp & humidity module',type:'sensor',shape:'rect',w:15.1,d:25,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'White DHT22 sensor on a small breakout. 3-pin 2.54 mm header. Keep away from heat sources.',features:[]},
+  {id:'b-dht11',name:'DHT11 temp & humidity module',type:'sensor',shape:'rect',w:15.1,d:25,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'Blue DHT11 sensor module — lower accuracy than DHT22. 3-pin header.',features:[]},
+  {id:'b-bme280',name:'BME280 (temp/humidity/pressure)',type:'sensor',shape:'rect',w:11.5,d:11.5,pcb:1,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Tiny Bosch BME280 breakout. I²C or SPI. 6-pin 2.54 mm header on one edge.',features:[]},
+  {id:'b-ds18b20',name:'DS18B20 waterproof probe',type:'sensor',shape:'round',w:6,d:6,pcb:0,h:30,below:0,mount:'wall',acc:'approx',
+    notes:'Stainless-steel probe with 1-wire bus. 1 m cable. The probe body is Ø6 × 30 mm.',features:[]},
+  {id:'b-hcsr04',name:'HC-SR04 ultrasonic sensor',type:'sensor',shape:'rect',w:45,d:20,pcb:1.6,h:15,below:0,mount:'wall',acc:'approx',
+    notes:'Two cylindrical transducers (Ø16 mm) on the front face. 4-pin 2.54 mm header on the back.',
+    features:[{t:'opening',x:11.5,y:10,dia:16},{t:'opening',x:33.5,y:10,dia:16},{t:'hole',x:2.5,y:2.5,dia:3},{t:'hole',x:42.5,y:2.5,dia:3}]},
+  {id:'b-pirsr501',name:'PIR motion sensor (HC-SR501)',type:'sensor',shape:'round',w:32,d:32,pcb:1.6,h:25,below:0,mount:'wall',acc:'approx',
+    notes:'White Fresnel dome on a 32 × 24 mm PCB. 3-pin header. Dome is Ø24 × 23 mm; allow clearance in the wall.',features:[]},
+  {id:'b-mpu6050',name:'MPU-6050 IMU (gyro + accel)',type:'sensor',shape:'rect',w:21,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'6-axis IMU breakout. 8-pin 2.54 mm header on one edge. I²C.',features:[]},
+  {id:'b-hx711',name:'HX711 load-cell amplifier',type:'sensor',shape:'rect',w:38,d:21,pcb:1.6,h:4,below:0,mount:'floor',acc:'approx',
+    notes:'24-bit ADC for load cells / scales. 10-pin header + screw terminal.',features:[]},
+  // ── Power & charging ───────────────────────────────────────────────────────
+  {id:'b-tp4056c',name:'TP4056 Li-ion charger (USB-C)',type:'charger',shape:'rect',w:28,d:17.5,pcb:1.6,h:3.3,below:1.5,mount:'floor',
+    notes:'Typical TP4056 module with battery protection. Check the size and LED positions against your board.',
+    features:[{t:'port',kind:'USB-C',side:'xmin',u:8.75,zc:1.6,pw:12.5,ph:7},{t:'led',x:15,y:3,dia:3},{t:'led',x:15,y:14.5,dia:3}]},
+  {id:'b-tp4056m',name:'TP4056 Li-ion charger (micro-USB)',type:'charger',shape:'rect',w:26,d:17,pcb:1.6,h:3.3,below:1.5,mount:'floor',acc:'approx',
+    notes:'TP4056 module with micro-USB input and battery protection.',
+    features:[{t:'port',kind:'USB-micro',side:'xmin',u:8.5,zc:1.6,pw:9,ph:5}]},
+  {id:'b-mt3608',name:'MT3608 boost converter',type:'power',shape:'rect',w:36,d:17,pcb:1.6,h:10,below:0,mount:'floor',acc:'approx',
+    notes:'2 A boost converter. Trimpot on board. Input 2–24 V, output up to 28 V.',features:[]},
+  {id:'b-lm2596',name:'LM2596 buck converter',type:'power',shape:'rect',w:43,d:21,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'3 A buck converter module. Trimpot on board.',features:[]},
+  {id:'b-lipo1000',name:'LiPo 3.7 V 1000 mAh (503450)',type:'battery',shape:'rect',w:50,d:34,pcb:0,h:5.5,below:0,mount:'floor',
+    notes:'Flat pouch cell, about 50 × 34 × 5 mm. Pouch cells vary, so measure yours.',features:[]},
+  {id:'b-lipo500',name:'LiPo 3.7 V 500 mAh (502030)',type:'battery',shape:'rect',w:30,d:20,pcb:0,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'Slim 500 mAh pouch cell, ≈ 30 × 20 × 5 mm. Always measure yours.',features:[]},
+  {id:'b-18650',name:'18650 cell',type:'battery',shape:'rect',w:66,d:19,pcb:0,h:19,below:0,mount:'floor',
+    notes:'Ø18.5 × 65 mm cylinder (protected cells can be 69 mm long). Use the size of the holder if you use one.',features:[]},
+  {id:'b-18650holder',name:'18650 single cell holder',type:'battery',shape:'rect',w:76,d:21.5,pcb:0,h:21.5,below:0,mount:'floor',acc:'approx',
+    notes:'Plastic single-cell 18650 holder with spring contacts. Wire leads. Sizes vary — measure yours.',features:[]},
+  {id:'b-dcjack',name:'DC barrel jack 5.5/2.1 mm (panel)',type:'power',shape:'rect',w:9,d:9,pcb:0,h:9,below:3,mount:'wall',acc:'approx',
+    notes:'Panel-mount DC barrel jack, 5.5 mm outer / 2.1 mm inner. Mounts through a 12 mm hole in the wall.',features:[]},
+  // ── Audio ──────────────────────────────────────────────────────────────────
   {id:'b-inmp441',name:'INMP441 I2S microphone',type:'mic',shape:'round',w:14,d:14,pcb:1,h:8,below:0,mount:'wall',
     notes:'The sound hole goes through the board. Solder the pins or wires on the chip side so the flat sound side sits against the wall.',
     features:[{t:'mic',x:7,y:7,dia:2.5}]},
@@ -5398,16 +5524,194 @@ const BUILTIN=[
   {id:'b-spk3w',name:'CQRobot 3 W 4 Ω speaker',type:'speaker',shape:'rect',w:69.8,d:30.8,pcb:0,h:16.6,below:0,mount:'wall',
     notes:'Enclosed speaker with a 3.2 mm flange and Ø3.3 holes 63.8 × 24.3 mm apart. The cone faces the grille. 400 mm lead with a JST-PH plug.',
     features:[{t:'cone',x:34.9,y:15.4,cw:38.4,ch:27},{t:'hole',x:3,y:3.25,dia:3.3},{t:'hole',x:66.8,y:3.25,dia:3.3},{t:'hole',x:3,y:27.55,dia:3.3},{t:'hole',x:66.8,y:27.55,dia:3.3}]},
-  {id:'b-tp4056c',name:'TP4056 Li-ion charger (USB-C)',type:'charger',shape:'rect',w:28,d:17.5,pcb:1.6,h:3.3,below:1.5,mount:'floor',
-    notes:'Typical TP4056 module with battery protection. Check the size and LED positions against your board.',
-    features:[{t:'port',kind:'USB-C',side:'xmin',u:8.75,zc:1.6,pw:12.5,ph:7},{t:'led',x:15,y:3,dia:3},{t:'led',x:15,y:14.5,dia:3}]},
-  {id:'b-lipo1000',name:'LiPo 3.7 V 1000 mAh (503450)',type:'battery',shape:'rect',w:50,d:34,pcb:0,h:5.5,below:0,mount:'floor',
-    notes:'Flat pouch cell, about 50 × 34 × 5 mm. Pouch cells vary, so measure yours.',features:[]},
-  {id:'b-18650',name:'18650 cell',type:'battery',shape:'rect',w:66,d:19,pcb:0,h:19,below:0,mount:'floor',
-    notes:'Ø18.5 × 65 mm cylinder (protected cells can be 69 mm long). Use the size of the holder if you use one.',features:[]},
+  {id:'b-buzzeractive',name:'Active buzzer 5 V (12 mm)',type:'speaker',shape:'round',w:12,d:12,pcb:0,h:9.5,below:0,mount:'floor',acc:'approx',
+    notes:'Buzzes at a fixed frequency when powered. Two pins 2.54 mm apart. Polarity marked on the base.',features:[]},
+  {id:'b-buzzerpassive',name:'Passive buzzer (12 mm)',type:'speaker',shape:'round',w:12,d:12,pcb:0,h:7.5,below:0,mount:'floor',acc:'approx',
+    notes:'Passive buzzer — needs a PWM signal to produce a tone.',features:[]},
+  // ── Wireless & comms ───────────────────────────────────────────────────────
+  {id:'b-hc05',name:'HC-05 Bluetooth module',type:'wireless',shape:'rect',w:27,d:13,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Classic UART Bluetooth module. 6-pin 2.54 mm header. Pairs with HC-06.',features:[]},
+  {id:'b-nrf24l01',name:'nRF24L01+ 2.4 GHz radio',type:'wireless',shape:'rect',w:29,d:15,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'2.4 GHz radio module. 8-pin 2.54 mm header, 2×4 layout. Chip antenna version.',features:[]},
+  {id:'b-esp01',name:'ESP-01 (ESP8266) Wi-Fi',type:'wireless',shape:'rect',w:24.75,d:14.5,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Tiny ESP8266 module. 8-pin 2.54 mm header, 2×4 layout.',features:[]},
+  // ── Actuators ──────────────────────────────────────────────────────────────
+  {id:'b-sg90',name:'SG90 micro servo',type:'motor',shape:'rect',w:23,d:12.5,pcb:0,h:22,below:0,mount:'floor',acc:'approx',
+    notes:'Popular micro servo. Body 23 × 12.5 × 22 mm. Ears add about 4 mm each side. 3-wire connector.',features:[]},
+  {id:'b-mg995',name:'MG995 standard servo',type:'motor',shape:'rect',w:40.7,d:19.7,pcb:0,h:38,below:0,mount:'floor',acc:'approx',
+    notes:'Metal gear servo. Body ≈ 40 × 19 × 38 mm; ears add about 10 mm to the width.',features:[]},
+  {id:'b-28byj48',name:'28BYJ-48 stepper motor',type:'motor',shape:'round',w:28,d:28,pcb:0,h:19,below:0,mount:'floor',acc:'approx',
+    notes:'Geared stepper. Ø28 mm body, 19 mm tall. Usually sold with a ULN2003 driver board.',features:[]},
+  {id:'b-uln2003',name:'ULN2003 stepper driver board',type:'board',shape:'rect',w:36,d:32,pcb:1.6,h:4,below:0,mount:'floor',acc:'approx',
+    notes:'Driver board for 28BYJ-48. Screw terminal and JST socket for the motor, 5-pin header for the MCU.',features:[]},
+  {id:'b-l298n',name:'L298N dual motor driver',type:'board',shape:'rect',w:43.5,d:43.5,pcb:1.6,h:30,below:0,mount:'floor',acc:'approx',
+    notes:'Dual H-bridge. Big heatsink on top. Screw terminals for two motors and power.',features:[]},
+  {id:'b-drv8825',name:'DRV8825 stepper driver',type:'board',shape:'rect',w:15,d:20,pcb:1.6,h:5,below:8,mount:'floor',acc:'approx',
+    notes:'Pololu-style microstepping driver. 8-pin SIP header × 2.',features:[]},
+  // ── Relays ─────────────────────────────────────────────────────────────────
+  {id:'b-relay1ch',name:'5 V relay module (1-channel)',type:'relay',shape:'rect',w:38,d:29,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Single relay, 10 A 250 VAC. Screw terminal (COM/NO/NC) on one side, 3-pin header (VCC/GND/IN) on the other.',features:[]},
+  {id:'b-relay4ch',name:'5 V relay module (4-channel)',type:'relay',shape:'rect',w:76,d:55,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Four relays, 10 A 250 VAC each. 6-pin header. Screw terminals on the relay side.',features:[]},
+  // ── Switches & controls ────────────────────────────────────────────────────
   {id:'b-ss12',name:'Mini slide switch (SS12D00)',type:'switch',shape:'rect',w:8.6,d:4.4,pcb:0,h:3.6,below:0,mount:'floor',
     notes:'The lever pokes out through a slot in the wall. Glue the switch body into its holder.',
-    features:[{t:'switch',side:'ymin',u:4.3,zc:1.8,pw:6.5,ph:3.2}]}
+    features:[{t:'switch',side:'ymin',u:4.3,zc:1.8,pw:6.5,ph:3.2}]},
+  {id:'b-btn12mm',name:'Tactile button 12×12 mm',type:'switch',shape:'rect',w:12,d:12,pcb:0,h:7,below:0,mount:'floor',acc:'approx',
+    notes:'Through-hole tactile switch, 12 × 12 mm body, 7 mm actuator height.',features:[]},
+  {id:'b-btn6mm',name:'Tactile button 6×6 mm',type:'switch',shape:'rect',w:6,d:6,pcb:0,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'Small SMD/through-hole tactile switch.',features:[]},
+  {id:'b-rotenc',name:'Rotary encoder (KY-040)',type:'switch',shape:'rect',w:20,d:15,pcb:1.6,h:7,below:7,mount:'floor',acc:'approx',
+    notes:'Incremental encoder with push button. 5-pin header. Threaded shaft mounts through an 8 mm panel hole.',
+    features:[{t:'hole',x:3,y:7.5,dia:3}]},
+  {id:'b-pot10k',name:'Potentiometer 10 kΩ (panel)',type:'switch',shape:'round',w:16,d:16,pcb:0,h:14,below:0,mount:'wall',acc:'approx',
+    notes:'Panel-mount pot, 7 mm threaded shaft, 10 mm nut. Mounts through a 7.2 mm panel hole.',features:[]},
+  {id:'b-togglesw',name:'Toggle switch SPST (panel)',type:'switch',shape:'round',w:13,d:13,pcb:0,h:20,below:0,mount:'wall',acc:'approx',
+    notes:'Standard panel-mount toggle switch. Mounts through a 12 mm hole.',features:[]},
+  // ── LEDs & lighting ────────────────────────────────────────────────────────
+  {id:'b-led5mm',name:'LED 5 mm (any colour)',type:'led',shape:'round',w:5,d:5,pcb:0,h:9,below:3,mount:'wall',acc:'approx',
+    notes:'Standard 5 mm through-hole LED. Mounts through a 5.1 mm panel hole.',features:[]},
+  {id:'b-ws2812ring12',name:'WS2812B LED ring 12',type:'led',shape:'round',w:37,d:37,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Addressable RGB LED ring, 12 LEDs, 37 mm outer diameter. 3-pin header.',features:[]},
+  {id:'b-ws2812ring16',name:'WS2812B LED ring 16',type:'led',shape:'round',w:44,d:44,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Addressable RGB LED ring, 16 LEDs, 44 mm outer diameter.',features:[]},
+  // ── Connectors & terminals ─────────────────────────────────────────────────
+  {id:'b-screw2',name:'Screw terminal 2-pin (2.54 mm)',type:'connector',shape:'rect',w:10,d:7,pcb:1.6,h:8.5,below:0,mount:'floor',acc:'approx',
+    notes:'2-position screw terminal, 2.54 mm pitch.',features:[]},
+  {id:'b-screw3',name:'Screw terminal 3-pin (2.54 mm)',type:'connector',shape:'rect',w:15,d:7,pcb:1.6,h:8.5,below:0,mount:'floor',acc:'approx',
+    notes:'3-position screw terminal, 2.54 mm pitch.',features:[]},
+  {id:'b-screw2_5mm',name:'Screw terminal 2-pin (5 mm)',type:'connector',shape:'rect',w:10,d:10,pcb:1.6,h:10,below:0,mount:'floor',acc:'approx',
+    notes:'Heavy-duty 2-position screw terminal, 5 mm pitch. Used for mains or motor wiring.',features:[]},
+  // ── Storage & RTC ──────────────────────────────────────────────────────────
+  {id:'b-sdmodule',name:'Micro SD card module',type:'storage',shape:'rect',w:41,d:24,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'SPI micro-SD breakout. 6-pin 2.54 mm header.',
+    features:[{t:'port',kind:'microSD',side:'xmin',u:12,zc:1.6,pw:14,ph:5}]},
+  {id:'b-ds3231',name:'DS3231 RTC module',type:'board',shape:'rect',w:38,d:22,pcb:1.6,h:10,below:0,mount:'floor',acc:'approx',
+    notes:'Real-time clock with CR2032 battery holder on the back. I²C, 4-pin header.',features:[]},
+  // ── Misc ───────────────────────────────────────────────────────────────────
+  {id:'b-llc4ch',name:'4-channel logic-level converter',type:'board',shape:'rect',w:25,d:14,pcb:1.6,h:3,below:7,mount:'floor',acc:'approx',
+    notes:'Bi-directional 4-channel level shifter (3.3 V ↔ 5 V). 8-pin header on each side.',features:[]},
+  {id:'b-ky038',name:'KY-038 sound sensor module',type:'sensor',shape:'rect',w:36,d:16,pcb:1.6,h:7,below:0,mount:'floor',acc:'approx',
+    notes:'Microphone + comparator module. Analogue and digital outputs. 4-pin header.',features:[]},
+
+  // ── Elegoo Mega 2560 Ultimate Starter Kit parts ──────────────────────────
+  {id:'b-mega2560',name:'Arduino Mega 2560 R3',type:'board',shape:'rect',w:101.6,d:53.3,pcb:1.6,h:3.5,below:0,mount:'floor',acc:'approx',
+    notes:'Large Arduino board. USB-B on one short end, DC barrel jack beside it. Four 54-digital + 16-analogue pin headers. 4 mounting holes (3.2 mm dia).',
+    features:[{t:'port',kind:'USB-B',side:'xmin',u:15,zc:1.6,pw:12,ph:11},{t:'hole',x:2.5,y:50.8,dia:3.2},{t:'hole',x:99.1,y:50.8,dia:3.2},{t:'hole',x:99.1,y:7.6,dia:3.2},{t:'hole',x:15.3,y:2.5,dia:3.2}]},
+  {id:'b-elegoo-psu',name:'Elegoo power supply module (MB102)',type:'power',shape:'rect',w:53,d:35,pcb:1.6,h:16,below:0,mount:'floor',acc:'approx',
+    notes:'Breadboard power supply module. DC barrel jack input (max 9 V). Outputs 3.3 V and 5 V via rails. Fits a standard 830-point breadboard.',features:[]},
+  {id:'b-rc522',name:'RC522 RFID reader module',type:'sensor',shape:'rect',w:60,d:40,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'13.56 MHz RFID reader/writer (Mifare). SPI interface, 8-pin header. Usually sold with one card and one key fob. The antenna is the flat coil printed on the PCB.',features:[]},
+  {id:'b-joystick',name:'Joystick module (KY-023)',type:'sensor',shape:'rect',w:26,d:34,pcb:1.6,h:33,below:0,mount:'floor',acc:'approx',
+    notes:'Dual-axis analogue joystick with push button. 5-pin header (GND/5V/VRx/VRy/SW). Stick rises 33 mm above the PCB.',features:[]},
+  {id:'b-keypad4x4',name:'4×4 matrix keypad',type:'switch',shape:'rect',w:69,d:69,pcb:0,h:1,below:0,mount:'wall',acc:'approx',
+    notes:'Membrane keypad, 16 keys (0–9 + A–D + * #). 8-pin 2.54 mm header. Peel-and-stick backing.',features:[]},
+  {id:'b-rgbled',name:'RGB LED 5 mm (common cathode)',type:'led',shape:'round',w:5,d:5,pcb:0,h:9,below:3,mount:'wall',acc:'approx',
+    notes:'4-lead 5 mm RGB LED. Common cathode. Three resistors needed (R/G/B). Same body size as a standard 5 mm LED.',features:[]},
+  {id:'b-max7219matrix',name:'MAX7219 8×8 LED matrix module',type:'display',shape:'rect',w:32,d:32,pcb:1.6,h:8,below:0,mount:'wall',acc:'approx',
+    notes:'64-LED dot matrix driven by MAX7219. SPI, 5-pin header. Modules can be chained. The active LED area is about 28 × 28 mm.',
+    features:[{t:'screen',x:2,y:2,sw:28,sh:28}]},
+  {id:'b-seg7_1digit',name:'1-digit 7-segment display',type:'display',shape:'rect',w:12,d:19,pcb:0,h:7,below:3,mount:'wall',acc:'approx',
+    notes:'Single digit 7-segment LED, 0.56″. Common cathode or anode. 10 pins. Mount in a matching cutout.',features:[]},
+  {id:'b-irreceiver',name:'IR receiver module (38 kHz)',type:'sensor',shape:'rect',w:24,d:7,pcb:1.6,h:7,below:0,mount:'wall',acc:'approx',
+    notes:'3-pin 38 kHz IR receiver module. Fits in a 5 mm panel hole. 3-pin header (VCC/GND/OUT).',features:[]},
+  {id:'b-ldrmodule',name:'LDR light sensor module',type:'sensor',shape:'rect',w:30,d:14,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'LDR with comparator. Analogue and digital output. 4-pin header. Trimpot to set threshold.',features:[]},
+  {id:'b-waterlevel',name:'Water level detection sensor',type:'sensor',shape:'rect',w:62,d:20,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Exposed PCB-trace water sensor. 3-pin header (VCC/GND/SIG). Analogue output. Keep the header dry.',features:[]},
+  {id:'b-breadboard830',name:'830-point breadboard',type:'connector',shape:'rect',w:170,d:63,pcb:0,h:9,below:0,mount:'floor',acc:'approx',
+    notes:'Standard full-size solderless breadboard. 830 tie points. No mounting holes (rubber feet).',features:[]},
+
+  // ── Environmental & climate sensors ──────────────────────────────────────
+  {id:'b-bmp180',name:'BMP180 barometric pressure sensor',type:'sensor',shape:'rect',w:10.5,d:12.5,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Bosch BMP180 breakout. I²C, 4-pin header. Measures pressure, altitude and temperature. Superseded by BMP280 but very common.',features:[]},
+  {id:'b-yl69',name:'YL-69 soil moisture sensor',type:'sensor',shape:'rect',w:60,d:20,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Exposed-trace soil probe. Used with a companion comparator board. 2-pin connector plus 4-pin header on the driver board.',features:[]},
+  {id:'b-fc37',name:'FC-37 raindrop sensor',type:'sensor',shape:'rect',w:54,d:40,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Exposed-trace rain / water detector board. Companion comparator module with 4-pin header and trimpot.',features:[]},
+  {id:'b-mq2',name:'MQ-2 smoke / gas sensor',type:'sensor',shape:'rect',w:32,d:22,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Detects smoke, LPG, methane, alcohol. Cylindrical heater element on top. 4-pin header (AO/DO/GND/VCC). Needs warm-up time.',features:[]},
+  {id:'b-mq7',name:'MQ-7 CO sensor',type:'sensor',shape:'rect',w:32,d:22,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Carbon monoxide sensor. Same board footprint as MQ-2 family.',features:[]},
+  {id:'b-mq135',name:'MQ-135 air quality sensor',type:'sensor',shape:'rect',w:32,d:22,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Detects NH3, NOx, alcohol, benzene, CO2. Same board footprint as MQ-2 family.',features:[]},
+  // ── Motion, position & optical sensors ────────────────────────────────────
+  {id:'b-flamesensor',name:'Flame sensor module (IR)',type:'sensor',shape:'rect',w:30,d:14,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'IR phototransistor sensitive to 760–1100 nm. Detects candle-sized flames up to ~1 m. 4-pin header (AO/DO/GND/VCC).',features:[]},
+  {id:'b-linetrack',name:'IR line tracking sensor',type:'sensor',shape:'rect',w:40,d:16,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'IR emitter + receiver pair for line-following robots. Detects black line on white surface. 4-pin header. Trimpot to set sensitivity.',features:[]},
+  // ── Human interface & biometric ───────────────────────────────────────────
+  {id:'b-ky039',name:'KY-039 heartbeat sensor',type:'sensor',shape:'rect',w:15,d:36,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'IR transmitter + phototransistor in a clip-shaped holder. Place a finger over the tip. Analogue output. 3-pin header.',features:[]},
+  // ── Control & power ───────────────────────────────────────────────────────
+  {id:'b-relay8ch',name:'5 V relay module (8-channel)',type:'relay',shape:'rect',w:140,d:55,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Eight relays, 10 A 250 VAC each. 10-pin header (VCC/GND/IN1–IN8). Screw terminals on the relay side.',features:[]},
+  {id:'b-ds1302',name:'DS1302 RTC module',type:'board',shape:'rect',w:38,d:22,pcb:1.6,h:10,below:0,mount:'floor',acc:'approx',
+    notes:'Older real-time clock module with CR2032 battery. 3-wire SPI (not I²C). 5-pin header.',features:[]},
+  // ── Arduino shields & expansion boards ────────────────────────────────────
+  {id:'b-ethernetshield',name:'Arduino Ethernet Shield (W5100)',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:15,below:0,mount:'floor',acc:'approx',
+    notes:'Stacks on Uno/Mega. RJ-45 Ethernet port on one short end. SD card slot. Same mounting holes as Uno (3.2 mm dia).',
+    features:[{t:'port',kind:'RJ-45',side:'xmin',u:15,zc:5,pw:16,ph:13},{t:'hole',x:2.5,y:50.8,dia:3.2},{t:'hole',x:66.1,y:50.8,dia:3.2},{t:'hole',x:66.1,y:7.6,dia:3.2},{t:'hole',x:15.3,y:2.5,dia:3.2}]},
+  {id:'b-sensorshieldv5',name:'Sensor Shield V5.0 (Uno)',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'Stacks on Uno. Breaks all digital and analogue pins out to 3-pin VCC/GND/SIG headers. IIC port and SD slot.',features:[]},
+  {id:'b-protoshield',name:'Arduino Proto Shield (Uno)',type:'board',shape:'rect',w:68.6,d:53.3,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'Blank prototyping board that stacks on an Uno or Mega. Grid of 0.1″ holes for custom soldering.',features:[]},
+  // ── Raspberry Pi HATs ──────────────────────────────────────────────────────
+  {id:'b-sensehat',name:'Raspberry Pi Sense HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:15,below:0,mount:'floor',acc:'approx',
+    notes:'HAT for Pi A+/B+/2/3/4/5. 8×8 RGB LED matrix, 5-way joystick, humidity/pressure/gyro/accel sensors. 40-pin GPIO header.',features:[]},
+  {id:'b-upsdhat',name:'Raspberry Pi UPS HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:14,below:0,mount:'floor',acc:'approx',
+    notes:'Battery backup HAT for Raspberry Pi. Fits Pi 3B+/4/5. I²C fuel gauge. Sizes vary by brand — measure yours.',features:[]},
+  {id:'b-motorhat',name:'Raspberry Pi Motor / Servo HAT',type:'board',shape:'rect',w:65,d:56.5,pcb:1.6,h:12,below:0,mount:'floor',acc:'approx',
+    notes:'PWM HAT for controlling DC motors, steppers, and servos. I²C, 40-pin header. Screw terminals for motors.',features:[]},
+
+  // ── Extended sensor & module set ─────────────────────────────────────────
+  {id:'b-bmp280',name:'BMP280 pressure/temperature sensor',type:'sensor',shape:'rect',w:11.5,d:11.5,pcb:1,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Bosch BMP280 breakout (pressure + temperature; no humidity — that is the BME280). I²C or SPI. 6-pin 2.54 mm header.',features:[]},
+  {id:'b-vl53l0x',name:'VL53L0X ToF laser distance sensor',type:'sensor',shape:'rect',w:25,d:11,pcb:1.6,h:3,below:0,mount:'wall',acc:'approx',
+    notes:'Time-of-Flight laser ranging sensor, up to 2 m. I²C. 6-pin header. The laser window must face outward through a small cutout.',features:[]},
+  {id:'b-max30102',name:'MAX30102 pulse oximeter module',type:'sensor',shape:'rect',w:14,d:14,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Heart-rate and SpO2 sensor. I²C. 5-pin header. The red/IR LEDs must be close to skin — usually mounted flush with an opening.',features:[]},
+  {id:'b-adxl345',name:'ADXL345 3-axis accelerometer',type:'sensor',shape:'rect',w:21,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Low-power 3-axis digital accelerometer. I²C or SPI. 8-pin header. Same popular breakout as the GY-291.',features:[]},
+  {id:'b-hmc5883l',name:'HMC5883L / QMC5883L compass',type:'sensor',shape:'rect',w:25,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'3-axis digital magnetometer/compass. I²C. 5-pin header. Keep well away from magnets and motor current paths.',features:[]},
+  {id:'b-apds9960',name:'APDS-9960 gesture/proximity sensor',type:'sensor',shape:'rect',w:20,d:15,pcb:1.6,h:3,below:0,mount:'wall',acc:'approx',
+    notes:'RGB, ambient light, proximity and gesture sensing in one module. I²C. 6-pin header. Sensor face must be flush with or through the wall.',features:[]},
+  {id:'b-bh1750',name:'BH1750 ambient light sensor',type:'sensor',shape:'rect',w:20,d:16,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'Digital lux meter. I²C. 5-pin header. Place near a window opening if measuring natural light.',features:[]},
+  {id:'b-sw420',name:'SW-420 vibration sensor module',type:'sensor',shape:'rect',w:30,d:14,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'Ball-tilt vibration switch with comparator. 3-pin header (VCC/GND/DO). Trimpot to set sensitivity.',features:[]},
+  {id:'b-ky008',name:'KY-008 laser transmitter (5 mW)',type:'led',shape:'rect',w:15,d:19,pcb:1.6,h:12,below:0,mount:'wall',acc:'approx',
+    notes:'650 nm red laser module. 3-pin header. The laser diode is on one face — the beam exits perpendicular to the board. Mount flush with or through a wall cutout.',features:[]},
+  {id:'b-syn115',name:'SYN115 433 MHz RF transmitter',type:'wireless',shape:'rect',w:19,d:19,pcb:1.6,h:3,below:0,mount:'floor',acc:'approx',
+    notes:'ASK/OOK 433 MHz transmitter module. 4-pin header. Usually paired with an SYN480R receiver. Antenna wire connects to the ANT pin.',features:[]},
+  {id:'b-neo6m',name:'NEO-6M GPS module',type:'sensor',shape:'rect',w:25,d:35,pcb:1.6,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'u-blox NEO-6M GPS module with ceramic patch antenna. UART, 4-pin header. Needs a clear view of the sky — allow a window or roof opening.',
+    features:[{t:'antenna',side:'xmax',u:17.5,len:5,width:25}]},
+  {id:'b-dipswitch4',name:'DIP switch 4-way',type:'switch',shape:'rect',w:10,d:7,pcb:0,h:5,below:3,mount:'floor',acc:'approx',
+    notes:'4-position DIP switch for setting binary config (address, mode). Through-hole, 2.54 mm pitch.',features:[]},
+  {id:'b-cr2032holder',name:'CR2032 coin cell holder',type:'power',shape:'round',w:23,d:23,pcb:0,h:5,below:0,mount:'floor',acc:'approx',
+    notes:'PCB-mount or bare CR2032 holder. Ø23 mm × 5 mm. Used for RTC backup power.',features:[]},
+
+  // ── Audio: mics & amps ────────────────────────────────────────────────────
+  {id:'b-max9814',name:'MAX9814 auto-gain mic module',type:'mic',shape:'rect',w:21,d:21,pcb:1.6,h:8,below:0,mount:'wall',acc:'approx',
+    notes:'Electret mic with MAX9814 auto-gain amplifier. Analogue output. 3-pin header. The mic capsule faces forward — mount flush with or through the wall.',features:[]},
+  {id:'b-max4466',name:'MAX4466 mic amplifier module',type:'mic',shape:'rect',w:19,d:9,pcb:1.6,h:8,below:0,mount:'wall',acc:'approx',
+    notes:'Electret mic with MAX4466 fixed-gain amp. Analogue output. 3-pin header. Trimpot on back for gain adjustment.',features:[]},
+  {id:'b-ky037',name:'KY-037 sound sensor module',type:'sensor',shape:'rect',w:36,d:16,pcb:1.6,h:7,below:0,mount:'floor',acc:'approx',
+    notes:'High-sensitivity sound/clap detection module. Analogue and digital output. 4-pin header. Trimpot to set threshold. Similar to KY-038 but higher sensitivity mic.',features:[]},
+  {id:'b-pam8403',name:'PAM8403 stereo 3 W amp module',type:'amp',shape:'rect',w:21,d:21,pcb:1.6,h:8,below:0,mount:'floor',acc:'approx',
+    notes:'Class-D stereo amplifier, 2 × 3 W at 4 Ω on 5 V. Screw terminals for two speakers, 4-pin header for audio in and power. Very compact and efficient.',features:[]},
+  {id:'b-spk8ohm',name:'8 Ω mini speaker (0.5–2 W)',type:'speaker',shape:'round',w:40,d:40,pcb:0,h:12,below:0,mount:'wall',acc:'approx',
+    notes:'Generic small cone speaker. Ø40 mm body is common — measure yours. 2 solder-tab or wire leads. Mount in a matching circular cutout.',features:[]},
+  // ── Force & weight ─────────────────────────────────────────────────────────
+  {id:'b-loadcell1kg',name:'Load cell 1 kg (straight bar)',type:'sensor',shape:'rect',w:80,d:12.7,pcb:0,h:12.7,below:0,mount:'floor',acc:'approx',
+    notes:'Straight-bar aluminium load cell, 1 kg. 4-wire Wheatstone bridge (red/black/white/green). Mount one end fixed, the other end under the load. Use with HX711.',features:[]},
+  {id:'b-fsr402',name:'FSR402 force sensitive resistor',type:'sensor',shape:'round',w:12.7,d:12.7,pcb:0,h:0.5,below:0,mount:'floor',acc:'approx',
+    notes:'Flat circular FSR, Ø12.7 mm sensing area on a 56 mm tail. Resistance drops from ~10 MΩ unloaded to ~200 Ω under pressure. Use with a voltage divider.',features:[]},
+  // ── Light automation ───────────────────────────────────────────────────────
+  {id:'b-ldrrelay',name:'Photoresistor relay module',type:'relay',shape:'rect',w:38,d:38,pcb:1.6,h:18,below:0,mount:'floor',acc:'approx',
+    notes:'Combined LDR + relay board for automatic day/night switching. Trimpot to set light threshold. Screw terminal for load (mains-rated relay). 4-pin header.',features:[]},
 ];
 for(const b of BUILTIN)b.builtin=true;
 // ---- pins, for the wiring diagram. x,y: position on the part (mm, same frame as its features; approximate
@@ -5590,7 +5894,7 @@ function prep(inst,st){
   if(mount==='outside')return Object.assign(o,{outside:true});
   if(mount==='wall'){
     o.cone=F.some(f=>f.t==='cone');
-    o.tk=o.below+o.pcb+o.h+(o.cone&&o.pcb===0?2.8:0);// speakers get a rib behind them
+    o.tk=o.below+o.pcb+o.h+(o.cone&&o.pcb===0?2.8:0)+(F.some(f=>f.t==='opening')&&o.pcb>0?1:0);// +1 for locating-pin tip beyond PCB
     o.floorOnly=o.cone;// heavy: sits on the floor
     o.portSides=[];o.ant=[];return o;
   }
@@ -5655,7 +5959,15 @@ function setBounds(it,box){
       case 'xmin':b={x0:0,x1:tk,y0:it.u0,y1:it.u0+L};break;
       default:b={x0:box.W-tk,x1:box.W,y0:it.u0,y1:it.u0+L};
     }
-    b.z0=it.z0;b.z1=it.z0+o.d;it.b=b;it.keep=[];it.ant=[];return it;
+    b.z0=it.z0;b.z1=it.z0+o.d;
+    // Extend along-wall bounds to cover standoff cylinder footprints (standoff radius can
+    // protrude slightly beyond the part's footprint, causing near-misses with floor items).
+    for(const s of wallStandoffs(it)){
+      const u=wallU(it,s.f.x);
+      if(it.wall==='xmin'||it.wall==='xmax'){b.y0=Math.min(b.y0,u-s.r);b.y1=Math.max(b.y1,u+s.r);}
+      else{b.x0=Math.min(b.x0,u-s.r);b.x1=Math.max(b.x1,u+s.r);}
+    }
+    it.b=b;it.keep=[];it.ant=[];return it;
   }
   const fw=it.rot%2?o.fd:o.fw,fd=it.rot%2?o.fw:o.fd;
   it.b={x0:it.x0,y0:it.y0,x1:it.x0+fw,y1:it.y0+fd,z0:0,z1:o.top};
@@ -5737,8 +6049,8 @@ function valid(it,placed,box,st){
     if(b.x0<m('xmin')||b.y0<m('ymin')||box.W-b.x1<m('xmax')||box.D-b.y1<m('ymax'))return false;
   }
   for(const q of placed){
-    if(ov3(b,q.b,q.kind==='post'?0.3:st.gap-1e-6,0.8))return false;
-    if(q.kind==='post')continue;
+    if(ov3(b,q.b,q.kind==='post'?0.3:q.kind==='brace'?2:st.gap-1e-6,q.kind==='brace'?2:0.8))return false;
+    if(q.kind==='post'||q.kind==='brace')continue;
     for(const k of q.keep)if(ov2(b,k,0))return false;
     for(const k of it.keep)if(ov2(q.b,k,0))return false;
     if(!awayOK(it,q))return false;
@@ -5768,7 +6080,9 @@ function score(it,placed,box,st){
 }
 function tryPack(box,order,st){
   const placed=postsFor(box,st);
-  for(const o of order){
+  // Wall items first so their brace keep-out zones are registered before floor items are placed.
+  const sortedOrder=[...order].sort((a,b)=>(a.mount==='wall'?0:1)-(b.mount==='wall'?0:1));
+  for(const o of sortedOrder){
     let best=null,bs=Infinity;
     for(const it of candidates(o,placed,box,st)){
       if(!valid(it,placed,box,st))continue;
@@ -5776,6 +6090,21 @@ function tryPack(box,order,st){
     }
     if(!best)return null;
     placed.push(best);
+    // After placing a wall item, register each standoff brace as a keep-out zone so
+    // floor items are placed with ≥2 mm clearance from the 45° brace geometry.
+    if(best.kind==='wall'){
+      for(const s of wallStandoffs(best)){
+        const u=wallU(best,s.f.x);
+        const bd=Math.min(s.z+s.r+1,best.o.h);
+        const zlo=Math.max(0,s.z-s.r),zhi=s.z+s.r;
+        let bb;
+        if(best.wall==='xmin')      bb={x0:0,        x1:bd,        y0:u-s.r,y1:u+s.r,z0:zlo,z1:zhi};
+        else if(best.wall==='xmax') bb={x0:box.W-bd,  x1:box.W,     y0:u-s.r,y1:u+s.r,z0:zlo,z1:zhi};
+        else if(best.wall==='ymin') bb={x0:u-s.r,     x1:u+s.r,     y0:0,     y1:bd,   z0:zlo,z1:zhi};
+        else                        bb={x0:u-s.r,     x1:u+s.r,     y0:box.D-bd,y1:box.D,z0:zlo,z1:zhi};
+        placed.push({kind:'brace',b:bb});
+      }
+    }
   }
   return placed;
 }
@@ -5783,7 +6112,7 @@ function tryPack(box,order,st){
 function heightFor(items,box,st){
   let top=0,nearWall=0;const m=LIP_T+LID_CLEAR+0.3;
   for(const it of items){
-    if(it.kind==='post')continue;
+    if(it.kind==='post'||it.kind==='brace')continue;
     top=Math.max(top,it.b.z1);
     if(it.b.x0<m||it.b.y0<m||it.b.x1>box.W-m||it.b.y1>box.D-m)nearWall=Math.max(nearWall,it.b.z1);
   }
@@ -6052,7 +6381,8 @@ async function buildSolids(L){
           const clear=F.filter(q=>q.t==='opening').map(q=>cylN(wallU(it,q.x),it.z0+q.y,-0.5,o.h+0.5,q.dia/2+1.4));
           for(const s of wallStandoffs(it)){
             const u=wallU(it,s.f.x),post=cylN(u,s.z,-0.1,o.h,s.r);
-            let brace=K(M.hull([post,cube(u-s.r,-0.1,Math.max(-0.1,s.z-s.r-o.h),u+s.r,0,s.z)]));
+            const braceDepth=Math.min(s.z+s.r+1,o.h);// only as deep as needed for a 45° base; floor supports the rest
+            let brace=K(M.hull([cylN(u,s.z,-0.1,braceDepth,s.r),cube(u-s.r,-0.1,Math.max(-0.1,s.z-s.r),u+s.r,0,s.z)]));
             for(const c of clear)brace=K(brace.subtract(c));
             adds.push(toWall(post,it.wall),toWall(brace,it.wall),toWall(cylN(u,s.z,o.h-0.1,o.h+o.pcb+1,Math.max(0.6,s.f.dia/2-0.2)),it.wall));
           }
@@ -6694,7 +7024,7 @@ function openLibrary(id){
 }
 function closeLibrary(){
   if(edDirty&&!confirm('Close without saving the changes to "'+ed.name+'"?'))return;
-  edDirty=false;plBack.style.display='none';setBig(false);
+  edDirty=false;plBack.style.display='none';setBig(false);plSelected.clear();
 }
 function selectPart(id,force){
   if(!force&&edDirty&&!confirm('Discard the changes to "'+ed.name+'"?'))return;
@@ -6702,21 +7032,73 @@ function selectPart(id,force){
   ed=tidyPart(clone(p));if(!ed.pins||!ed.pins.length)ed.pins=clone(pinsOf(p));edDirty=false;edSel=-1;edPin=-1;edMode='select';clicks=[];rawImg=null;clearRef();
   renderList();renderEditor();
 }
+const thumbCache=new Map();// id → dataURL, cleared when a part is saved/deleted
+function thumbInvalidate(id){thumbCache.delete(id);}
 function thumb(cv,p){
   const c=cv.getContext('2d'),W=cv.width,H=cv.height;c.clearRect(0,0,W,H);
   const s=Math.min((W-6)/p.w,(H-6)/p.d),ox=(W-p.w*s)/2,oy=(H+p.d*s)/2;
-  const im=imgOf(p.photo,()=>thumb(cv,p));
+  const im=imgOf(p.photo||p.img,()=>{thumb(cv,p);thumbCache.set(p.id,cv.toDataURL());});
   if(im)c.drawImage(im,ox,oy-p.d*s,p.w*s,p.d*s);
   c.strokeStyle=typeOf(p).color;c.lineWidth=1.5;c.fillStyle=im?'transparent':typeOf(p).color+'40';c.beginPath();
   if(p.shape==='round')c.ellipse(ox+p.w*s/2,oy-p.d*s/2,p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(ox,oy-p.d*s,p.w*s,p.d*s);
   c.fill();c.stroke();
+  thumbCache.set(p.id,cv.toDataURL());
 }
+// IntersectionObserver: only draw thumbnails that scroll into view; uses cached dataURLs on revisit.
+let _thumbObs=null;
+function getThumbObs(){
+  if(_thumbObs)return _thumbObs;
+  _thumbObs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      _thumbObs.unobserve(e.target);
+      const id=e.target.closest('.plItem')?.dataset.id;
+      if(!id)return;
+      const p=_plPartsMap.get(id);
+      if(p)thumb(e.target,p);
+    });
+  },{root:$('plList'),rootMargin:'120px'});
+  return _thumbObs;
+}
+let _plPartsMap=new Map();// built once per renderList, reused by the observer
+let _rlPending=false;
+let plSelected=new Set();
+function updateSelBar(){const bar=$('plSelBar'),n=plSelected.size;if(!bar)return;bar.style.display=n?'flex':'none';const sc=$('plSelCount');if(sc)sc.textContent=n+' part'+(n===1?'':'s')+' selected';}
 function renderList(){
-  const L=$('plList');
-  L.innerHTML=allParts().map(p=>`<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}"><canvas width="64" height="44"></canvas><div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div></div>`).join('');
-  L.querySelectorAll('.plItem').forEach(el=>thumb(el.querySelector('canvas'),partById(el.dataset.id)));
+  if(_rlPending)return;// coalesce rapid calls into one frame
+  _rlPending=true;
+  requestAnimationFrame(()=>{
+    _rlPending=false;
+    const L=$('plList'),parts=allParts();
+    _plPartsMap=new Map(parts.map(p=>[p.id,p]));
+    if(_thumbObs){_thumbObs.disconnect();}
+    const obs=getThumbObs();
+    L.innerHTML=parts.map(p=>{
+      const cached=thumbCache.get(p.id);
+      const thumb_el=cached?`<img width="64" height="44" src="${cached}" class="plThumb">`:`<canvas width="64" height="44"></canvas>`;
+      const canDel=!p.builtin&&!builtinById(p.id);
+      return `<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}">${thumb_el}<div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div>${canDel?`<input type="checkbox" class="plCheck" data-id="${esc(p.id)}" title="Tick to select for deletion"${plSelected.has(p.id)?' checked':''}>`:''}</div>`;
+    }).join('');
+    L.querySelectorAll('.plItem canvas').forEach(cv=>obs.observe(cv));
+    updateSelBar();
+  });
 }
-$('plList').addEventListener('click',e=>{const el=e.target.closest('.plItem');if(el)selectPart(el.dataset.id);});
+$('plList').addEventListener('change',e=>{
+  const cb=e.target.closest('.plCheck');if(!cb)return;
+  const id=cb.dataset.id;if(cb.checked)plSelected.add(id);else plSelected.delete(id);
+  updateSelBar();
+});
+$('plList').addEventListener('click',e=>{
+  if(e.target.closest('.plCheck'))return;
+  const el=e.target.closest('.plItem');if(el)selectPart(el.dataset.id);
+});
+$('plSelDelBtn').onclick=()=>{
+  if(!plSelected.size)return;
+  if(!confirm('Delete '+plSelected.size+' part'+(plSelected.size===1?'':'s')+'? This cannot be undone.'))return;
+  plSelected.forEach(id=>{const idx=custom.findIndex(c=>c.id===id);if(idx>=0){custom.splice(idx,1);thumbInvalidate(id);if(ed&&ed.id===id)ed=null;}});
+  plSelected.clear();saveLib();renderList();
+};
+$('plSelClrBtn').onclick=()=>{plSelected.clear();renderList();};
 function renderEditor(){
   const p=ed,isB=!!builtinById(p.id),overridden=isB&&custom.some(c=>c.id===p.id);
   const opt=(o,v)=>Object.entries(o).map(([k,n])=>`<option value="${k}"${v===k?' selected':''}>${esc(n)}</option>`).join('');
@@ -6752,7 +7134,12 @@ ${p.shape==='round'?'':`<label class="f"><span>Width (bottom → top)</span><inp
 <label>Notes<textarea data-p="notes">${esc(p.notes||'')}</textarea></label>
 <h4>Photo</h4>
 <div class="ewRow"><button id="plTop">${p.photo?'Replace top photo…':'Top photo…'}</button>${p.photo?'<button id="plTurn" title="Turn the photo upside down, if it came out the wrong way round">Turn photo 180°</button><button id="plNoPhoto">Remove photo</button>':''}</div>
-<div class="ewRow"><button id="plSide">Side photo for heights…</button><label>shows the <select id="plSideRef"><option value="w"${sideRef==='w'?' selected':''}>long side</option><option value="d"${sideRef==='d'?' selected':''}>short side</option></select></label></div><h4>Features <span class="ewNote">(${p.features.length})</span></h4>
+<div class="ewRow"><button id="plSide">Side photo for heights…</button><label>shows the <select id="plSideRef"><option value="w"${sideRef==='w'?' selected':''}>long side</option><option value="d"${sideRef==='d'?' selected':''}>short side</option></select></label></div>
+<h4>Product image</h4>
+<div class="ewNote" style="margin-bottom:6px">A catalog or datasheet photo — stored with the part, shown in the list when there is no calibrated top photo.</div>
+<div class="ewRow">${p.img?`<button id="plImgReplace">Replace image…</button><button id="plNoImg">Remove image</button>`:`<button id="plImgAdd">Add product image…</button>`}</div>
+${p.img?`<div style="margin:4px 0 2px"><img src="${esc(p.img)}" style="max-height:88px;max-width:200px;border:1px solid var(--line);border-radius:4px;object-fit:contain;background:#f5f5f5"></div>`:''}
+<h4>Features <span class="ewNote">(${p.features.length})</span></h4>
 <label class="f" title="Where the X and Y numbers of features and pins are measured from (the red 0,0 mark on the picture). It only changes the numbers shown, not the part."><span>Measure from</span><select id="plOrigin">${opt(ORIGINS,orig())}</select></label>
 <div id="plFeats"></div>
 <div class="ewRow" style="margin-top:10px"><button id="plTypical" title="Add the features this type of part usually has">Add typical features</button></div>
@@ -6839,6 +7226,8 @@ $('plEdit').addEventListener('click',async e=>{
   if(id==='plSide'){pickPhoto('side');return;}
   if(id==='plNoPhoto'){delete ed.photo;markDirty();renderEditor();return;}
   if(id==='plTurn'){turnPhoto();return;}
+  if(id==='plImgAdd'||id==='plImgReplace'){$('plImgIn').click();return;}
+  if(id==='plNoImg'){delete ed.img;markDirty();renderEditor();renderList();return;}
   if(id==='plTurn90'){turnPart(ed).then(()=>{markDirty();renderEditor();WF.flash('Part turned a quarter turn: its sizes, picture, features and pins all moved together. Click again to keep turning.',6000);});return;}
   if(el.dataset.pdel!==undefined){ed.pins.splice(+el.dataset.pdel,1);edPin=-1;markDirty();renderEditor();return;}
   if(id==='plPinAdd'){(ed.pins=ed.pins||[]).push({n:'PIN '+(ed.pins.length+1),r:'sig'});markDirty();renderEditor();return;}
@@ -6865,7 +7254,7 @@ $('plEdit').addEventListener('click',async e=>{
   if(id==='plTypical'){addTypical();return;}
   if(id==='plSave'){savePart();return;}
   if(id==='plDup'){const c=clone(ed);c.id=newPartId();c.name=ed.name+' (copy)';delete c.builtin;ed=c;edDirty=true;savePart();return;}
-  if(id==='plDel'){if(!confirm('Delete "'+ed.name+'" from your library?'))return;custom=custom.filter(c=>c.id!==ed.id);saveLib();edDirty=false;selectPart(allParts()[0].id,true);return;}
+  if(id==='plDel'){if(!confirm('Delete "'+ed.name+'" from your library?'))return;const _delId=ed.id;custom=custom.filter(c=>c.id!==_delId);saveLib();thumbInvalidate(_delId);edDirty=false;selectPart(allParts()[0].id,true);return;}
   if(id==='plReset'){if(!confirm('Put "'+ed.name+'" back to the original built-in part?'))return;custom=custom.filter(c=>c.id!==ed.id);saveLib();edDirty=false;selectPart(ed.id,true);return;}
   if(id==='plUse'){if(edDirty&&!savePart())return;wiz.items.push({pid:ed.id,qty:1,mount:'auto',wall:'auto'});saveWiz();lay=null;WF.flash(ed.name+' added to the Enclosure Wizard');openWizard();}
 });
@@ -6876,6 +7265,7 @@ function savePart(){
   const c=clone(p);delete c.builtin;
   const i=custom.findIndex(x=>x.id===c.id);if(i>=0)custom[i]=c;else custom.push(c);
   if(!saveLib()){if(i<0)custom.pop();return false;}
+  thumbInvalidate(c.id);
   edDirty=false;lay=null;renderList();renderEditor();WF.flash('Saved "'+p.name+'"');return true;
 }
 $('plNew').onclick=()=>{
@@ -6902,40 +7292,16 @@ function choose(message,buttons){
 $('plExport').onclick=async()=>{
   if(!custom.length)return WF.flash('You have no parts of your own yet (built-in parts are already in every copy of the app)');
   let parts=custom;
-  if(custom.some(p=>p.photo)){
-    const c=await choose('Some of your parts have photos.\n\nPhotos you took yourself are fine to share. Photos downloaded from websites belong to whoever took them, so leave them out when giving parts to other people.',['Export without photos','Export with photos','Cancel']);
+  if(custom.some(p=>p.photo||p.img)){
+    const c=await choose('Some of your parts have photos or product images.\n\nPhotos you took yourself are fine to share. Images downloaded from websites belong to whoever took them, so leave them out when giving parts to other people.',['Export without images','Export with images','Cancel']);
     if(c<0||c===2)return;
-    if(c===0)parts=custom.map(p=>{const q=clone(p);delete q.photo;return q;});
+    if(c===0)parts=custom.map(p=>{const q=clone(p);delete q.photo;delete q.img;return q;});
   }
   WF.download('EvenUCan parts.json',JSON.stringify({app:'EvenUCan',kind:'parts',version:1,parts},null,1),'application/json');
 };
 $('plImport').onclick=()=>$('plFile').click();
+$('plFzBulk').onclick=()=>{$('fzImLog').innerHTML='';$('fzImBack').style.display='grid';};// opens in-app drop dialog
 $('plBrowse').onclick=browseParts;
-$('plMyParts').onclick=async()=>{
-  // Open Browse parts filtered to owned only — load library then open with My parts filter on
-  const btn=$('plMyParts'),label=btn.textContent,first=!webLibList&&!(window.wfNative&&window.wfNative.fritzingList);
-  if(btn.disabled)return;
-  if(first){btn.disabled=true;btn.textContent='Loading…';WF.flash('Loading the parts library…',15000);}
-  let src=null,list=[];
-  try{
-    src=await partsSource(true,true);if(!src)return;
-    partsSrc=src;fzPreviewCache.clear();
-    try{list=await src.list();}catch(e){console.error('EvenUCan: could not list the parts library',e);}
-  }finally{if(first){btn.disabled=false;btn.textContent=label;if(list.length)WF.flash(list.length+' parts ready',2000);else $('toast').style.display='none';}}
-  if(!list.length)return WF.flash('No parts library was found');
-  const ownedCount=list.filter(p=>invOwned(p.title)).length;
-  if(!ownedCount)WF.flash('No parts ticked yet — click ★ next to any part to mark it as owned.',7000);
-  if(edDirty&&!confirm('Discard the changes to "'+ed.name+'"?'))return;
-  let id=await pickFritzing(list,'My parts');
-  if(id===null)return;
-  if(id&&id.box){const box2=true;id=id.id;}
-  if(id==='file'){$('plNew').click();WF.flash('Choose a part file: .fzpz (or a .fzp together with its breadboard .svg)',6000);$('plFzIn').click();return;}
-  edDirty=false;$('plNew').click();
-  try{const r=await src.load(id);await (r.data?applyFritzingData(r.data):applyFritzing(r.fzp,r.svg,r.file));renderList();
-    WF.flash('Added as a new part: check its size and pins, then click Save part',6000);}
-  catch(e){WF.flash('Could not read that part: '+(e.message||e));}
-};
-$('plCookbook').onclick=()=>cookbookPanel();
 $('plFile').addEventListener('change',async e=>{
   const file=e.target.files[0];e.target.value='';if(!file)return;
   try{
@@ -6974,7 +7340,7 @@ function drawEd(){
   const p=ed,s=Math.min((cw-70)/p.w,(ch-60)/p.d);
   pv={s,ox:(cw-p.w*s)/2,oy:(ch+p.d*s)/2};
   const X=x=>pv.ox+x*s,Y=y=>pv.oy-y*s;
-  const im=imgOf(p.photo,drawEd);
+  const im=imgOf(p.photo||p.img,drawEd);
   c.save();c.beginPath();
   if(p.shape==='round')c.ellipse(X(p.w/2),Y(p.d/2),p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(X(0),Y(p.d),p.w*s,p.d*s);
   if(im){c.clip();c.drawImage(im,X(0),Y(p.d),p.w*s,p.d*s);c.restore();c.save();c.beginPath();if(p.shape==='round')c.ellipse(X(p.w/2),Y(p.d/2),p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(X(0),Y(p.d),p.w*s,p.d*s);}
@@ -7226,6 +7592,20 @@ $('plPhotoIn').addEventListener('change',e=>{
       ['Got it'],0);
   };
   im.onerror=()=>WF.flash('Could not read that picture');
+  im.src=url;
+});
+// Product image: resize to max 600 px on the longest side, store as JPEG in ed.img.
+$('plImgIn').addEventListener('change',e=>{
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  const url=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+    URL.revokeObjectURL(url);
+    const K=Math.min(1,600/Math.max(im.naturalWidth,im.naturalHeight));
+    const oc=document.createElement('canvas');oc.width=Math.round(im.naturalWidth*K);oc.height=Math.round(im.naturalHeight*K);
+    oc.getContext('2d').drawImage(im,0,0,oc.width,oc.height);
+    ed.img=oc.toDataURL('image/jpeg',0.82);markDirty();renderEditor();renderList();
+  };
+  im.onerror=()=>{URL.revokeObjectURL(url);WF.flash('Could not read that picture');};
   im.src=url;
 });
 function solve(A,b){
@@ -7669,7 +8049,7 @@ Return ONLY a JSON object:
  "pcb": board thickness in mm (0 for a solid block such as a battery or enclosed speaker), "h": height of the tallest part above the board top in mm (for a block: its full height),
  "below": height of pins or parts under the board in mm (0 if none),
  "mount": "wall" if the part must face out through a side of the box (microphones, speakers, ultrasonic or distance sensors, cameras), "outside" if the part lives entirely outside the enclosure (soil moisture probes, buried or submerged sensors, outdoor weather sensors, anything that goes into soil, water or the environment), otherwise "floor",
- "features": [ ... ], "pins": [ {"name": exact printed label e.g. "SDA" or "D7", "x", "y": centre of that pin/pad in mm (same frame as above), "role": "gnd"|"3v3"|"5v"|"vcc"|"vin"|"sda"|"scl"|"gpio"|"sig"|"trig"|"echo"|"nc"} ], "uncertain": [short strings], "notes": short string}
+ "features": [ ... ], "pins": [ {"name": exact printed label e.g. "SDA" or "D7", "x", "y": centre of that pin/pad in mm (same frame as above), "role": "gnd"|"3v3"|"5v"|"vcc"|"vin"|"sda"|"scl"|"gpio"|"sig"|"trig"|"echo"|"ao"|"do"|"nc"} ], "uncertain": [short strings], "notes": short string}
 Coordinates: looking down on the top (component side), origin at the bottom-left corner, x to the right along w, y up along d, all in mm, positions are centres.
 Feature objects:
  {"t":"hole","x","y","dia"} mounting hole
@@ -7682,7 +8062,7 @@ Feature objects:
  {"t":"button","x","y","dia"}, {"t":"led","x","y","dia"}
  {"t":"window","x","y","fw","fd"} display active area
  {"t":"switch","side","u","zc"} switch lever on an edge
-Pin roles: gnd=ground, 3v3=3.3V power, 5v=5V power, vcc=power at another or unclear voltage, vin=power in before the board's own regulator, sda/scl=I2C data/clock, gpio=a general-purpose digital pin on a microcontroller/dev board that code can use freely (Arduino/ESP32/Pi-style D0, D7, GPIO14, IO2, A0 and so on - put the pin number in its name exactly as printed, e.g. "D7" or "GPIO14"), sig=a single fixed-purpose signal pin on a sensor or other module (not a GPIO a sketch chooses what to do with), trig/echo=ultrasonic trigger/echo, nc=not connected/do not use. Use gpio only for a dev board's own general I/O pins, not for a sensor's dedicated pins.
+Pin roles: gnd=ground, 3v3=3.3V power, 5v=5V power, vcc=power at another or unclear voltage, vin=power in before the board's own regulator, sda/scl=I2C data/clock, gpio=a general-purpose digital pin on a microcontroller/dev board that code can use freely (Arduino/ESP32/Pi-style D0, D7, GPIO14, IO2, A0 and so on - put the pin number in its name exactly as printed, e.g. "D7" or "GPIO14"), sig=a single fixed-purpose signal pin on a sensor or other module (not a GPIO a sketch chooses what to do with), trig/echo=ultrasonic trigger/echo, ao=analog output (a voltage proportional to the measured value, connects to an ADC GPIO, e.g. MQ gas sensor AO pin), do=digital output (a comparator-driven high/low output, connects to any GPIO, e.g. MQ gas sensor DO pin), nc=not connected/do not use. Use gpio only for a dev board's own general I/O pins, not for a sensor's dedicated pins.
 Rules: use numbers stated on the drawing or clearly worked out from it. Do not invent features that are not shown. If something needed is not shown, give your best estimate and add it to "uncertain". If there are several views, combine them. Turn the frame if needed so that w >= d. If a pinout (a header, connector or row of pads with printed names) is shown, list every individual pin with its own name, position and role - not just the header's outline as a "header" feature. Never return anything except the JSON.`;
 const fileB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(r.error);r.readAsDataURL(f);});
 // Big photos are shrunk before sending (drawings stay readable at 3000 px).
@@ -7826,16 +8206,10 @@ async function oaChat(p,key,model,content,maxTokens){
   const mt=A.local?Math.min(maxTokens,1024):maxTokens;// small local models: cap at 1024 to halve generation time
   const body=JSON.stringify({model,messages:Array.isArray(content)&&content[0]&&content[0].role?content:[{role:'user',content}],temperature:0.1,max_tokens:mt,...(A.local?{stream:false}:{})});
   let status,raw;
-  let _bridgeOk=false;
   if(post){
-    try{const r=await post(A.url,key,body);status=r.status;raw=r.text;_bridgeOk=true;}
-    catch(e){
-      if(A.local)throw new Error('Couldn\'t reach Ollama on this computer. Make sure it\'s running (ollama serve, or just open the Ollama app) and that you pulled the model you typed.');
-      // Bridge allow-list may not include this host; fall through to direct fetch.
-      _bridgeOk=false;
-    }
-  }
-  if(!post||!_bridgeOk){
+    try{const r=await post(A.url,key,body);status=r.status;raw=r.text;}
+    catch(e){throw new Error(A.local?'Couldn\'t reach Ollama on this computer. Make sure it\'s running (ollama serve, or just open the Ollama app) and that you pulled the model you typed.':'Couldn\'t reach '+A.name+'. Check the internet connection and try again.');}
+  }else{
     if(A.deskOnly)throw new Error('NVIDIA\'s free AI only works in the EvenUCan desktop app (NVIDIA doesn\'t accept requests from web pages). In this web version, pick Google Gemini, Groq or OpenRouter (all free) or Claude instead.');
     const _oMs=A.local?300000:60000;// local models get 5 min; cloud APIs get 60 s
     const _oSig=AbortSignal.timeout?AbortSignal.timeout(_oMs):(()=>{const ac=new AbortController();setTimeout(()=>ac.abort(),_oMs);return ac.signal;})();
@@ -7912,7 +8286,7 @@ function applyDrawing(d,src,sources){
   // and places every pin, so there's no reason the AI assist shouldn't fill those in too, not just the
   // header's outline. Replaced wholesale like features: only kept if the AI actually found some.
   if(Array.isArray(d.pins)&&d.pins.length){
-    const roles=new Set(['gnd','3v3','5v','vcc','vin','sda','scl','gpio','sig','trig','echo','nc']);
+    const roles=new Set(['gnd','3v3','5v','vcc','vin','sda','scl','gpio','sig','trig','echo','ao','do','nc']);
     ed.pins=d.pins.filter(p=>p&&typeof p==='object').slice(0,64)
       .map(p=>{
         const nm=String(p.name||p.n||'?').slice(0,16),r=roles.has(p.role)?p.role:'sig',q={n:nm,r,x:n(p.x,0),y:n(p.y,0)};
@@ -8037,6 +8411,22 @@ $('plEdit').addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfe
 $('plEdit').addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(!f)return;e.preventDefault();
   if(/\.fzpz?$/i.test(f.name)){const dt=new DataTransfer();for(const x of e.dataTransfer.files)dt.items.add(x);const inp=$('plFzIn');inp.files=dt.files;inp.dispatchEvent(new Event('change'));return;}// a part file: import its pins, size and picture
   readDrawing(f);});
+// Drop .fzpz files onto the parts list (left panel) → bulk import all at once
+$('plList').addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault();});
+$('plList').addEventListener('drop',e=>{
+  const files=[...( e.dataTransfer&&e.dataTransfer.files||[])].filter(f=>/\.fzpz$/i.test(f.name));
+  if(!files.length){e.preventDefault();return;}e.preventDefault();
+  if(files.length===1){const dt=new DataTransfer();dt.items.add(files[0]);const inp=$('plFzIn');inp.files=dt.files;inp.dispatchEvent(new Event('change'));return;}
+  bulkImportFzpz(files);
+});
+// Prevent browser from opening dropped files as tabs — catch everything the element handlers miss
+document.addEventListener('dragover',e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes('Files'))e.preventDefault();});
+document.addEventListener('drop',e=>{
+  if(!e.dataTransfer||!e.dataTransfer.files.length)return;
+  e.preventDefault();// stop browser opening files as new tabs
+  const fzpz=[...e.dataTransfer.files].filter(f=>/\.fzpz$/i.test(f.name));
+  if(fzpz.length)bulkImportFzpz(fzpz);
+});
 document.addEventListener('paste',e=>{
   if(plBack.style.display!=='grid'||!ed)return;
   const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'))return;
@@ -8054,19 +8444,20 @@ const ROLES={gnd:'Ground (GND)','3v3':'3.3 V power in','5v':'5 V power',vin:'Pow
   mic_sck:'I2S mic clock (SCK)',mic_ws:'I2S mic word select (WS)',mic_sd:'I2S mic data out (SD)',mic_lr:'Mic channel select (L/R)',
   amp_bclk:'I2S amp bit clock (BCLK)',amp_lrc:'I2S amp word select (LRC)',amp_din:'I2S amp data in (DIN)',amp_gain:'Amp gain (leave open)',amp_sd:'Amp shutdown (leave open)',
   trig:'Trigger (to a GPIO)',echo:'Echo, 5 V output (to a GPIO via a divider)',sda:'I2C data (SDA)',scl:'I2C clock (SCL)',uart_tx:'Serial TX (its output)',uart_rx:'Serial RX (its input)',
+  ao:'Analog out (to an ADC GPIO)',do:'Digital out (to a GPIO)',
   sig:'Signal (to any free GPIO)',gpio:'Controller GPIO',nc:'Not connected'};
 // ESP32-S3: pins not to use (Espressif user guide; strapping pins from the ESP32-S3 datasheet)
 const S3_AVOID={0:'BOOT strapping pin',3:'strapping pin',45:'strapping pin',46:'strapping pin',19:'USB D−',20:'USB D+',43:'USB-serial TX',44:'USB-serial RX',
   35:'used by the PSRAM on R8 modules',36:'used by the PSRAM on R8 modules',37:'used by the PSRAM on R8 modules',38:'RGB LED (board v1.1)',48:'RGB LED (board v1.0)',26:'flash',27:'flash',28:'flash',29:'flash',30:'flash',31:'flash',32:'flash'};
 const S3_ORDER=[4,5,6,7,15,16,17,18,8,9,10,11,12,13,14,1,2,42,41,40,39,47,21];
 const pinsOf=p=>(p&&p.pins&&p.pins.length?p.pins:(builtinById(p&&p.id)||{}).pins)||[];
-const SIG_ROLES=['mic_sck','mic_ws','mic_sd','amp_bclk','amp_lrc','amp_din','trig','echo','uart_tx','uart_rx','sig'];
-const SIG_NAMES={mic_sck:'MIC_SCK',mic_ws:'MIC_WS',mic_sd:'MIC_SD',amp_bclk:'AMP_BCLK',amp_lrc:'AMP_LRC',amp_din:'AMP_DIN',trig:'TRIG',echo:'ECHO',uart_tx:'RX_FROM',uart_rx:'TX_TO',sig:'PIN'};
+const SIG_ROLES=['mic_sck','mic_ws','mic_sd','amp_bclk','amp_lrc','amp_din','trig','echo','uart_tx','uart_rx','ao','do','sig'];
+const SIG_NAMES={mic_sck:'MIC_SCK',mic_ws:'MIC_WS',mic_sd:'MIC_SD',amp_bclk:'AMP_BCLK',amp_lrc:'AMP_LRC',amp_din:'AMP_DIN',trig:'TRIG',echo:'ECHO',uart_tx:'RX_FROM',uart_rx:'TX_TO',ao:'AO',do:'DO',sig:'PIN'};
 function planWiring(){
   const insts=instances().map((i,k)=>({key:'w'+k,part:i.part,pins:pinsOf(i.part)}));
   const same=i=>insts.filter(j=>j.part.id===i.part.id);
   for(const i of insts)i.label=i.part.name+(same(i).length>1?' #'+(same(i).indexOf(i)+1):'');
-  const warn=[],info=[];
+  const warn=[],info=[],noPinParts=[];
   if(!insts.length)return {error:'Add parts in the Enclosure Wizard first: the wiring is worked out for the parts in your box.'};
   const mcuOf=p=>p.mcu||(builtinById(p.id)||{}).mcu;// (an edited copy of a built-in board keeps its type)
   const ctrl=insts.find(i=>mcuOf(i.part))||insts.find(i=>i.pins.filter(p=>p.r==='gpio').length>=8);
@@ -8119,7 +8510,7 @@ function planWiring(){
   const i2c={};
   for(const i of insts){
     if(i===ctrl||i===bat||i===chg||i===sw)continue;
-    if(!i.pins.length){warn.push(i.label+' has no pin data yet, so it isn\'t in the diagram. Add its pins in Parts (or use Import pins…).');continue;}
+    if(!i.pins.length){warn.push(i.label+' has no pin data yet, so it isn\'t in the diagram. Add its pins in Parts (or use Import pins…).');noPinParts.push({label:i.label,id:i.part.id});continue;}
     const sonar=P(i,'trig').length&&P(i,'echo').length;
     for(const pin of i.pins){
       const pp={inst:i,pin};
@@ -8146,7 +8537,8 @@ function planWiring(){
           if(!SIG_ROLES.includes(pin.r))break;
           {const c=take();if(!c){warn.push('No free controller pin left for '+i.label+' '+pin.n+'.');break;}
            add(net(i.label+' '+pin.n+' → '+c.n,'sig'),pp,{inst:ctrl,pin:c});assigned.push({inst:i,role:pin.r,c,pin});
-           if(pin.r==='echo')warn.push(i.label+': ECHO is a 5 V signal but the '+ctrl.label+' pins take 3.3 V. Put a divider in that wire: 1 kΩ from ECHO to the GPIO, and 2 kΩ from the GPIO to GND.');}
+           if(pin.r==='echo')warn.push(i.label+': ECHO is a 5 V signal but the '+ctrl.label+' pins take 3.3 V. Put a divider in that wire: 1 kΩ from ECHO to the GPIO, and 2 kΩ from the GPIO to GND.');
+           if(pin.r==='ao')info.push(i.label+': AO is an analog output — make sure the GPIO it is wired to supports ADC (avoid GPIO19, 20 on ESP32-S3).');}
       }
     }
     if(P(i,'amp_gain').length||P(i,'amp_sd').length)info.push(i.label+': GAIN and SD are left unconnected (9 dB gain, left and right mixed to mono).');
@@ -8161,7 +8553,7 @@ function planWiring(){
   }
   if(s3)info.push('Pins kept free on the ESP32-S3: '+[0,3,45,46].map(g=>'GPIO'+g).join(', ')+' (start-up), 19/20 (USB), 43/44 (serial), 35–37 (PSRAM), 38/48 (RGB LED).');
   const live=nets.filter(n=>n.pins.length>=2);
-  return {insts,ctrl,nets:live,warn,info,assigned,s3,bat:!!bat,batSense,power,code:wiringCode(ctrl,assigned,s3)};
+  return {insts,ctrl,nets:live,warn,info,noPinParts,assigned,s3,bat:!!bat,batSense,power,code:wiringCode(ctrl,assigned,s3)};
 }
 
 // ---- ESPHome device file: a complete YAML for the controller, from the wiring plan and a few answers.
@@ -8246,7 +8638,7 @@ function esphomeYaml(P,f){
     sec(`speaker:\n  - platform: i2s_audio\n    id: spk\n    i2s_audio_id: i2s_amp\n    i2s_dout_pin: ${g(amp)}\n    dac_type: external\n    channel: mono`);
     sec(`micro_wake_word:\n  microphone: mic\n  models:\n    - model: ${f.wake in WAKE_WORDS?f.wake:'okay_nabu'}\n  on_wake_word_detected:\n    - voice_assistant.start:\n        wake_word: !lambda return wake_word;`);
     let va=`voice_assistant:\n  microphone: mic\n  speaker: spk\n  noise_suppression_level: 2\n  auto_gain: 31dBFS\n  volume_multiplier: 2.0`;
-    if(lightId)va+=`\n  on_listening:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0%\n        green: 30%\n        blue: 100%`:'')+`\n  on_tts_start:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0%\n        green: 100%\n        blue: 30%`:'');
+    if(lightId)va+=`\n  on_listening:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0.0\n        green: 0.3\n        blue: 1.0`:'')+`\n  on_tts_start:\n    - light.turn_on:\n        id: ${lightId}`+(lightId==='status_led'?`\n        red: 0.0\n        green: 1.0\n        blue: 0.3`:'');
     va+=`\n  on_end:`+(lightId?`\n    - light.turn_off: ${lightId}`:'')+`\n    - wait_until:\n        not:\n          voice_assistant.is_running:\n    - micro_wake_word.start`;
     sec(va);
   }else if(mic||amp)sec('# The microphone and amplifier are wired, but a sensor node doesn\'t use them.\n# Choose "Voice assistant" in EvenUCan to use them.');
@@ -8260,7 +8652,7 @@ function esphomeYaml(P,f){
     sensors.push(`  - platform: ultrasonic\n    id: distance_${k+1}\n    name: ${yq('Distance'+(trigs.length>1?' '+(k+1):''))}\n    trigger_pin: ${g(t)}\n    echo_pin: ${g(e)}\n    update_interval: ${!voice&&+f.alarm>0?'1s':every}`);// an alarm needs quick readings
     if(!voice&&+f.alarm>0){
       let b=`  - platform: template\n    name: ${yq('Something close'+(trigs.length>1?' '+(k+1):''))}\n    device_class: occupancy\n    lambda: |-\n      return id(distance_${k+1}).state < ${(+f.alarm/100).toFixed(3)};`;
-      if(lightId)b+=`\n    on_press:\n      - light.turn_on:\n          id: ${lightId}`+(lightId==='status_led'?`\n          red: 100%\n          green: 0%\n          blue: 0%`:'')+`\n    on_release:\n      - light.turn_off: ${lightId}`;
+      if(lightId)b+=`\n    on_press:\n      - light.turn_on:\n          id: ${lightId}`+(lightId==='status_led'?`\n          red: 1.0\n          green: 0.0\n          blue: 0.0`:'')+`\n    on_release:\n      - light.turn_off: ${lightId}`;
       bins.push(b);
     }
   });
@@ -8308,12 +8700,12 @@ function esphomeYaml(P,f){
       if(acts.length)b+='\n    on_press:\n'+acts.join('\n');
       bins.push(b);
     }
-    else if(kind==='pixel'){pixelN++;lights.push(`  - platform: esp32_rmt_led_strip\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    pin: ${pin}\n    num_leds: 1  # change to the number of LEDs on the strip\n    rgb_order: GRB\n    chipset: ws2812`);}
+    else if(kind==='pixel'){pixelN++;lights.push(`  - platform: esp32_rmt_led_strip\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    pin: ${pin}\n    num_leds: 1  # change to the number of LEDs on the strip\n    rgb_order: GRB`);}
     else if(kind==='led'){outputs.push(`  - platform: gpio\n    id: led_out_${ledN+1}\n    pin: ${pin}`);lights.push(`  - platform: binary\n    id: led_${++ledN}\n    name: ${yq(nm)}\n    output: led_out_${ledN}`);}
     else if(kind==='relay'||kind==='buzzer')switches.push(`  - platform: gpio\n    id: ${buzz&&buzz.a===a?'buzzer_1':compId(nm)}\n    name: ${yq(nm)}\n    pin: ${pin}`);
     else unk(a.inst,a);
   }
-  if(statusLed)lights.unshift(`  - platform: esp32_rmt_led_strip\n    id: status_led\n    name: "Status light"\n    pin: GPIO${brd.led}\n    num_leds: 1\n    rgb_order: GRB\n    chipset: ws2812`);
+  if(statusLed)lights.unshift(`  - platform: esp32_rmt_led_strip\n    id: status_led\n    name: "Status light"\n    pin: GPIO${brd.led}\n    num_leds: 1\n    rgb_order: GRB`);
   if(sda&&scl){
     // well-known I2C sensors get their own section; anything else is left for the user to add
     const i2cParts=[...new Set(P.assigned.filter(a=>a.role==='sda').map(a=>a.inst))];let unknownI2C=0,n=0;
@@ -8691,7 +9083,7 @@ function renderWiringSide(){
   const s=$('wrSide'),P=wr.plan;
   if(P.error){s.innerHTML='<h4>Nothing to wire yet</h4><p>'+esc(P.error)+'</p><div class="ewRow"><button id="wrToWiz">Open the Enclosure Wizard</button></div>';return;}
   const tab=wr.tab,pf=pfOfPlan(P),tabs=['list','code','esphome','ai'].map(t=>`<button data-wrtab="${t}" class="${tab===t?'on':''}">${{list:'Wiring list',code:'Code pins',esphome:(PLATFORMS[pf]||PLATFORMS.esphome).code,ai:'Ask AI'}[t]}</button>`).join('');
-  const warn=P.warn.map(w=>`<li class="warn"><span class="ic">!</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('');
+  const warn=P.warn.map(w=>{const np=(P.noPinParts||[]).find(p=>w.startsWith(p.label+' has no pin data'));return`<li class="warn"><span class="ic">!</span><span style="color:var(--text)">${esc(w)}</span>${np?` <button class="wrFixPins" data-partid="${esc(np.id)}" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:4px;border:1px solid #e67700;background:color-mix(in srgb,#e67700 12%,var(--bg2));color:#e67700;cursor:pointer">Fix: add pins →</button>`:''}</li>`;}).join('');
   const info=P.info.map(w=>`<li class="ok"><span class="ic">✓</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('');
   let body='';
   if(tab==='list'){
@@ -8706,8 +9098,9 @@ function renderWiringSide(){
     body=`<h4>ESPHome</h4><textarea readonly class="wrCode" id="wrYml">${esc(P.code.esphome)}</textarea><div class="ewRow"><button data-copy="wrYml">Copy</button></div>
 <h4>Arduino</h4><textarea readonly class="wrCode" id="wrIno">${esc(P.code.arduino)}</textarea><div class="ewRow"><button data-copy="wrIno">Copy</button></div>`;
   }
-  // tabs first; the warnings and notes belong with the wiring list
-  s.innerHTML=`<div class="ewRow" style="margin-top:6px">${tabs}</div>`+(tab==='list'?`<ul style="list-style:none;padding:0;margin:8px 0">${warn}${info}</ul>`:'')+body;
+  // tabs first; warnings always shown so the Fix button is accessible on any tab
+  const warnHtml=warn||info?`<ul style="list-style:none;padding:0;margin:8px 0">${warn}${info}</ul>`:'';
+  s.innerHTML=`<div class="ewRow" style="margin-top:6px">${tabs}</div>`+warnHtml+body;
 }
 // The ESPHome device tab: a few questions, then the whole file to copy, save or check.
 function esphPanel(){
@@ -9259,10 +9652,14 @@ const ESPH_AI_PROMPT=`You write ESPHome device configuration (ESPHome version 20
 Change the file so the device does what the user describes. Rules:
 - Keep every existing section, pin, id, board, framework, psram, wifi, api, ota, logger and captive_portal setting exactly as it is. Do not change pins or invent new wiring: only the parts already in the file exist.
 - Add behaviour with ESPHome's built-in automations (on_value, on_press, interval, if/then/else, lambda conditions, light.turn_on, switch.turn_on, delay, script). No external_components, no custom C++ files, no new secrets.
-- RGB colours in YAML automations use percentages (red: 100%, green: 0%, blue: 0%). RGB colours inside C++ lambda blocks use floats 0.0–1.0: id(led).turn_on().set_rgb(1.0, 0.0, 0.0).perform() — NEVER use % inside a lambda.
+- RGB colours in light.turn_on actions use floats 0.0–1.0 (red: 1.0, green: 0.0, blue: 0.0). The brightness: field accepts a percentage (brightness: 100%) but red/green/blue NEVER use % — always floats. RGB colours inside C++ lambda blocks also use floats: id(led).turn_on().set_rgb(1.0, 0.0, 0.0).perform().
 - ESPHome substitutions (\${varname}) expand in YAML but NOT inside C++ lambda string literals at runtime. In a lambda, use the numeric value directly (e.g. float threshold = 60.0;) or read a global variable — never atof("\${varname}") inside a lambda string.
 - Every switch, sensor and binary_sensor already in the file has its own id: use that id in your automations. NEVER declare a second switch/sensor/binary_sensor for hardware that already has one in the file (e.g. if a relay or buzzer is already declared with an id, turn that id on/off - don't add a new one on a different, unwired pin). This applies just as much to a part you yourself add under "Every part listed as not in the file yet" below: once you've declared its sensor/binary_sensor, your own automations must read that same id, not a separate pin you make up to match it.
-- If you use http_request.post or http_request.get anywhere in your automations, you MUST also add a top-level http_request:\n  timeout: 10s\n  verify_ssl: false section (ESPHome fails to compile without it).
+- If you use http_request.post or http_request.get anywhere in your automations, you MUST also add a top-level http_request:\n  timeout: 10s\n  verify_ssl: false section (ESPHome fails to compile without it). Inside http_request.post, the key for HTTP headers is "headers:" NOT "request_headers:" — using request_headers: causes a validation error.
+- Do NOT add a "chipset:" key to esp32_rmt_led_strip sections. It is not a valid option and causes a validation error.
+- The ESPHome sensor clamp filter uses min_value: and max_value: — NEVER min: or max: (those cause a validation error).
+- Do NOT call http_request inside a C++ lambda block (e.g. id(http_request).post(...) inside a lambda: will not compile). Use YAML actions instead — http_request.post: or http_request.get: — outside the lambda, in the automation's then: block.
+- If you use a named light effect — whether in a YAML automation (effect: "Pulse") or in a C++ lambda (.set_effect("Pulse")) — you MUST also define that effect in the light's effects: block. Without the effects: block entry the effect name is unknown and ESPHome will fail to compile. Example: add an effects: block under the light with - pulse: for a pulse effect.
 - Every part listed as not in the file yet must get its own working section (sensor, binary_sensor, output, light, switch, uart, display… as the module needs), with a clear friendly name.
 - You MUST make the device do EVERY requirement in the user's description. Never silently leave one out or replace it with a comment. If one truly cannot be done with these parts, return {"refuse":true,"reason":"<one plain-English sentence: which requirement, and why>"} instead of a file.
 Return ONLY a JSON object: {"yaml": "<the complete new file>", "notes": "<one to three short plain-English sentences on what you added, or what you couldn't do>"}.`;
@@ -9290,7 +9687,7 @@ async function esphWithAI(){
       const {data}=aiProv()==='claude'?await claude([{type:'text',text}],false):isOA()?await oaAI(aiProv(),text):await gemini([{text}],false);
       if(data&&data.refuse)throw softErr('Your AI says it can\'t do everything you asked: '+String(data.reason||'no reason given').slice(0,300));
       if(!data||typeof data.yaml!=='string'||!/esphome:/.test(data.yaml))throw softErr('The AI didn\'t send back a whole ESPHome file. Try again, or describe it more simply.');
-      yaml=data.yaml.replace(/\r/g,'');if(!yaml.endsWith('\n'))yaml+='\n';notes=String(data.notes||'').slice(0,600);
+      yaml=data.yaml.replace(/\r/g,'').replace(/\n# Still to add[^\n]*\n(#[^\n]*\n)*/g,'\n');if(!yaml.endsWith('\n'))yaml+='\n';notes=String(data.notes||'').slice(0,600);
       if(!check){ok=null;break;}
       say('<div class="ewNote">Checking the AI\'s file with ESPHome…</div>');
       const c=await window.wfNative.esphomeCheck(yaml,base.slug);
@@ -9346,6 +9743,7 @@ const CHAT_SCOPE=`You are built into EvenUCan, a program that designs 3D-printed
 function chatProjectNote(){
   const P=wr.plan;
   let t='Parts in this build: '+(P.insts.map(i=>i.label).join(', ')||'none yet')+'.\n';
+  if(P.noPinParts&&P.noPinParts.length)t+='Parts with NO pin data yet (not in the wiring diagram): '+(P.noPinParts.map(p=>p.label).join(', '))+'. The user needs to add pin data for these in the Parts Library before they can be wired. Suggest they click the "Fix: add pins →" button next to the warning, or go to Parts and use "Look up online".\n';
   const sig=P.assigned.filter(a=>['sig','uart_tx','uart_rx','trig','echo','sda','scl'].includes(a.role)&&a.pin);
   if(sig.length)t+='Signal pins wired so far: '+sig.map(a=>a.inst.label+' on '+a.pin.n).join(', ')+'.\n';
   const ta=$('wrEsp');
@@ -9450,6 +9848,7 @@ $('wrSide').addEventListener('click',e=>{
   if(el.dataset.wrtab){if(el.dataset.wrtab==='esphome'&&!hasParts())WF.flash(NEED_PARTS,5000);wr.tab=el.dataset.wrtab;renderWiringSide();return;}
   if(el.dataset.copy){const ta=$(el.dataset.copy);ta.select();navigator.clipboard.writeText(ta.value).then(()=>WF.flash('Copied'),()=>{document.execCommand('copy');WF.flash('Copied');});return;}
   if(el.id==='wrToWiz'){closeWiring();openWizard();}
+  if(el.classList&&el.classList.contains('wrFixPins')){closeWiring();openLibrary(el.dataset.partid);return;}
   if(el.id==='wrAi'){esphWithAI();return;}
   if(el.id==='wrPfGen'){pfGenerate();return;}
   if(el.id==='wrPfStarter'){makeStarter();return;}
@@ -9571,6 +9970,60 @@ new ResizeObserver(()=>{if(wrBack.style.display==='grid')drawWiring();}).observe
 // A .fzpz file (or .fzp + .svg) works in the desktop app and in a web browser.
 // Fritzing's part graphics and data are © Fritzing contributors, CC BY-SA 3.0 (noted on the imported part).
 document.body.insertAdjacentHTML('beforeend','<input type="file" id="plFzIn" accept=".fzpz,.fzp,.svg" multiple style="display:none">');
+// ---- Fritzing bulk import dialog
+(function(){
+  document.body.insertAdjacentHTML('beforeend',`
+<div id="fzImBack" class="ewBack"><div class="ewWin" style="width:min(560px,95vw);min-height:300px">
+  <div class="ewHead"><h2>Import Fritzing Parts</h2><button id="fzImX" class="x" title="Close">✕</button></div>
+  <div id="fzImDrop" style="margin:16px;border:3px dashed #aab4cc;border-radius:12px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:24px;cursor:pointer;transition:background .15s;user-select:none">
+    <span style="font-size:2rem">📦</span>
+    <b style="font-size:1.1em;color:#334">Drop .fzpz files here</b>
+    <small style="color:#778">Or click to browse — you can drop hundreds at once</small>
+  </div>
+  <input type="file" id="fzImIn" accept=".fzpz" multiple style="display:none">
+  <div id="fzImLog" style="margin:0 16px 8px;max-height:220px;overflow-y:auto;font-size:0.82em;font-family:monospace;background:#f6f8ff;border-radius:6px;padding:6px 10px;display:none"></div>
+  <div class="ewFoot" style="display:flex;gap:8px;justify-content:flex-end;padding:12px 16px">
+    <button id="fzImDone" class="primary" disabled>Done</button>
+  </div>
+</div></div>`);
+  const back=$('fzImBack'),drop=$('fzImDrop'),inp=$('fzImIn'),log=$('fzImLog'),done=$('fzImDone'),closeBtn=$('fzImX');
+  function closeDialog(){back.style.display='none';inp.value='';}
+  closeBtn.onclick=closeDialog;
+  back.addEventListener('click',e=>{if(e.target===back)closeDialog();});
+  done.onclick=closeDialog;
+  drop.onclick=()=>inp.click();
+  drop.addEventListener('dragover',e=>{if([...e.dataTransfer.types].includes('Files')){e.preventDefault();drop.style.background='#e8eeff';}});
+  drop.addEventListener('dragleave',()=>{drop.style.background='';});
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.style.background='';const files=[...e.dataTransfer.files].filter(f=>/\.fzpz$/i.test(f.name));if(files.length)startImport(files);});
+  inp.addEventListener('change',e=>{const files=[...e.target.files].filter(f=>/\.fzpz$/i.test(f.name));e.target.value='';if(files.length)startImport(files);});
+  const rows=new Map();
+  async function startImport(zFiles){
+    drop.style.display='none';log.style.display='block';done.disabled=true;rows.clear();
+    log.innerHTML='<div style="color:#556">Starting import of <b>'+zFiles.length+'</b> file'+(zFiles.length===1?'':'s')+'…</div>';
+    // Pre-create a row for each file so progress appears immediately
+    zFiles.forEach((z,i)=>{
+      const row=document.createElement('div');
+      row.style.cssText='padding:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#778';
+      row.textContent=(i+1)+'/'+zFiles.length+' '+z.name;
+      log.appendChild(row);rows.set(i,row);
+    });
+    log.scrollTop=log.scrollHeight;
+    const result=await bulkImportFzpz(zFiles,(i,total,fname,ok,detail)=>{
+      if(i<0){// storage full signal
+        const r=document.createElement('div');r.style.cssText='color:#c44;font-weight:bold';r.textContent='⚠ Could not save: storage is full';log.appendChild(r);return;}
+      const row=rows.get(i);if(!row)return;
+      if(ok){row.style.color='#2a7';row.textContent=(i+1)+'/'+total+' '+fname+' ✓ '+String(detail).slice(0,50);}
+      else{row.style.color='#c44';row.textContent=(i+1)+'/'+total+' '+fname+' — '+detail;}
+      log.scrollTop=log.scrollHeight;
+    });
+    if(result){lay=null;renderList();}
+    const summary=document.createElement('div');
+    summary.style.cssText='margin-top:6px;font-weight:bold;color:'+((result&&result.failed)?'#884':'#2a7');
+    summary.textContent='Done: '+(result?result.saved:0)+' part'+(result&&result.saved===1?'':'s')+' imported'+(result&&result.failed?' · '+result.failed+' failed':'');
+    log.appendChild(summary);log.scrollTop=log.scrollHeight;
+    done.disabled=false;drop.style.display='';
+  }
+})();
 function guessRole(name,desc,title){
   const l=String(name||'').trim().toLowerCase(),d=String(desc||'').toLowerCase();
   if(/^(gnd|g|vss|ground|0v|v-|-|gnd\d+|agnd|dgnd)$/.test(l)||(/^ground/.test(d)&&l.length<6))return {r:'gnd'};
@@ -9698,6 +10151,48 @@ async function applyFritzingData(d){
       :'Part data and picture © Fritzing contributors, CC BY-SA 3.0. Check the pin roles before wiring. The picture keeps the pin spacing exact but is sometimes drawn smaller than the real board: measure the board before designing a box.')+'\n'+(ed.notes||'')).slice(0,2000);
   edDirty=true;edSel=-1;renderEditor();
   WF.flash(pins.length+' pins'+(all&&holes.length?' and '+holes.length+' mounting hole'+(holes.length>1?'s':''):'')+' imported'+(g?'':' (no picture found, so pin positions are unknown)')+(turned?', turned so the long side runs left to right':'')+'. Check each pin\'s role in the Pins list'+(all&&g?', and measure the board: these pictures are sometimes drawn smaller than the real board':'')+'. Then Save part.',9000);
+}
+async function bulkImportFzpz(zFiles,onProgress){
+  let saved=0,failed=0;
+  if(!onProgress)WF.flash('Importing '+zFiles.length+' part'+(zFiles.length===1?'':'s')+'…',60000);
+  for(let _i=0;_i<zFiles.length;_i++){const z=zFiles[_i];
+    try{
+      const all=await WF.readZip(await z.arrayBuffer()),names=Object.keys(all),td=new TextDecoder();
+      const fzpName=names.find(n=>/\.fzp$/i.test(n));
+      if(!fzpName){failed++;if(onProgress)onProgress(_i,zFiles.length,z.name,false,'no .fzp inside');continue;}
+      const svgName=names.find(n=>/breadboard.*\.svg$/i.test(n))||names.find(n=>/\.svg$/i.test(n));
+      const d=await fritzingData(td.decode(all[fzpName]),svgName?td.decode(all[svgName]):null,z.name);
+      if(d.error){failed++;if(onProgress)onProgress(_i,zFiles.length,z.name,false,d.error);continue;}
+      const {title,conns,info}=d,g=d.g?{...d.g}:null;
+      const dd=g?g.h:20;
+      const pins=conns.map(c=>{
+        const r=guessRole(c.name,c.desc,title),q={n:c.name,r:r.r};if(r.g!==undefined)q.g=r.g;
+        if(c.desc&&c.desc.trim()&&c.desc.trim()!==c.name)q.d=c.desc.trim().slice(0,100);
+        const p=g&&g.pos[c.svgId];if(p){q.x=+p[0].toFixed(2);q.y=+(dd-p[1]).toFixed(2);}
+        return q;
+      });
+      const ctrl=pins.filter(p=>p.r==='gpio').length>=8;
+      if(!ctrl)for(const p of pins)if(p.r==='gpio'){p.r='sig';delete p.g;}
+      const holes=g?(d.features||[]).filter(f=>f&&f.t==='hole').map(f=>({t:'hole',x:+(+f.x).toFixed(2),y:+(dd-f.y).toFixed(2),dia:+f.dia||3})):[];
+      if(g&&g.h>g.w*1.02){const t={w:g.w,d:g.h,pins,photo:g.photo,features:holes};await turnPart(t);g.w=t.w;g.h=t.d;g.photo=t.photo;}
+      const tl=title.toLowerCase();
+      const type=ctrl?'board':/speaker/.test(tl)?'speaker':/batter|lipo/.test(tl)?'battery':/switch/.test(tl)?'switch':/display|oled|lcd|tft/.test(tl)?'display':/mic/.test(tl)?'mic':/amp/.test(tl)?'amp':/charg/.test(tl)?'charger':/sensor|sonar|ultrason/.test(tl)?'sensor':'other';
+      const part=tidyPart({id:newPartId(),name:title.slice(0,80),type,mount:TYPES[type].mount,
+        shape:'rect',w:g?+g.w.toFixed(2):30,d:g?+g.h.toFixed(2):20,pcb:1.6,h:3,below:0,
+        features:holes,acc:g?(info&&info.credit?'drawing':'approx'):undefined,
+        photo:(g&&g.photo&&!onProgress)?g.photo:undefined,pins,info:clone(info),notes:
+        ('Pins, size and picture imported from "'+title+'" ('+(z.name||'parts library')+').'+
+        (info&&info.credit?' Part data from an Eagle library: '+info.credit+' Check pin roles.'
+          :' Part data and picture © Fritzing contributors, CC BY-SA 3.0. Check pin roles.')).slice(0,2000)});
+      if(ctrl&&/esp32-?s3/i.test(title))part.mcu='esp32s3';
+      custom.push(part);saved++;
+      if(onProgress)onProgress(_i,zFiles.length,z.name,true,title);
+    }catch(e){failed++;if(onProgress)onProgress(_i,zFiles.length,z.name,false,'error');}
+  }
+  if(saved&&!saveLib()){if(onProgress)onProgress(-1,0,'','storage full','');else WF.flash('Imported but could not save: storage is full');return;}
+  if(onProgress)return{saved,failed};
+  if(saved){lay=null;renderList();WF.flash('Saved '+saved+' part'+(saved===1?'':'s')+(failed?' ('+failed+' could not be read)':''));}
+  else WF.flash('Could not read '+(failed===1?'that part file':'any of those part files'));
 }
 // ---- Parts browser: search the parts library (or the Fritzing parts on this computer) by name, by kind,
 // or by plain words for what a part does ("gyroscope", "air quality", "screen"), with a picture of each.
@@ -9836,111 +10331,21 @@ async function fzPreview(id){
     return {photo,pins:(r.fzp.match(/<connector\b/g)||[]).length,raw:r};})();
   fzPreviewCache.set(id,pr);return pr;
 }
-// ---------------------------------------------------------------- Parts Inventory (r2.1)
-// Users tick which parts they already own. AI gets a note to strongly prefer those parts.
-// Stored in localStorage as a JSON array of part titles.
-const INV_KEY='evenucan-inventory';
-let ownedInv=null; // Set<string> loaded lazily
-function loadInventory(){
-  if(ownedInv)return ownedInv;
-  try{const raw=localStorage.getItem(INV_KEY);ownedInv=new Set(raw?JSON.parse(raw):[]);}
-  catch(e){ownedInv=new Set();}
-  return ownedInv;
-}
-function saveInventory(inv){
-  ownedInv=inv;
-  try{localStorage.setItem(INV_KEY,JSON.stringify([...inv]));}catch(e){}
-}
-function invToggle(title){
-  const inv=loadInventory();
-  if(inv.has(title))inv.delete(title);else inv.add(title);
-  saveInventory(inv);
-}
-function invOwned(title){return loadInventory().has(title);}
-function invList(){return[...loadInventory()];}
-// Summary for AI prompts: "Parts the user already owns: Arduino Nano, BME280, ..."
-function invAINote(){
-  const list=invList();
-  if(!list.length)return '';
-  return '\n\nIMPORTANT – The user already owns these parts: '+list.join(', ')+'. When choosing parts, strongly prefer these if they can do the job. Only suggest a part the user does not own when there is no owned alternative that fits.';
-}
-
-// ---------------------------------------------------------------- Parts Cookbook (r2.1)
-// "What can I make with my parts?" — AI suggests 3–5 project ideas based on the user's inventory.
-async function cookbookPanel(){
-  const list=invList();
-  if(!list.length){
-    WF.flash('Tick ★ next to some parts in Browse parts… first so I know what you have.',6000);
-    return;
-  }
-  if(!aiKey()){WF.flash('Set up an AI key first (Tools → AI helper key).',5000);return;}
-  // Show a panel inside the Parts Library window
-  const body=$('plList');
-  body.innerHTML='<div class="cookbookPanel"><div class="ewNote" style="padding:8px">Thinking about what you could build with your parts…</div></div>';
-  const pane=body.querySelector('.cookbookPanel');
-  const prompt=`You are a friendly electronics helper. The user has these parts at home: ${list.join(', ')}.
-Suggest 3 to 5 small electronics projects they could build using mainly those parts. For each project:
-- Give it a short catchy name (max 6 words).
-- Write 2 sentences: what it does and why it's fun.
-- List which of their owned parts it uses (comma-separated).
-- List any additional parts they would need to buy (empty array [] if none needed).
-Output ONLY valid JSON — no other text:
-[{"name":"...","description":"...","uses":["part1","part2"],"also_needs":["part3"]}]`;
-  let cards=[];
-  try{
-    const {data}=await callAI(prompt);
-    if(!Array.isArray(data)||!data.length)throw new Error('no projects');
-    cards=data;
-  }catch(e){
-    pane.innerHTML='<div class="ewNote" style="padding:8px;color:#a00">Sorry, couldn\'t get project ideas: '+(e&&e.message||e)+'. Check your AI key and try again.</div>';
-    return;
-  }
-  pane.innerHTML=cards.map(c=>{
-    const uses=(c.uses||[]).join(', ')||'some of your parts';
-    const needs=(c.also_needs||[]).filter(x=>x);
-    return `<div class="cookbookCard">
-      <h4>${esc(c.name||'Project')}</h4>
-      <div class="ck-match">✓ Uses: ${esc(uses)}</div>
-      ${needs.length?'<div class="ck-missing">Also needs: '+esc(needs.join(', '))+'</div>':''}
-      <div style="font-size:13px;line-height:1.5">${esc(c.description||'')}</div>
-      <div style="margin-top:8px"><button class="primary ck-start" data-name="${esc(c.name||'')}">Build this →</button></div>
-    </div>`;
-  }).join('')+`<div style="text-align:right;padding-top:4px"><button id="ckClose" class="linkBtn">← Back to parts list</button></div>`;
-  pane.querySelector('#ckClose').onclick=()=>renderList();
-  for(const btn of pane.querySelectorAll('.ck-start')){
-    btn.onclick=()=>{
-      // Pre-fill the intent wizard with this project name, then open it
-      const name=btn.dataset.name;
-      openLibrary();// close parts panel
-      openWizard();// open enclosure wizard
-      // Open the intent wizard with a prefilled description
-      const desc='Build a '+name+' using the parts I already have: '+list.join(', ')+'.';
-      iw.desc=desc;iw.step='ask';openIntent();
-      setTimeout(()=>{const t=$('iwDesc');if(t){t.value=desc;}},100);
-    };
-  }
-}
-
 function pickFritzing(list,title){
   return new Promise(done=>{
     const lib=list[0]&&list[0].library,back=document.createElement('div');back.id='askBack';
     const counts={};for(const p of list){const k=p._kind||(p._kind=partKind(p));counts[k]=(counts[k]||0)+1;}
     const kinds=[...PART_KINDS,{k:'other',n:'Other'}].filter(k=>counts[k.k]).map(k=>`<option value="${k.k}">${esc(k.n)} (${counts[k.k]})</option>`).join('');
-    const ownedCount=list.filter(p=>invOwned(p.title)).length;
     back.innerHTML=`<div id="askBox" class="fzBox"><div class="msg"><b>${esc(title||'Parts library')}</b> · ${list.length} parts ${lib?'in the EvenUCan parts library <span class="ewNote">(from the Fritzing parts, © Fritzing contributors, CC BY-SA 3.0)</span>':'in the Fritzing parts on this computer'}</div>
 <div class="fzBar"><input placeholder="Search: a part number, or what it does, e.g. gyroscope, air quality, screen" autocomplete="off"><select><option value="all">All kinds</option>${kinds}</select></div>
-<div class="inv-filter"><label style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="fzInvOnly"> Show only my parts ${ownedCount?'('+ownedCount+' owned)':'(none ticked yet)'}</label><span class="ewNote">Click ★ to mark parts you own</span></div>
 <div class="fzMain"><div class="fzList"></div><div class="fzPrev"><div class="ewNote">Click a part to see it here.</div></div></div>
 <div class="btns"><button data-f="file">Use a .fzpz file…</button><button data-f="cancel">Cancel</button></div></div>`;
-    const inp=back.querySelector('input'),sel=back.querySelector('select'),invOnly=back.querySelector('#fzInvOnly'),box=back.querySelector('.fzList'),prev=back.querySelector('.fzPrev');
+    const inp=back.querySelector('input'),sel=back.querySelector('select'),box=back.querySelector('.fzList'),prev=back.querySelector('.fzPrev');
     let cur=null,timer=0;
     const show=()=>{
-      let hits=searchParts(list,inp.value,sel.value);
-      if(invOnly.checked)hits=hits.filter(p=>invOwned(p.title));
-      else hits=[...hits.filter(p=>invOwned(p.title)),...hits.filter(p=>!invOwned(p.title))];// owned first
-      const shown=hits.slice(0,300);
+      const hits=searchParts(list,inp.value,sel.value),shown=hits.slice(0,300);
       box.innerHTML=(hits.length>300?`<div class="ewNote" style="padding:4px 6px">Showing 300 of ${hits.length}: type more to narrow it down.</div>`:'')+
-        shown.map(p=>`<div class="fzRow${invOwned(p.title)?' inv-owned':''}" data-id="${p.id}"><b>${esc(p.title)}</b><span class="ewNote">${esc(p.family||'')}${p.pkg?' · '+esc(p.pkg):''}</span><button class="fzStar${invOwned(p.title)?' inv-on':''}" data-star="${p.id}" title="${invOwned(p.title)?'Remove from my parts':'Mark as owned — I have this part'}">${invOwned(p.title)?'★':'☆'}</button></div>`).join('')||'<div class="ewNote" style="padding:6px">No parts match. Try another word, or "All kinds".</div>';
+        shown.map(p=>`<div class="fzRow" data-id="${p.id}"><b>${esc(p.title)}</b><span class="ewNote">${esc(p.family||'')}${p.pkg?' · '+esc(p.pkg):''}</span></div>`).join('')||'<div class="ewNote" style="padding:6px">No parts match. Try another word, or "All kinds".</div>';
       if(shown[0]&&cur===null)preview(shown[0].id);
     };
     const preview=async id=>{
@@ -9954,12 +10359,8 @@ function pickFritzing(list,title){
     const fin=v=>{back.remove();done(v);};
     inp.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{cur=null;show();},120);});
     sel.addEventListener('change',()=>{cur=null;show();});
-    invOnly.addEventListener('change',()=>{cur=null;show();});
-    box.addEventListener('click',e=>{
-      const star=e.target.closest('[data-star]');
-      if(star){e.stopPropagation();const p=list.find(x=>x.id===+star.dataset.star);if(p){invToggle(p.title);show();if(cur===+star.dataset.star)preview(cur);}return;}
-      const r=e.target.closest('.fzRow');if(r)preview(+r.dataset.id);});
-    box.addEventListener('dblclick',e=>{const r=e.target.closest('.fzRow');if(r&&!e.target.closest('[data-star]'))fin(+r.dataset.id);});
+    box.addEventListener('click',e=>{const r=e.target.closest('.fzRow');if(r)preview(+r.dataset.id);});
+    box.addEventListener('dblclick',e=>{const r=e.target.closest('.fzRow');if(r)fin(+r.dataset.id);});
     prev.addEventListener('click',e=>{const a=e.target.dataset.f;if((a==='use'||a==='box')&&cur!==null)fin(a==='box'?{id:cur,box:true}:cur);});
     back.querySelector('[data-f=file]').onclick=()=>fin('file');back.querySelector('[data-f=cancel]').onclick=()=>fin(null);
     back.addEventListener('keydown',e=>{e.stopPropagation();if(e.key==='Escape')fin(null);if(e.key==='Enter'&&cur!==null)fin(cur);});
@@ -10009,7 +10410,9 @@ async function fritzingImport(){
 $('plFzIn').addEventListener('change',async e=>{
   const files=[...e.target.files];e.target.value='';if(!files.length)return;
   try{
-    const z=files.find(f=>/\.fzpz$/i.test(f.name));
+    const fzpzFiles=files.filter(f=>/\.fzpz$/i.test(f.name));
+    if(fzpzFiles.length>1)return bulkImportFzpz(fzpzFiles);
+    const z=fzpzFiles[0];
     if(z){
       const all=await WF.readZip(await z.arrayBuffer()),names=Object.keys(all),td=new TextDecoder();
       const fzp=names.find(n=>/\.fzp$/i.test(n)),svg=names.find(n=>/breadboard.*\.svg$/i.test(n))||names.find(n=>/\.svg$/i.test(n));
@@ -10178,7 +10581,7 @@ Guidance:
 - Never ask for the Wi-Fi name or password (ESPHome and the Raspberry Pi keep those themselves).
 - "only_if_platform" (optional) is "esphome", "arduino" or "raspberrypi" for inputs that only matter on that platform.
 Output format:
-{"name":"<short device name, at most 30 characters>","summary":"<2-3 sentence plain English explanation of what parts are needed and why>","requirements":["<each separate thing the user asked for>"],"platform":"esphome|arduino|raspberrypi","platform_reason":"<one sentence explaining why this platform suits the project>","microcontroller":{"name":"ESP32-S3","why":"needs WiFi for notifications"},"parts":[{"category":"sensors-tilt/acceleration","function":"measures tilt/level on two axes","search":"MPU-6050 accelerometer","required":true,"why":"needed to know if the RV is level"}],"code_libraries":["<libraries the code uses on the chosen platform, e.g. Wire.h, Adafruit_SSD1306 or smbus2, RPi.GPIO>"],"extra_inputs_needed":[{"key":"ntfy_topic","label":"Notification topic name","help":"Any word, like 'myrv123': you'll subscribe to it in the ntfy app on your phone","url":"https://ntfy.sh","only_if_platform":"esphome"}],"code_description":"<detailed description of what the code needs to do, step by step>","esphome_notes":"<plain-English notes on how the code works>","esphome_yaml_hint":"<for an ESPHome expert: components, intervals, web addresses, display layout>","notification_method":"ntfy|none|email","missing_parts_hint":"<common names of any parts that might not be in a parts database>"}`;
+{"name":"<short device name, at most 40 characters>","summary":"<2-3 sentence plain English explanation of what parts are needed and why>","requirements":["<each separate thing the user asked for>"],"platform":"esphome|arduino|raspberrypi","platform_reason":"<one sentence explaining why this platform suits the project>","microcontroller":{"name":"ESP32-S3","why":"needs WiFi for notifications"},"parts":[{"category":"sensors-tilt/acceleration","function":"measures tilt/level on two axes","search":"MPU-6050 accelerometer","required":true,"why":"needed to know if the RV is level"}],"code_libraries":["<libraries the code uses on the chosen platform, e.g. Wire.h, Adafruit_SSD1306 or smbus2, RPi.GPIO>"],"extra_inputs_needed":[{"key":"ntfy_topic","label":"Notification topic name","help":"Any word, like 'myrv123': you'll subscribe to it in the ntfy app on your phone","url":"https://ntfy.sh","only_if_platform":"esphome"}],"code_description":"<detailed description of what the code needs to do, step by step>","esphome_notes":"<plain-English notes on how the code works>","esphome_yaml_hint":"<for an ESPHome expert: components, intervals, web addresses, display layout>","notification_method":"ntfy|none|email","missing_parts_hint":"<common names of any parts that might not be in a parts database>"}`;
 // ---- platforms (r3). Each has its own controller board and its own code writer.
 const PLATFORMS={
   esphome:{name:'ESP32 + ESPHome',icon:'📶',board:'b-esp32s3',code:'ESPHome YAML',
@@ -10701,7 +11104,7 @@ async function intentAnalyse(){
   try{
     let data=null;
     try{
-      const text=INTENT_PROMPT+invAINote()+'\n\nWhat the beginner wants:\n"""'+desc+'"""';
+      const text=INTENT_PROMPT+(window.ownedPartsNote?ownedPartsNote():'')+'\n\nWhat the beginner wants:\n"""'+desc+'"""';
       // (PNA fix) Start the AI fetch and library load together so the Ollama fetch begins
       // immediately within Chrome's Private Network Access user-activation window — no await
       // before this point that could expire it. ensureLibraryReady() runs in parallel.
@@ -10842,6 +11245,7 @@ function wcRender(){
 <button id="wcNoAi" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧰 Carry on without AI</span><br><span class="ewNote">Start from a ready-made example, or tick the parts you have</span></button>
 <div class="wcOr"><span>or</span></div>
 <button id="wcDraw" class="wcBig wcPlain"><span style="font-size:15px">✏️ I want to draw something myself</span><br><span class="ewNote">(close this and use the drawing canvas)</span></button>
+<div style="margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,#7048e8 5%,var(--bg2));text-align:left"><b>🍳 New: Open Cookbook</b> — tick the parts you own at home, set quantities, then press <b>💡 What can I build?</b> and the AI suggests up to 6 projects you can start today. Find it in the <b>Tools</b> menu or the <b>🍳 Cookbook</b> button in the top bar.</div>
 <label style="display:inline-flex;gap:6px;align-items:center;margin-top:16px"><input type="checkbox" id="wcNoShow"${w.noShow?' checked':''}> Don't show this when I open a new file</label>
 <div class="ewNote" style="margin-top:4px">You can always come back with <b>💡 Start a project</b> at the top right.</div></div>`;
     f.style.display='none';f.innerHTML='';focus='wcIdea';
@@ -10914,22 +11318,16 @@ ${aiHelperBox(true)}
 // (1.9.37) "About the AI helper": honest about what is sent where, which keys work, and whether one is set up.
 function aiHelperBox(short){
   const desk=!!(window.wfNative&&window.wfNative.aiPost),has=!!aiKey(),P=PROVIDERS[aiProv()];
-  // Collapsed by default when a key is already set; expanded when no key yet
-  const startOpen=!has;
   return `<div class="aiHelp" style="border:1px solid #c9d7ea;background:#f4f8fd;border-radius:8px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.5">
-<div style="font-weight:600;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none" onclick="(function(el){var b=el.closest('.aiHelp').querySelector('.aiHelpBody');var open=b.style.display!=='none';b.style.display=open?'none':'';el.querySelector('.aiHelpChev').textContent=open?'▶':'▼';})(this)">🤖 About the AI helper <span class="aiHelpChev" style="font-size:11px;color:#888">${startOpen?'▼':'▶'}</span></div>
-<div class="aiHelpBody" style="display:${startOpen?'':'none'}">
-${short?'':'<div style="margin-top:6px">When you describe an idea, an AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: use a free key, a paid key, or a model running on this computer with Ollama if you\'d rather stay fully offline.</div>'}
+<div style="font-weight:600;font-size:14px">🤖 About the AI helper</div>
+${short?'':'<div>When you describe an idea, an AI turns it into a parts list and writes the Arduino sketch. EvenUCan has no AI of its own: use a free key, a paid key, or a model running on this computer with Ollama if you\'d rather stay fully offline.</div>'}
 <div style="font-size:12px;color:var(--text2);margin:6px 0 2px;font-weight:600">Free keys (no credit card needed):</div>
 <div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:0 0 8px"><button id="wcAiGem">🆓 Google Gemini</button><button id="wcAiNv"${desk?'':' disabled title="NVIDIA only works in the EvenUCan desktop app"'}>🆓 NVIDIA${desk?'':' (desktop app only)'}</button><button id="wcAiGroq">🆓 Groq</button><button id="wcAiOr">🆓 OpenRouter</button><button id="wcAiOllama">🆓 Ollama (offline)</button></div>
 <div style="font-size:12px;color:var(--text2);margin:2px 0 2px;font-weight:600">Paid keys (very cheap, most capable):</div>
 <div class="ewRow" style="flex-wrap:wrap;gap:6px;margin:0 0 4px"><button id="wcAiCl">💳 Claude (Anthropic)</button><button id="wcAiOa">💳 ChatGPT (OpenAI)</button><button id="wcAiDs">💳 DeepSeek</button><button id="wcAiGrok">💳 Grok (xAI)</button></div>
 <div class="ewNote">${desk?'':' NVIDIA keys need the EvenUCan desktop app, because NVIDIA doesn\'t accept requests from web pages.'} Paid keys cost a fraction of a cent per run — DeepSeek is the cheapest.</div>
 <div style="margin-top:4px">${has?`<span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button>`:'<span class="warn">No AI key is set up yet.</span> You can set one up now or later.'}</div>
-<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it - except Ollama, which runs on this computer and sends nothing anywhere. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div>
-</div>
-${has&&!startOpen?`<div style="margin-top:6px"><span class="ok">✓ Your ${esc(P.name)} key is set up.</span> <button id="wcAiTest">Test or change it...</button></div>`:''}
-</div>`;
+<div class="ewNote" style="margin-top:4px">What you type about your idea is sent to that company (Google, NVIDIA, Groq, OpenRouter or Anthropic) to plan it - except Ollama, which runs on this computer and sends nothing anywhere. Free keys have limits (a number of requests a minute or a day; OpenRouter's free tier is only about 50 a day): if it says it's busy, wait a minute and try again. The drawing, box design, wiring and ESPHome code don't need the AI or the internet.</div></div>`;
 }
 // (1.9.37) Carry on without AI: ready-made examples (common modules and built-in parts, no look-up needed)
 const NOAI_EX=[
@@ -11039,6 +11437,7 @@ iwBack.addEventListener('keydown',e=>{
 });
 $('ewIntent').onclick=openIntent;
 $('bBuild').onclick=()=>openWelcome(false);
+$('bCookbook').onclick=()=>openCookbook();
 $('iwX').onclick=closeIntent;
 $('iwFoot').addEventListener('click',e=>{
   const id=e.target.id;
@@ -11084,6 +11483,132 @@ document.addEventListener('keydown',e=>{
 for(const b of [ewBack,plBack,wrBack,iwBack])b.addEventListener('keydown',e=>e.stopPropagation());
 $('bWiring').onclick=openWiringGated;$('ewWire').onclick=openWiringGated;// (wizard-r1) a nudge when there are no parts yet
 $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
+
+// ================================================================ Cookbook (1.9.44)
+// User ticks the parts they own at home; AI suggests projects and prioritises those parts.
+{
+  const COOKBOOK_KEY='cookbook';
+  // localStorage wrapper (store may be out of scope here depending on script structure)
+  const store={get:k=>{ try{return localStorage.getItem('opensketch.'+k);}catch(e){return null;} },set:(k,v)=>{ try{localStorage.setItem('opensketch.'+k,v);}catch(e){} }};
+  // stock: {partId: qty}  — 0 or absent means not owned
+  const getStock=()=>{try{const v=JSON.parse(store.get(COOKBOOK_KEY)||'{}');return(Array.isArray(v)?Object.fromEntries(v.map(id=>[id,1])):v);}catch(e){return {};}};
+  const setStock=obj=>{store.set(COOKBOOK_KEY,JSON.stringify(obj));};
+  const getOwnedIds=()=>Object.entries(getStock()).filter(([,q])=>q>0).map(([id])=>id);
+  let cbQuery='',cbBusy=false;
+  const cbBack=$('cbBack');
+
+  window.openCookbook=function(){
+    cbQuery='';$('cbSearch').value='';$('cbAiResult').classList.remove('on');
+    cbBack.style.display='grid';renderCookbook();
+  };
+  function closeCookbook(){cbBack.style.display='none';}
+  function renderCookbook(){
+    const stock=getStock(),q=cbQuery.toLowerCase().trim();
+    const parts=allParts().filter(p=>!q||p.name.toLowerCase().includes(q)||(p.type||'').toLowerCase().includes(q)||p.id.toLowerCase().includes(q));
+    $('cbList').innerHTML=parts.map(p=>{const qty=stock[p.id]||0;return`<div class="cbItem${qty>0?' cbOwned':''}" data-cbid="${esc(p.id)}"><input type="number" class="cbQty" min="0" max="9999" value="${qty}" data-cbid="${esc(p.id)}" title="How many do you have?"><div style="flex:1;min-width:0"><div class="cbName">${esc(p.name)}</div><div class="cbMeta">${esc(typeOf(p).name)}${p.id?' · '+esc(p.id):''}</div></div></div>`;}).join('');
+    updateCbCount();
+  }
+  function updateCbCount(){
+    const stock=getStock();
+    const ids=Object.entries(stock).filter(([,q])=>q>0);
+    const parts=ids.length,units=ids.reduce((s,[,q])=>s+q,0);
+    $('cbCount').textContent=parts===0?'Set a quantity above 0 for each part you own':
+      parts===1?'1 part · '+units+' unit'+(units===1?'':'s') :
+      parts+' parts · '+units+' total units';
+  }
+  $('cbList').addEventListener('input',e=>{
+    const inp=e.target;if(!inp.classList.contains('cbQty')||!inp.dataset.cbid)return;
+    const stock=getStock();
+    const qty=Math.max(0,parseInt(inp.value,10)||0);
+    inp.value=qty;
+    if(qty>0)stock[inp.dataset.cbid]=qty;else delete stock[inp.dataset.cbid];
+    setStock(stock);
+    const row=inp.closest('.cbItem');
+    if(row){row.classList.toggle('cbOwned',qty>0);inp.style.borderColor=qty>0?'#7048e8':'';}
+    updateCbCount();
+  });
+  $('cbSearch').addEventListener('input',()=>{cbQuery=$('cbSearch').value;renderCookbook();});
+  $('cbClear').onclick=()=>{if(getOwnedIds().length&&confirm('Clear all quantities?')){setStock({});renderCookbook();}};
+  $('cbSave').onclick=()=>{
+    const stock={};
+    document.querySelectorAll('#cbList .cbQty').forEach(inp=>{
+      if(!inp.dataset.cbid)return;
+      const qty=Math.max(0,parseInt(inp.value,10)||0);
+      if(qty>0)stock[inp.dataset.cbid]=qty;
+    });
+    setStock(stock);
+    renderCookbook();
+    WF.flash('✅ Cookbook saved — '+Object.keys(stock).length+' part'+(Object.keys(stock).length===1?'':'s')+' stored.');
+  };
+  $('cbClose').onclick=closeCookbook;
+  $('cbX').onclick=closeCookbook;
+  cbBack.addEventListener('keydown',e=>{if(e.key==='Escape')closeCookbook();e.stopPropagation();});
+  cbBack.addEventListener('mousedown',e=>{if(e.target===cbBack)closeCookbook();});
+
+  $('cbAsk').onclick=async()=>{
+    if(cbBusy)return;
+    // Flush any typed-but-not-yet-saved quantities before reading stock
+    document.querySelectorAll('.cbQty').forEach(inp=>{
+      if(!inp.dataset.cbid)return;
+      const stock2=getStock();
+      const qty=Math.max(0,parseInt(inp.value,10)||0);
+      if(qty>0)stock2[inp.dataset.cbid]=qty;else delete stock2[inp.dataset.cbid];
+      setStock(stock2);
+      const row=inp.closest('.cbItem');
+      if(row){row.classList.toggle('cbOwned',qty>0);inp.style.borderColor=qty>0?'#7048e8':'';};
+    });
+    updateCbCount();
+    const stock=getStock();
+    const owned=Object.entries(stock).filter(([,q])=>q>0);
+    if(!owned.length){WF.flash('Set at least one part quantity above 0 — the AI needs to know what you have.');return;}
+    if(!aiKey()){if(window.WFEnclosure)WFEnclosure.askKey();return;}
+    const ownedList=owned.map(([id,qty])=>{const p=partById(id);return p?{name:p.name,qty}:null;}).filter(Boolean);
+    if(!ownedList.length){WF.flash('No recognised parts found.');return;}
+    cbBusy=true;$('cbAsk').disabled=true;$('cbAsk').textContent='Thinking…';
+    $('cbAiResult').classList.remove('on');$('cbAiResult').innerHTML='';
+    try{
+      const prompt=`You are an expert electronics engineer and maker. The user has these electronic parts in their stock at home (name · quantity available):\n${ownedList.map((x,i)=>`${i+1}. ${x.name} × ${x.qty}`).join('\n')}\n\nSuggest up to 6 fun projects they could build RIGHT NOW using only parts from this list (quantities matter — never require more of a part than the user has). For each project:\n- Give it a short catchy name\n- One clear sentence explaining what it does and why it is useful\n- List which parts from their stock it uses, with quantities needed\n\nOutput ONLY valid JSON (no other text): {"projects":[{"name":"...","description":"...","parts":["part name",...]},...]}\``;
+      const {data}=await callAI(prompt);
+      if(!data||!Array.isArray(data.projects)||!data.projects.length)throw new Error('No projects in response — try rephrasing or check your AI key.');
+      const html=`<h4>Here are ${data.projects.length} project${data.projects.length>1?'s':''} you can build today:</h4><ol>${data.projects.map((p,i)=>`<li style="margin-bottom:10px"><span class="cbIdeaTitle">${esc(p.name||'')}</span> — ${esc(p.description||'')}${p.parts&&p.parts.length?'<br><small style="color:var(--muted)">Uses: '+p.parts.map(n=>esc(n)).join(', ')+'</small>':''}<br><button class="cbBuildBtn" data-cbidx="${i}" style="margin-top:5px;padding:3px 10px;font-size:12px;border-radius:5px;border:1px solid #7048e8;background:color-mix(in srgb,#7048e8 12%,var(--bg2));color:#7048e8;cursor:pointer">Build this →</button></li>`).join('')}</ol>`;
+      $('cbAiResult').innerHTML=html;$('cbAiResult').classList.add('on');
+      // store projects for click handler
+      $('cbAiResult')._cbProjects=data.projects;
+    }catch(e){
+      console.error('Cookbook AI error',e);
+      $('cbAiResult').innerHTML=`<div style="color:var(--err,#b03a3a)">Couldn't get ideas: ${esc(e&&e.message||'AI error')}. Check your AI key and internet connection.</div>`;
+      $('cbAiResult').classList.add('on');
+    }finally{
+      cbBusy=false;$('cbAsk').disabled=false;$('cbAsk').textContent='💡 What can I build?';
+    }
+  };
+
+  // "Build this →" click handler — opens intent wizard pre-filled with the chosen project
+  $('cbAiResult').addEventListener('click',e=>{
+    const btn=e.target.closest('.cbBuildBtn');if(!btn)return;
+    const idx=parseInt(btn.dataset.cbidx,10);
+    const projects=$('cbAiResult')._cbProjects;
+    if(!projects||!projects[idx])return;
+    const p=projects[idx];
+    const text=(p.name?p.name+': ':'')+p.description;
+    // pre-fill the intent wizard description
+    iw.w={text,does:[],pf:'auto',noShow:false};iw.err='';iw.step='w1';
+    closeCookbook();
+    iwBack.style.display='grid';renderIntent();
+    WF.flash('💡 Project loaded — describe it more if you like, then click Next →');
+  });
+
+  // Expose owned-parts note for injection into other AI prompts
+  window.ownedPartsNote=function(){
+    const stock=getStock();
+    const owned=Object.entries(stock).filter(([,q])=>q>0);
+    if(!owned.length)return '';
+    const list=owned.map(([id,qty])=>{const p=partById(id);return p?`${p.name} (qty: ${qty})`:null;}).filter(Boolean);
+    if(!list.length)return '';
+    return `\n\nThe user already owns these parts at home with quantities — PREFER these over other options when they fit the project, and respect the quantities available:\n${list.map((s,i)=>`${i+1}. ${s}`).join('\n')}`;
+  };
+}
+
 // (r1) Read the wizard settings and own parts again after a saved project (version 2 file) put its own back.
 function reloadState(){
   custom=readCustom();wiz=readWiz();lay=null;WF.setGhosts([]);
