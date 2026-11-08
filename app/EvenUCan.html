@@ -3837,7 +3837,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.79';
+const APP_VERSION='1.9.83';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5741,7 +5741,14 @@ const LIB_KEY='parts';
 // them all. Keep a copy under 'parts.damaged', stop saving over them this session, and tell the user.
 let libDamaged=false;
 function readCustom(){
-  const raw=WF.store.get(LIB_KEY);
+  // Support chunked storage: opensketch.parts.0, .1, … assembled in order
+  let raw=WF.store.get(LIB_KEY);
+  if(raw==null){
+    // try chunked
+    let chunks=[],i=0;
+    while(true){const c=WF.store.get(LIB_KEY+'.'+i);if(c==null)break;chunks.push(c);i++;}
+    if(chunks.length)raw='['+chunks.map(c=>c.slice(1,-1)).join(',')+']';
+  }
   try{const a=JSON.parse(raw||'[]');libDamaged=false;return Array.isArray(a)?a.filter(p=>p&&p.id):[];}
   catch(e){
     console.error('EvenUCan: the saved parts could not be read',e);libDamaged=true;
@@ -5759,7 +5766,20 @@ function injectPhotos(parts){parts.forEach(p=>{if(!p.photo){const ph=photoGet(p.
 let custom=readCustom();injectPhotos(custom);
 function saveLib(){
   if(libDamaged){WF.flash('⚠ Not saved: your saved parts could not be read, so EvenUCan won\'t write over them.',7000);return false;}
-  try{localStorage.setItem('opensketch.'+LIB_KEY,JSON.stringify(custom));return true;}
+  // Strip in-memory photos before serialising (photos live in sidecar keys)
+  const toSave=custom.map(p=>{if(!p.photo)return p;const{photo,...rest}=p;return rest;});
+  // Split into chunks of ~400 parts to stay well under the 5 MB localStorage limit per key
+  const CSIZE=400;
+  try{
+    // Remove old single-key save
+    localStorage.removeItem('opensketch.'+LIB_KEY);
+    // Remove old chunks beyond what we're about to write
+    for(let i=Math.ceil(toSave.length/CSIZE);;i++){const k='opensketch.'+LIB_KEY+'.'+i;if(localStorage.getItem(k)==null)break;localStorage.removeItem(k);}
+    for(let i=0;i<Math.ceil(toSave.length/CSIZE)||i===0;i++){
+      localStorage.setItem('opensketch.'+LIB_KEY+'.'+i,JSON.stringify(toSave.slice(i*CSIZE,(i+1)*CSIZE)));
+    }
+    return true;
+  }
   catch(e){WF.flash('Could not save the parts library: this computer\'s storage for the app is full. Remove some photos or parts.',7000);return false;}
 }
 const builtinById=id=>BUILTIN.find(b=>b.id===id);
@@ -7044,7 +7064,7 @@ function thumbInvalidate(id){thumbCache.delete(id);}
 function thumb(cv,p){
   const c=cv.getContext('2d'),W=cv.width,H=cv.height;c.clearRect(0,0,W,H);
   const s=Math.min((W-6)/p.w,(H-6)/p.d),ox=(W-p.w*s)/2,oy=(H+p.d*s)/2;
-  const im=imgOf(p.photo||p.img,()=>{thumb(cv,p);thumbCache.set(p.id,cv.toDataURL());});
+  const im=imgOf(p.photo||p.img,()=>{const live=document.querySelector('.plItem[data-id="'+p.id+'"] canvas')||cv;thumb(live,p);thumbCache.set(p.id,live.toDataURL());});
   if(im)c.drawImage(im,ox,oy-p.d*s,p.w*s,p.d*s);
   c.strokeStyle=typeOf(p).color;c.lineWidth=1.5;c.fillStyle=im?'transparent':typeOf(p).color+'40';c.beginPath();
   if(p.shape==='round')c.ellipse(ox+p.w*s/2,oy-p.d*s/2,p.w*s/2,p.d*s/2,0,0,Math.PI*2);else c.rect(ox,oy-p.d*s,p.w*s,p.d*s);
@@ -7141,7 +7161,7 @@ async function fetchAndResize(url){
 async function bgFindPhotos(){
   if(bgPhotoState&&bgPhotoState.running)return;
   if(!aiKey('gemini')){WF.flash('Set up a Gemini key first (the AI → Set up Google Gemini key… button in any part).',6000);return;}
-  const todo=custom.filter(p=>!p.photo);
+  const todo=custom.filter(p=>!p.photo||!p.photo.startsWith('data:'));
   if(!todo.length){WF.flash('All custom parts already have photos.');return;}
   bgPhotoState={running:true,found:0,done:0,total:todo.length,stop:false};
   updateBgBar();
