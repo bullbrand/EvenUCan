@@ -3847,7 +3847,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.104';
+const APP_VERSION='2.01';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -11094,11 +11094,9 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
     const gone=pf==='arduino'&&(removed.length||noWifi)?`<div class="warn" style="margin:4px 0">Without Wi-Fi on the ${esc(PF.name)}: `+(removed.length?'removed '+esc(removed.join(', '))+'. ':'')+(noWifi?'You chose to leave out messages to your phone and anything from the internet.':'')+'</div>':'';
     let editor='';
     if(iw.edit){
-      const seen=new Set(),opts=[];
-      COMMON_MODS.forEach((m,i)=>{seen.add(m.part.id);opts.push(`<option value="cm:${i}">${esc(m.part.name)}</option>`);});
-      for(const p of allParts())if(!CTRL_IDS.includes(p.id)&&!seen.has(p.id)){seen.add(p.id);opts.push(`<option value="p:${esc(p.id)}">${esc(p.name)}</option>`);}
-      editor=`<div class="efbox" id="iwEditor"><b>Change the parts</b><div class="ewNote">Take a part out with ✕ Remove, add one from the list, or pick a different board above.</div>
-<div class="ewRow" style="flex-wrap:wrap"><select id="iwAddSel" style="max-width:100%"><option value="">Add a part…</option>${opts.join('')}</select><button id="iwAddBtn">+ Add it</button></div></div>`;
+      editor=`<div class="efbox" id="iwEditor"><b>Change the parts</b><div class="ewNote">Take a part out with ✕ Remove, search for a part below, or pick a different board above.</div>
+<div class="ewRow" style="margin-top:6px"><input id="iwAddSearch" type="search" placeholder="Type what you're looking for — e.g. gyroscope, air quality, DHT22, screen…" style="flex:1;min-width:0" autocomplete="off"></div>
+<div id="iwAddResults" style="max-height:230px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;margin-top:6px"><div class="ewNote" style="padding:6px 8px">Type above to search your own parts and the full ready-made library.</div></div></div>`;
     }
     b.innerHTML=`<h4 style="margin-top:0">${esc(A.name||'Your device')}</h4><p style="margin:4px 0 10px">${esc(A.summary)}</p>`+capHtml(issues)+`
 <h4>Which board runs it?</h4><div class="ewRow" role="group" aria-label="Platform" style="flex-wrap:wrap">${pfBtns}</div><p style="margin:4px 0">${why}<span class="ewNote">${esc(PF.about)}</span></p>${gone}
@@ -11488,11 +11486,65 @@ $('iwFoot').addEventListener('click',e=>{
   else if(id==='iwRetry')intentAnalyse();
   else if(id==='iwCancel')closeIntent();
   else if(id==='iwEdit'){iw.step=iw.analysis&&iw.analysis.noAI?'noai':iw.welcome?'w1':'ask';if(iw.step==='noai')iw.welcome=true;iw.err='';renderIntent();}
-  else if(id==='iwAgain'){iwKeepVals();iw.edit=!iw.edit;renderIntent();if(iw.edit){const h=$('iwEditor');if(h)h.scrollIntoView({block:'nearest'});const sel=$('iwAddSel');if(sel)sel.focus();}}// (wizard-r2) change the parts, not the idea
+  else if(id==='iwAgain'){iwKeepVals();iw.edit=!iw.edit;renderIntent();if(iw.edit){const h=$('iwEditor');if(h)h.scrollIntoView({block:'nearest'});const sel=$('iwAddSearch');if(sel)sel.focus();}}// (wizard-r2) change the parts, not the idea
   else if(id==='iwRestart')guideRestart();
   else if(id==='iwApply')intentApply().catch(err=>{console.error('EvenUCan: could not set up the project idea',err);iw.step='error';iw.err='Could not set up the enclosure: '+(err.message||err);iw.raw='';renderIntent();});
 });
+let _iwLib=null,_iwLibSrc=null,_iwPick={},_iwSearchTimer=0;
+async function iwLibList(){
+  if(_iwLib&&_iwLib.length)return _iwLib;
+  try{const src=await partsSource(false);if(src){_iwLibSrc=src;partsSrc=src;_iwLib=await src.list();}}catch(e){console.warn('EvenUCan: could not open the parts library for the parts search',e);}
+  if(!_iwLib||!_iwLib.length){
+    const list=[];_iwPick={};
+    for(const db of [{key:'fritz',url:'parts-library.json'},{key:'eagle',url:'eagle-parts.json'},{key:'kicad',url:'kicad-parts.json'}]){
+      const parts=await _loadDb(db.key,db.url);if(!parts)continue;
+      for(const entry of parts){const i=list.length;_iwPick['d'+i]=entry;
+        list.push({id:i,title:entry.title||'',family:(entry.info&&entry.info.family)||'',pkg:((entry.info&&entry.info.props)||{}).package||'',tags:(entry.info&&entry.info.tags)||[],desc:((entry.info&&entry.info.description)||'').slice(0,300),_pick:'d'+i,
+          _src:/eagle/i.test(String(entry.folder||''))?'Eagle library':/kicad/i.test(String(entry.folder||''))?'KiCad library':'Fritzing parts library'});}
+    }
+    _iwLib=list;
+  }
+  return _iwLib||[];
+}
+function iwOwnList(){
+  return COMMON_MODS.map((m,i)=>({v:'cm:'+i,title:m.part.name,family:'Common module',tags:[m.part.type],desc:''}))
+    .concat(allParts().filter(p=>!CTRL_IDS.includes(p.id)).map(p=>({v:'p:'+p.id,title:p.name,family:p.builtin?'Built-in part':'Your parts',tags:[p.type],desc:String(p.notes||'').slice(0,300)})));
+}
+async function iwAddSearchRun(q){
+  try{await iwLibList();}catch(e){console.warn('EvenUCan: the ready-made parts could not be listed',e);}
+  const box=$('iwAddResults');if(!box)return;
+  const now=$('iwAddSearch');if(!now||now.value.trim()!==q)return;
+  const own=searchParts(iwOwnList(),q,'all').slice(0,40),ready=searchParts(_iwLib||[],q,'all').slice(0,60);
+  const row=(v,t,sub)=>`<div class="iwAddRow" data-v="${esc(v)}" style="display:flex;align-items:center;gap:8px;padding:4px 10px;cursor:pointer;border-bottom:1px solid color-mix(in srgb,var(--line) 45%,transparent)"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${esc(t)}</b> <span class="ewNote">${esc(sub)}</span></span><span class="ewNote">click to add</span></div>`;
+  let html='';
+  if(own.length)html+='<div class="ewNote" style="padding:5px 10px 1px"><b>Your parts</b></div>'+own.map(h=>row(h.v,h.title,h.family)).join('');
+  if(ready.length)html+='<div class="ewNote" style="padding:5px 10px 1px"><b>Ready-made parts library</b></div>'+ready.map(h=>row(h._pick?'__pick:'+h._pick:'libid:'+h.id,h.title,h._src||(h.family||''))).join('');
+  box.innerHTML=html||'<div class="ewNote" style="padding:6px 8px">No parts match — try another word: a part number, or what it does.</div>';
+}
+async function iwAddPick(v){
+  iwKeepVals();
+  let part=null,from='your choice';
+  try{
+    if(v.startsWith('cm:'))part=commonPart(COMMON_MODS[+v.slice(3)]);
+    else if(v.startsWith('p:'))part=partById(v.slice(2));
+    else if(v.startsWith('libid:')){
+      if(!_iwLibSrc){const src=await partsSource(false);if(src){_iwLibSrc=src;partsSrc=src;}}
+      if(!_iwLibSrc)return WF.flash('The ready-made parts library isn\'t loaded. Open Parts → Browse parts… once, then try again.',7000);
+      part=await importLibPart(_iwLibSrc,v.slice(6));if(part)from='parts library';
+    }else if(v.startsWith('__pick:')){
+      const raw=_iwPick[v.slice(7)];
+      if(raw){part=lookupToPart(_dbToLookupData(raw,raw.title||''),raw.title||'');part.source=raw._src||'';
+        part.notes='Pin positions and board size from '+(raw._src||'the parts library')+'. Component height is estimated at '+part.h+' mm — check yours.';
+        custom.push(part);if(!saveLib()){custom.pop();part=null;}else from=raw._src||'parts library';}
+    }
+  }catch(err){console.error('EvenUCan: could not add the chosen part',err);return WF.flash('Couldn\'t add that part: '+(err.message||err),7000);}
+  if(!part)return WF.flash('Couldn\'t add that part.',5000);
+  iw.base.push({spec:{category:'added',function:'added by you',search:part.name,required:true},part,from,note:''});
+  iw.matches=pfMatches(iw.base,iw.pf);renderIntent();WF.flash('Added '+part.name,3000);
+}
 $('iwBody').addEventListener('click',e=>{
+  const rowEl=e.target.closest('.iwAddRow');
+  if(rowEl)return iwAddPick(rowEl.dataset.v||'');
   const el=e.target.closest('button');if(!el)return;
   if(el.id==='iwKey')askKey().then(renderIntent);
   else if(el.dataset.ex){iw.desc=EXAMPLES[el.dataset.ex]||'';const t=$('iwDesc');if(t){t.value=iw.desc;t.focus();}}
@@ -11502,16 +11554,16 @@ $('iwBody').addEventListener('click',e=>{
     if(PLATFORMS[a])intentSetPf(a);
     else{if(/^drop-/.test(a))iw.dropped=[...new Set([...(iw.dropped||[]),a.slice(5)])];else if(/^pow-/.test(a))iw.power=a.slice(4);renderIntent();}}
   else if(el.dataset.iwdel!==undefined){iwKeepVals();const k=+el.dataset.iwdel;if(k>0&&iw.base[k-1]){iw.base.splice(k-1,1);iw.matches=pfMatches(iw.base,iw.pf);renderIntent();}}
-  else if(el.id==='iwAddBtn'){
-    const v=$('iwAddSel').value;if(!v)return WF.flash('Pick a part in the list first.',4000);
-    iwKeepVals();const part=v.startsWith('cm:')?commonPart(COMMON_MODS[+v.slice(3)]):partById(v.slice(2));
-    if(!part)return WF.flash('Couldn\'t add that part.',5000);
-    iw.base.push({spec:{category:'added',function:'added by you',search:part.name,required:true},part,from:'your choice',note:''});
-    iw.matches=pfMatches(iw.base,iw.pf);renderIntent();WF.flash('Added '+part.name,3000);}
 });
 $('iwBody').addEventListener('change',e=>{if(e.target.name==='iwPow'){iwKeepVals();iw.power=e.target.value;renderIntent();}});
 $('iwBody').addEventListener('input',e=>{const t=e.target;
   if(t.id==='iwSsid')wifiMem.ssid=t.value;else if(t.id==='iwPass')wifiMem.pass=t.value;
+  else if(t.id==='iwAddSearch'){clearTimeout(_iwSearchTimer);const q=t.value.trim();
+    _iwSearchTimer=setTimeout(async()=>{const box=$('iwAddResults');if(!box)return;
+      if(!q){box.innerHTML='<div class="ewNote" style="padding:6px 8px">Type above to search your own parts and the full ready-made library.</div>';return;}
+      box.innerHTML='<div class="ewNote" style="padding:6px 8px">Searching…</div>';
+      try{await iwAddSearchRun(q);}catch(err){console.error('EvenUCan: parts search failed',err);}
+    },200);}
   else if(t.dataset.iw==='ntfy_topic'){iw.vals.ntfy_topic=t.value;const box=$('iwBody').querySelector('.ntfyBox');if(box){box.querySelector('.topic').textContent=t.value.trim();box.querySelector('[data-copytext]').dataset.copytext=t.value.trim();}}});
 $('iwBody').addEventListener('keydown',e=>{if(e.target.id==='iwDesc'&&e.key==='Enter'&&(e.ctrlKey||e.metaKey)){const desc=(e.target.value||'').trim();if(desc.length>=8){iw.desc=desc;iw.err='';iw.step='clarify';renderIntent();}else{iw.err='Tell me a little more (a sentence or two is plenty).';renderIntent();}}});
 $('ewIntentMsg').addEventListener('click',e=>{if(e.target.id==='ewIntentHide')$('ewIntentMsg').style.display='none';else if(e.target.id==='ewIntentCode')intentCode();});
