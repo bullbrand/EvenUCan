@@ -3847,7 +3847,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.102';
+const APP_VERSION='1.9.103';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -6603,8 +6603,9 @@ function renderSide(){
   }).join('');
   const st=wiz.style;
   s.innerHTML=`<h4>1. Parts in the box</h4>
-<div class="ewRow"><select id="ewAddSel" style="flex:1">${partOptions(null)}</select><button id="ewAdd">Add</button></div>
-<div class="ewNote">Not in the list? <a href="#" id="ewBrowse">Browse over 2,000 ready-made parts</a>, or open the <a href="#" id="ewLib2">Parts Library</a> to add one from a photo.</div>
+<div class="ewRow"><input id="ewAddSearch" type="search" placeholder="Search all parts…" style="flex:1;min-width:0" autocomplete="off"><button id="ewAdd">Add</button></div>
+<div class="ewRow" id="ewAddSelRow"><select id="ewAddSel" style="flex:1;width:100%">${partOptions(null)}</select></div>
+<div class="ewNote">Not in the list? Open the <a href="#" id="ewLib2">Parts Library</a> to add one from a photo.</div>
 ${rows||'<div class="ewNote">No parts yet.</div>'}
 <h4>2. Power</h4>
 <div class="ewRow" style="flex-wrap:wrap"><label><input type="radio" name="ewPow" value="usb"${wiz.power!=='battery'&&wiz.power!=='mains'?' checked':''}> USB cable</label><label><input type="radio" name="ewPow" value="mains"${wiz.power==='mains'?' checked':''}> Mains adapter (USB plug)</label><label><input type="radio" name="ewPow" value="battery"${wiz.power==='battery'?' checked':''}> Battery inside</label></div>
@@ -6639,9 +6640,62 @@ $('ewSide').addEventListener('change',e=>{
 $('ewSide').addEventListener('click',e=>{
   const el=e.target;
   if(el.dataset.del!==undefined){wiz.items.splice(+el.dataset.del,1);return wizChanged(true);}
-  if(el.id==='ewAdd'){const id=$('ewAddSel').value;if(id){wiz.items.push({pid:id,qty:1,mount:'auto',wall:'auto'});wizChanged(true);}}
+  if(el.id==='ewAdd'){const sel=$('ewAddSel');const id=sel&&sel.value;if(id){const isDb=id.startsWith('__db:');if(isDb){const raw=JSON.parse(decodeURIComponent(id.slice(5)));const part=lookupToPart(_dbToLookupData(raw,raw.title||''),raw.title||'');part.source=raw._dbSrc||'';part.notes='Pin positions and board size from '+part.source+'. Component height is estimated at '+part.h+' mm.';custom.push(part);saveLib();WF.flash('Added "'+part.name+'" to your library',4000);wiz.items.push({pid:part.id,qty:1,mount:'auto',wall:'auto'});}else{wiz.items.push({pid:id,qty:1,mount:'auto',wall:'auto'});}wizChanged(true);}}
   if(el.id==='ewLib2'){e.preventDefault();openLibrary();}
-  if(el.id==='ewBrowse'){e.preventDefault();openLibrary();browseParts();}
+});
+let _ewSearchTimer=null;
+$('ewSide').addEventListener('input',async e=>{
+  if(e.target.id!=='ewAddSearch')return;
+  clearTimeout(_ewSearchTimer);
+  _ewSearchTimer=setTimeout(async()=>{
+    const q=e.target.value.trim();
+    const sel=$('ewAddSel');
+    if(!sel)return;
+    if(!q){sel.innerHTML=partOptions(null);return;}
+    const qw=q.toLowerCase().split(/\W+/).filter(w=>w.length>0);
+    if(!qw.length)return;
+    // Score a haystack string against the query words
+    const sc=(hay)=>{const h=hay.toLowerCase();const full=qw.join(' ');if(h.includes(full))return 1000;return qw.reduce((s,w)=>s+(h.includes(w)?1:0),0);};
+    // Search own library first
+    const ownHits=[];
+    for(const p of allParts()){
+      const hay=[p.name,p.category||'',p.protocol||'',(p.pins||[]).map(x=>x.n).join(' ')].join(' ');
+      const s=sc(hay);if(s>0)ownHits.push({s,name:p.name,id:p.id,own:true});
+    }
+    // Search JSON databases
+    const DBS2=[{key:'fritz',url:'parts-library.json',src:'Fritzing'},{key:'eagle',url:'eagle-parts.json',src:'Eagle'},{key:'kicad',url:'kicad-parts.json',src:'KiCad'}];
+    const dbHits=[];
+    for(const db of DBS2){
+      const parts=await _loadDb(db.key,db.url);
+      if(!parts)continue;
+      for(const entry of parts){
+        const info=entry.info||{};
+        const hay=[entry.title,info.title,info.description,Array.isArray(info.tags)?info.tags.join(' '):'',info.family].filter(Boolean).join(' ');
+        const s=sc(hay);
+        if(s>0){
+          const payload={...entry,_dbSrc:db.src+' library'};
+          dbHits.push({s,name:_dbClean(info.title||entry.title||''),src:db.src,payload});
+        }
+      }
+    }
+    // Sort each group by score desc, limit to top 60 db hits so list stays usable
+    ownHits.sort((a,b)=>b.s-a.s);
+    dbHits.sort((a,b)=>b.s-a.s);
+    const topDb=dbHits.slice(0,60);
+    let html='';
+    if(ownHits.length){html+='<optgroup label="Your library">';for(const h of ownHits)html+=`<option value="${esc(h.id)}">${esc(h.name)}</option>`;html+='</optgroup>';}
+    if(topDb.length){
+      const groups={};
+      for(const h of topDb){(groups[h.src]=groups[h.src]||[]).push(h);}
+      for(const [src,hits] of Object.entries(groups)){
+        html+=`<optgroup label="${esc(src)} library">`;
+        for(const h of hits){const enc=encodeURIComponent(JSON.stringify(h.payload));html+=`<option value="__db:${enc}">${esc(h.name)}</option>`;}
+        html+='</optgroup>';
+      }
+    }
+    if(!html)html='<option disabled>No parts found</option>';
+    sel.innerHTML=html;
+  },250);
 });
 $('ewAuto').onclick=runAuto;
 $('ewRot').onclick=rotateSel;
