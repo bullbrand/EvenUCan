@@ -3847,7 +3847,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.101';
+const APP_VERSION='1.9.102';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -10640,11 +10640,28 @@ async function lookupPart(i){
   const m=iw.matches&&iw.matches[i];if(!m||m.part||m.looking||m.ctrl)return;
   const q=m.spec.search;
   if(!aiKey()){await askKey();if(!aiKey())return WF.flash('Set up a key for your AI first.',5000);}
-  const go=await askHtml(`<div class="kHead"><b>🔍 Look up "${esc(q)}"?</b></div><p style="margin:0 0 8px">EvenUCan will search its parts databases (Fritzing, Eagle and KiCad) first, then ask its AI if nothing is found.</p>`+
+  const go=await askHtml(`<div class="kHead"><b>🔍 Look up "${esc(q)}"?</b></div><p style="margin:0 0 8px">EvenUCan will search your parts library first, then its built-in databases (Fritzing, Eagle and KiCad), then ask its AI if nothing is found.</p>`+
     `<p class="ewNote" style="margin:0">If the AI is asked, one request goes to ${esc(PROVIDERS[aiProv()].name)} with only the part's name and what it is for. No personal data is sent.</p>`,['Cancel','Search for it'],1);
   if(go!==1)return;
-  m.looking=true;m.lookErr='';m.lookStage='Searching Fritzing library…';renderIntent();
+  m.looking=true;m.lookErr='';m.lookStage='Searching your parts…';renderIntent();
   let d=null,dbSrc='';
+  // Stage 0: search the user's own custom parts library first
+  {
+    const qWords=q.toLowerCase().split(/\W+/).filter(w=>w.length>1);
+    const minSc=Math.max(1,Math.ceil(qWords.length*0.6));
+    let best=null,bestSc=0;
+    for(const p of (custom||[])){
+      const hay=[p.name,p.category,p.protocol,p.voltage,(p.pins||[]).map(x=>x.n).join(' ')].filter(Boolean).join(' ').toLowerCase();
+      const full=qWords.join(' ');
+      let sc=hay.includes(full)?1000:qWords.reduce((s,w)=>s+(hay.includes(w)?1:0),0);
+      if(sc>bestSc){bestSc=sc;best=p;}
+    }
+    if(best&&bestSc>=minSc){
+      m.looking=false;m.lookStage='';m.part=partById(best.id);m.from='your library';m.note='';
+      WF.flash('"'+best.name+'" is already in your parts library.',4000);
+      renderIntent();return;
+    }
+  }
   const DBS=[{key:'fritz',url:'parts-library.json',label:'Fritzing library'},{key:'eagle',url:'eagle-parts.json',label:'Eagle library'},{key:'kicad',url:'kicad-parts.json',label:'KiCad library'}];
   for(const db of DBS){
     if(d)break;
@@ -10653,7 +10670,9 @@ async function lookupPart(i){
     if(!parts||!parts.length)continue;
     let best=null,bestSc=0;
     for(const entry of parts){const sc=_dbScore(entry,q);if(sc>bestSc){bestSc=sc;best=entry;}}
-    if(best&&bestSc>=1){d=_dbToLookupData(best,q);dbSrc=db.label;}
+    const qWords=q.toLowerCase().split(/\W+/).filter(w=>w.length>1);
+    const minSc=Math.max(1,Math.ceil(qWords.length*0.6));
+    if(best&&bestSc>=minSc){d=_dbToLookupData(best,q);dbSrc=db.label;}
   }
   if(!d){
     m.lookStage='Asking your AI…';renderIntent();
