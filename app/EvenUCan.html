@@ -3291,14 +3291,15 @@ async function saveFile(as){
   const data=JSON.stringify({app:'EvenUCan',version:2,units,camera:cam,faces:model.faces,edges:model.edges,guides:model.guides,electronics:elecState(true)});
   const m=buildMesh(true),blob=make3MF(m,data);
   const done=name=>{setDirty(false);flash('Saved '+name+(m.open?' · The model has gaps: they are marked in red, see the Print check panel.':''),m.open?8000:3500);showProblemsIfAny();};
+  const _sugName=(docName!=='Untitled'?docName:((intentNow()||{}).analysis||{}).name||docName);
   if(window.showSaveFilePicker){
     try{
-      if(!fileHandle||as||!/\.3mf$/i.test(fileHandle.name))fileHandle=await window.showSaveFilePicker({suggestedName:docName+'.3mf',types:SAVE_TYPES});
+      if(!fileHandle||as||!/\.3mf$/i.test(fileHandle.name))fileHandle=await window.showSaveFilePicker({suggestedName:_sugName+'.3mf',types:SAVE_TYPES});
       const w=await fileHandle.createWritable();await w.write(blob);await w.close();
       docName=baseName(fileHandle.name);setDirty(false);return done(fileHandle.name);
     }catch(err){if(err.name==='AbortError')return;console.warn(err);}
   }
-  downloadBlob(docName+'.3mf',blob);done(docName+'.3mf (in your Downloads folder)');
+  downloadBlob(_sugName+'.3mf',blob);done(_sugName+'.3mf (in your Downloads folder)');
 }
 function loadData(d,name){
   if(!d||!Array.isArray(d.faces))return flash('That is not a EvenUCan file');
@@ -3846,7 +3847,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.96';
+const APP_VERSION='1.9.101';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -9553,6 +9554,9 @@ Change the file so the device does what the user describes. Rules:
 - Every part listed as not in the file yet must get its own working section (sensor, binary_sensor, output, light, switch, uart, display… as the module needs), with a clear friendly name.
 - When a multi-LED module (such as a traffic light with red, green and yellow LEDs) appears more than once in the parts list, give each LED a unique name — e.g. "Red LED", "Green LED", "Yellow LED" for the first module, "Red LED 2", "Green LED 2", "Yellow LED 2" for the second. NEVER give two lights the same name: duplicate names cause Home Assistant errors.
 - NEVER add a second esphome: block. The file already has one at the top. If you need to add on_boot: behaviour, merge it into the existing esphome: block at the top of the file — do not create a new esphome: section anywhere else in the file.
+- NEVER invent or add hardware that is not in the parts list provided. Only generate code for the exact components listed. If the user description implies a sensor or device that is not in the parts list, ignore that requirement — do not add code for it, do not add a placeholder. Only use what is listed.
+- When the parts list contains multiple instances of the same component (e.g. three push buttons, two relay modules), generate a SEPARATE entity for EACH one with a unique id and a descriptive name based on the user description. NEVER merge multiple physical parts into one entity, and NEVER replace physical buttons with a software select or dropdown. If the user added 3 buttons and the description says weak/normal/strong, generate 3 binary_sensor entries named "Weak Button", "Normal Button", "Strong Button".
+- NEVER use !component_name syntax as a negation in conditions. ESPHome does not support this. To negate a condition use the not: wrapper.
 - You MUST make the device do EVERY requirement in the user's description. Never silently leave one out or replace it with a comment. If one truly cannot be done with these parts, return {"refuse":true,"reason":"<one plain-English sentence: which requirement, and why>"} instead of a file.
 Return ONLY a JSON object: {"yaml": "<the complete new file>", "notes": "<one to three short plain-English sentences on what you added, or what you couldn't do>"}.`;
 async function esphWithAI(){
@@ -10594,34 +10598,88 @@ function lookupToPart(d,q){
     approximate:true,source:'AI lookup',acc:'approx',voltage:s(d.voltage,40),protocol:s(d.protocol,40),i2c_address:s(d.i2c_address,20),
     notes:'Looked up by AI from its own knowledge ("'+s(q,60)+'"), not measured: sizes and pin positions are approximate, so measure yours before printing.'+(info?' '+info+'.':'')+(d.notes?' '+s(d.notes,400):'')});
 }
+// ---- Part-database search helpers (Fritzing / Eagle / KiCad JSON files) ----
+const _EW_DB={};
+async function _loadDb(key,url){
+  if(key in _EW_DB)return _EW_DB[key];
+  try{const r=await fetch(url);if(!r.ok)throw 0;const j=await r.json();return(_EW_DB[key]=j.parts||[]);}
+  catch(e){return(_EW_DB[key]=null);}
+}
+function _dbScore(entry,q){
+  const words=q.toLowerCase().split(/\W+/).filter(w=>w.length>1);
+  if(!words.length)return 0;
+  const hay=[entry.title,(entry.info&&entry.info.title),(entry.info&&entry.info.description),(Array.isArray(entry.info&&entry.info.tags)?entry.info.tags.join(' '):''),(entry.info&&entry.info.family)].filter(Boolean).join(' ').toLowerCase();
+  const full=words.join(' ');if(hay.includes(full))return 1000;
+  return words.reduce((s,w)=>s+(hay.includes(w)?1:0),0);
+}
+function _dbClean(t){return String(t||'').replace(/_h\d_|__h\d_/g,'').trim();}
+function _dbPinRole(n){
+  const v=String(n||'').toLowerCase().trim();
+  if(/^gnd$|^ground$|^vss$/.test(v))return 'ground';
+  if(/^vcc$|^vdd$|^vin$|^v\+$|^5v$|^3\.?3v?$|^power$/.test(v))return 'power';
+  if(/sda/.test(v))return 'i2c_sda';
+  if(/scl/.test(v))return 'i2c_scl';
+  if(/^nc$|^noc$|unused|not.?conn/.test(v))return 'unused';
+  return 'signal';
+}
+function _dbToLookupData(entry,q){
+  const g=entry.g||{},info=entry.info||{},conns=entry.conns||[];
+  const cleanName=_dbClean(info.title||entry.title||q);
+  const desc=String(info.description||'');
+  const iface=String((info.props&&info.props.interface)||'').toLowerCase();
+  const protocol=/i2c/.test(iface)?'I2C':/spi/.test(iface)?'SPI':/uart|serial/.test(iface)?'UART':/onewire|1-wire/.test(iface)?'1-Wire':'';
+  const allText=(cleanName+' '+desc+(Array.isArray(info.tags)?info.tags.join(' '):'')).toLowerCase();
+  const voltage=/\b3\.?3\s*v\b/.test(allText)?'3.3V':/\b5\s*v\b/.test(allText)?'5V':'';
+  const pos=g.pos||{};
+  const pins=conns.filter(c=>pos[c.svgId]).map(c=>({name:String(c.name||c.desc||'?').slice(0,16),x_mm:+(pos[c.svgId][0]).toFixed(2),y_mm:+(pos[c.svgId][1]).toFixed(2),role:_dbPinRole(c.name||'')}));
+  const fld=String(entry.folder||'').toLowerCase();
+  const src=fld.includes('eagle')?'Eagle library':fld.includes('kicad')?'KiCad library':'Fritzing parts library';
+  return {name:cleanName,category:desc||cleanName,width_mm:g.w||20,height_mm:g.h||20,depth_mm:10,pins,mounting_holes:[],port_cutouts:[],protocol,voltage,approximate:false,source:src,notes:'Pin positions from '+src+(desc?'. '+desc.slice(0,200):'')};
+}
 async function lookupPart(i){
   const m=iw.matches&&iw.matches[i];if(!m||m.part||m.looking||m.ctrl)return;
   const q=m.spec.search;
   if(!aiKey()){await askKey();if(!aiKey())return WF.flash('Set up a key for your AI first.',5000);}
-  const go=await askHtml(`<div class="kHead"><b>🔍 Look up "${esc(q)}"?</b></div><p style="margin:0 0 8px">EvenUCan will ask its AI assistant to look up this part's typical dimensions and pin layout from its knowledge. The AI may not have exact data — all lookups are marked as approximate.</p>`+
-    `<p class="ewNote" style="margin:0">One request goes to ${esc(PROVIDERS[aiProv()].name)} with only the part's name and what it is for. No personal data is sent.</p>`,['Cancel','Look it up'],1);
+  const go=await askHtml(`<div class="kHead"><b>🔍 Look up "${esc(q)}"?</b></div><p style="margin:0 0 8px">EvenUCan will search its parts databases (Fritzing, Eagle and KiCad) first, then ask its AI if nothing is found.</p>`+
+    `<p class="ewNote" style="margin:0">If the AI is asked, one request goes to ${esc(PROVIDERS[aiProv()].name)} with only the part's name and what it is for. No personal data is sent.</p>`,['Cancel','Search for it'],1);
   if(go!==1)return;
-  m.looking=true;m.lookErr='';renderIntent();
-  let d=null;
-  try{
-    ({data:d}=await callAI(LOOKUP_PROMPT+'\n\nThe part: "'+q+'"\nWhat it does in the project: '+m.spec.function));
-    if(!d||typeof d!=='object')throw new Error('garbled: no part data');
-    if(d.unknown){m.lookErr='Your AI doesn\'t know this part'+(d.notes?': '+String(d.notes).slice(0,200):'.')+' Add it yourself with Parts Library….';return;}
-    if(!(parseFloat(d.width_mm)>0)||!(parseFloat(d.height_mm)>0))throw new Error('garbled: no sizes');
-  }catch(e){console.error('EvenUCan: part lookup failed for "'+q+'"',e);m.lookErr=/garbled/.test(e.message||'')?'Sorry, the AI\'s answer couldn\'t be read. Try again, or add the part yourself.':'The AI couldn\'t be reached: '+(e.message||e);return;}
-  finally{m.looking=false;if(iw.step==='result')renderIntent();}
-  const part=lookupToPart(d,q),pinTxt=part.pins.length?part.pins.map(p=>esc(p.n)+' <span class="ewNote">('+esc(ROLE_TXT[p.r]||p.r)+')</span>').join(', '):'<span class="warn">none given: add them in Parts before wiring</span>';
+  m.looking=true;m.lookErr='';m.lookStage='Searching Fritzing library…';renderIntent();
+  let d=null,dbSrc='';
+  const DBS=[{key:'fritz',url:'parts-library.json',label:'Fritzing library'},{key:'eagle',url:'eagle-parts.json',label:'Eagle library'},{key:'kicad',url:'kicad-parts.json',label:'KiCad library'}];
+  for(const db of DBS){
+    if(d)break;
+    m.lookStage='Searching '+db.label+'…';renderIntent();
+    const parts=await _loadDb(db.key,db.url);
+    if(!parts||!parts.length)continue;
+    let best=null,bestSc=0;
+    for(const entry of parts){const sc=_dbScore(entry,q);if(sc>bestSc){bestSc=sc;best=entry;}}
+    if(best&&bestSc>=1){d=_dbToLookupData(best,q);dbSrc=db.label;}
+  }
+  if(!d){
+    m.lookStage='Asking your AI…';renderIntent();
+    try{
+      ({data:d}=await callAI(LOOKUP_PROMPT+'\n\nThe part: "'+q+'"\nWhat it does in the project: '+m.spec.function));
+      if(!d||typeof d!=='object')throw new Error('garbled: no part data');
+      if(d.unknown){m.looking=false;m.lookStage='';m.lookErr='Your AI doesn\'t know this part'+(d.notes?': '+String(d.notes).slice(0,200):'.')+' Add it yourself with Parts Library….';renderIntent();return;}
+      if(!(parseFloat(d.width_mm)>0)||!(parseFloat(d.height_mm)>0))throw new Error('garbled: no sizes');
+    }catch(e){console.error('EvenUCan: part lookup failed for "'+q+'"',e);m.looking=false;m.lookStage='';m.lookErr=/garbled/.test(e.message||'')?'Sorry, the AI\'s answer couldn\'t be read. Try again, or add the part yourself.':'The AI couldn\'t be reached: '+(e.message||e);renderIntent();return;}
+  }
+  m.looking=false;m.lookStage='';if(iw.step==='result')renderIntent();
+  const part=lookupToPart(d,q);
+  if(dbSrc){part.source=dbSrc;part.notes='Pin positions and board size from '+dbSrc+'. Component height is estimated at '+part.h+' mm — check yours.'+(d.notes?'\n'+d.notes.slice(0,300):'');}
+  const pinTxt=part.pins.length?part.pins.map(p=>esc(p.n)+' <span class="ewNote">('+esc(ROLE_TXT[p.r]||p.r)+')</span>').join(', '):'<span class="warn">none given: add them in Parts before wiring</span>';
   const ok=await askHtml(`<div class="kHead"><b>🔍 ${esc(part.name)}</b></div>`+
-    `<div><b>Size:</b> ${part.w} × ${part.d} mm, ${part.h} mm tall</div><div><b>Pins (${part.pins.length}):</b> ${pinTxt}</div>`+
+    (dbSrc?`<div class="ewNote" style="margin-bottom:4px">Found in ${esc(dbSrc)}</div>`:'')+
+    `<div><b>Size:</b> ${part.w} × ${part.d} mm${dbSrc?', component height estimated':`, ${part.h} mm tall`}</div><div><b>Pins (${part.pins.length}):</b> ${pinTxt}</div>`+
     (part.protocol||part.i2c_address?`<div><b>Protocol:</b> ${esc(part.protocol||'?')}${part.i2c_address?', I2C address '+esc(part.i2c_address):''}</div>`:'')+
     (part.voltage?`<div><b>Voltage:</b> ${esc(part.voltage)}</div>`:'')+`<div><b>Mounting holes:</b> ${part.features.filter(x=>x.t==='hole').length}, <b>openings for sockets:</b> ${part.features.filter(x=>x.t==='port').length}</div>`+
-    `<div class="warn" style="margin-top:8px">⚠️ Approximate: this comes from the AI's memory, not from a datasheet or a measurement. Check the size and the pin order against your own part before you print or wire.</div>`+
+    (dbSrc?`<div class="ewNote" style="margin-top:8px">Board dimensions and pin positions are from the library. Component height is estimated — check yours before printing.</div>`:`<div class="warn" style="margin-top:8px">⚠️ Approximate: this comes from the AI's memory, not from a datasheet or a measurement. Check the size and the pin order against your own part before you print or wire.</div>`)+
     (d.notes?`<div class="ewNote" style="margin-top:6px">${esc(String(d.notes).slice(0,400))}</div>`:''),['Don\'t use this','Add to my library →'],1);
   if(ok!==1)return;
   custom.push(part);if(!saveLib()){custom.pop();m.lookErr='Couldn\'t save it to your parts library.';return renderIntent();}
-  m.part=partById(part.id);m.from='AI lookup';m.note='';
+  m.part=partById(part.id);m.from=dbSrc||'AI lookup';m.note='';
   (iw.missingAdded=iw.missingAdded||[]).push(clone(part));
-  WF.flash('Added "'+part.name+'" to your parts (marked ⚠️ Approximate)',5000);
+  WF.flash('Added "'+part.name+'" to your parts'+(dbSrc?' (from '+dbSrc+')':' (marked ⚠️ Approximate)'),5000);
   renderIntent();
 }
 // Another platform: only the board, the Wi-Fi parts and the questions change (the AI isn't asked again).
@@ -10938,7 +10996,10 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
     const rows=iw.matches.map((m,k)=>m.from==='power'?'':`<li style="margin:5px 0">${m.part?'<span class="ok">✓</span> <b>'+esc(m.part.name)+'</b>':m.from==='removed'?'<span class="ewNote">✗</span> <s>'+esc(m.spec.search)+'</s>':okFrom(m)?'<span class="ok">✓</span> <b>'+esc(m.spec.category==='power'?'Power':m.spec.search)+'</b>':'<span class="warn">!</span> <b>'+esc(m.spec.search)+'</b> '+IW_BADGE} — ${esc(m.spec.function)}`+(iw.edit&&!m.ctrl?` <button data-iwdel="${k}" class="linkBtn" title="Take this part out">✕ Remove</button>`:'')+
       (m.from&&m.part?` <span class="ewNote">(${esc(m.from)})</span>`:'')+(m.part&&accOf(m.part)==='approx'&&m.from==='AI lookup'?' <span class="warn">⚠️ Approximate</span>':'')+
       (m.spec.why&&!m.ctrl?`<div class="ewNote">Why: ${esc(m.spec.why)}</div>`:'')+(m.note?`<div class="${m.part||okFrom(m)?'ewNote':'warn'}">${esc(m.note)}</div>`:'')+
-      (!m.part&&!okFrom(m)&&!m.ctrl?`<div class="ewRow" style="margin:3px 0 0">${m.looking?'<span class="ewNote">⏳ Asking your AI about this part...</span>':`<button data-look="${k}">🔍 Look this up</button>`}${m.lookErr?` <span class="bad">${esc(m.lookErr)}</span>`:''}</div>`:'')+'</li>').join('');
+      (!m.part&&!okFrom(m)&&!m.ctrl?`<div class="ewRow" style="margin:3px 0 0">${m.looking?`<span class="ewNote">⏳ ${esc(m.lookStage||'Searching…')}</span>`:`<button data-look="${k}">🔍 Look this up</button>`}${m.lookErr?` <span class="bad">${esc(m.lookErr)}</span>`:''}</div>`:'')+'</li>').join('');
+    // Hardware gap warning: required parts the AI asked for that have no match in the library
+    const gapParts=iw.matches.filter(m=>m.spec&&m.spec.required&&!m.part&&!m.ctrl&&m.from!=='power'&&m.from!=='skip'&&m.from!=='removed');
+    const missingWarning=gapParts.length?`<div class="bad" style="margin:10px 0;padding:10px 12px;border-radius:6px;border-left:4px solid #c00"><b>⚠️ Your project needs parts that aren't in your library yet</b><ul style="margin:6px 0 4px;padding-left:18px">`+gapParts.map(m=>`<li><b>${esc(m.spec.search)}</b> — ${esc(m.spec.function)}${m.spec.why?` <span class="ewNote">(${esc(m.spec.why)})</span>`:''}</li>`).join('')+`</ul><div style="margin-top:4px">Without ${gapParts.length===1?'it':'these'}, the device can't do everything you described. Click <b>🔍 Look this up</b> next to ${gapParts.length===1?'it':'each one'} above — your AI will find its dimensions and add it to your library automatically.</div></div>`:'';
     const drop=iw.dropped||[],noWifi=drop.includes('wifi');
     const shown=A.extra_inputs_needed.filter(x=>inputShown(x,pf)&&!(noWifi&&NET_KEYS.test(x.key))),hidden=A.extra_inputs_needed.filter(x=>!shown.includes(x));
     iw.vals=iw.vals||{};for(const x of shown)if(iw.vals[x.key]==null)iw.vals[x.key]=intentDefault(x.key,A);// made once, so the topic stays the same
@@ -10968,7 +11029,7 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
     }
     b.innerHTML=`<h4 style="margin-top:0">${esc(A.name||'Your device')}</h4><p style="margin:4px 0 10px">${esc(A.summary)}</p>`+capHtml(issues)+`
 <h4>Which board runs it?</h4><div class="ewRow" role="group" aria-label="Platform" style="flex-wrap:wrap">${pfBtns}</div><p style="margin:4px 0">${why}<span class="ewNote">${esc(PF.about)}</span></p>${gone}
-<h4 id="iwPartsHead">The parts I picked, and why</h4><ul style="list-style:none;padding:0;margin:0">${rows}</ul>${editor}${pow}`+
+<h4 id="iwPartsHead">The parts I picked, and why</h4><ul style="list-style:none;padding:0;margin:0">${rows}</ul>${missingWarning}${editor}${pow}`+
       (A.code_description||A.esphome_notes?`<h4>How the code will work</h4><p class="ewNote" style="font-size:13px;margin:0">${esc(A.code_description||A.esphome_notes)}</p>`:'')+
       (pf!=='esphome'&&A.code_libraries.length?`<p class="ewNote" style="margin:4px 0 0">Libraries the AI suggested: ${esc(A.code_libraries.join(', '))}</p>`:'')+
       (ins?`<div class="efbox" style="line-height:1.4"><b>A few things I need from you</b><div class="ewNote">They are kept on this computer and saved with your project file, and written into the device's code.</div>${ins}</div>`:'')+ntfyBox(topic)+wifiIn;
