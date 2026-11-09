@@ -3846,7 +3846,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.93';
+const APP_VERSION='1.9.95';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -9553,7 +9553,8 @@ Change the file so the device does what the user describes. Rules:
 Return ONLY a JSON object: {"yaml": "<the complete new file>", "notes": "<one to three short plain-English sentences on what you added, or what you couldn't do>"}.`;
 async function esphWithAI(){
   const f=esphForm(),it=intentNow(),desc=(f.desc||'').trim()||(it&&it.desc||'').trim(),P=wr.plan;
-  const base=esphomeYaml(P,f);if(!base.yaml)return;
+  let base;try{base=esphomeYaml(P,f);}catch(e){WF.flash('Could not build the base file — make sure your board is set and parts have pins assigned. ('+e.message+')',7000);return;}
+if(!base.yaml){WF.flash(base.error||'Could not build the base file — make sure your board is set and parts have pins assigned.',7000);return;}
   if(!desc&&!base.unknown.length)return WF.flash('Every part is already in the file. Describe what the device should do in the box, then click Make it with AI.',6000);
   if(!aiKey())return WF.flash('Set up a key for this AI first: click "'+keyLabel()+'" next to the AI menu.',6000);
   const check=window.wfNative&&window.wfNative.esphomeCheck,say=h=>{wr.aiMsg=h;const o=$('wrAiOut');if(o)o.innerHTML=h;};
