@@ -175,8 +175,8 @@ function showAbout() {
 }
 
 // ---------------------------------------------------------------- auto-update
-// On startup, quietly checks GitHub for a newer release. If found, offers to download and run
-// the NSIS installer — the whole process handled without the user needing to know any details.
+// On startup, quietly checks GitHub for a newer release. If found, informs the user
+// and offers to open the releases page — no automatic downloading or installing.
 
 function isNewer(a, b) {
   const pa = String(a || '').split('.').map(Number);
@@ -187,63 +187,6 @@ function isNewer(a, b) {
     if (na < nb) return false;
   }
   return false;
-}
-
-async function downloadAndInstall(url, filename, version) {
-  const tmpFile = path.join(os.tmpdir(), filename);
-
-  // Show download progress in the Windows taskbar button
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.setTitle('EvenUCan — Downloading update…');
-    mainWindow.setProgressBar(2); // indeterminate pulsing bar
-  }
-
-  try {
-    const res = await net.fetch(url);
-    if (!res.ok) throw new Error('Server returned ' + res.status);
-    const buf = Buffer.from(await res.arrayBuffer());
-    fs.writeFileSync(tmpFile, buf);
-  } catch (e) {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.setTitle('EvenUCan');
-      mainWindow.setProgressBar(-1);
-    }
-    dialog.showErrorBox(
-      'Update download failed',
-      'The update could not be downloaded automatically.\n\n' +
-      'Please visit github.com/bullbrand/EvenUCan to download the latest version.\n\n' +
-      String((e && e.message) || e)
-    );
-    return;
-  }
-
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.setTitle('EvenUCan');
-    mainWindow.setProgressBar(-1);
-  }
-
-  const r2 = await dialog.showMessageBox(mainWindow || undefined, {
-    type: 'info',
-    title: 'Update Ready',
-    message: 'EvenUCan ' + version + ' is ready to install',
-    detail:
-      'Click “Install Now” to close EvenUCan and run the installer.\n' +
-      'The app will reopen automatically when the installation is complete.',
-    buttons: ['Install Now', 'Later'],
-    defaultId: 0,
-    cancelId: 1
-  });
-
-  if (r2.response !== 0) return; // user chose Later
-
-  // Launch the installer detached then quit — the installer replaces the app and can restart it
-  try {
-    spawn(tmpFile, [], { detached: true, stdio: 'ignore', windowsHide: false }).unref();
-  } catch (e) {
-    // Last resort: open with the OS default handler
-    shell.openPath(tmpFile);
-  }
-  setTimeout(() => app.quit(), 1500);
 }
 
 async function checkForUpdates() {
@@ -260,34 +203,23 @@ async function checkForUpdates() {
     const current = app.getVersion();
     if (!tag || !isNewer(tag, current)) return; // already up to date
 
-    // Find the Windows NSIS installer in the release assets
-    const assets = Array.isArray(data.assets) ? data.assets : [];
-    const asset =
-      assets.find((a) => /EvenUCan-Setup.*\.exe$/i.test(a.name || '')) ||
-      assets.find((a) => /\.exe$/i.test(a.name || ''));
-
     const result = await dialog.showMessageBox(mainWindow || undefined, {
       type: 'info',
       title: 'Update Available',
       message: 'EvenUCan ' + tag + ' is available',
       detail:
         'You have version ' + current + '.\n\n' +
-        'Would you like to download and install the update now?\n' +
-        'If you choose Later you can update any time from the Help menu.',
-      buttons: ['Download Update', 'Later'],
+        'Click “Go to Releases” to open the GitHub releases page and download\n' +
+        'the right version for your platform.\n\n' +
+        'You can also update any time from Help > Check for Updates.',
+      buttons: ['Go to Releases', 'Later'],
       defaultId: 0,
       cancelId: 1
     });
 
-    if (result.response !== 0) return; // user chose Later
-
-    if (!asset || !asset.browser_download_url) {
-      // No installer asset found — just open the releases page
+    if (result.response === 0) {
       shell.openExternal('https://github.com/bullbrand/EvenUCan/releases/latest');
-      return;
     }
-
-    await downloadAndInstall(asset.browser_download_url, asset.name, tag);
   } catch (e) {
     // Network down, rate-limited, etc. — silently ignore so the app always opens normally
     console.warn('EvenUCan: update check failed (ignored):', e);
