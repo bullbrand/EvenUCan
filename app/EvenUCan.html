@@ -3849,7 +3849,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.150';
+const APP_VERSION='1.9.152';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -3895,7 +3895,7 @@ $('bAbout').onclick=showAbout;$('appIcon').onclick=()=>$('bAbout').click();
       if(d&&d.version&&semverGt(d.version,APP_VERSION))showBanner(d.version,d.notes,d.downloadUrl);
     }catch(e){/* network unavailable or rate-limited — silently ignore */}
   },3000);
-  async function checkForUpdatesManual(){
+  window.checkForUpdatesManual=async function(){
     try{
       const r=await fetch('https://raw.githubusercontent.com/bullbrand/EvenUCan/main/version.json',{cache:'no-store'});
       if(!r.ok){flash('Could not reach update server — check your connection');return;}
@@ -3903,7 +3903,7 @@ $('bAbout').onclick=showAbout;$('appIcon').onclick=()=>$('bAbout').click();
       if(d&&d.version&&semverGt(d.version,APP_VERSION)){
         WF.store.set&&WF.store.set('euDismissedVersion',null);// allow banner to show again
         showBanner(d.version,d.notes,d.downloadUrl);
-      }else{flash('EvenUCan v'+APP_VERSION+' — you're up to date ✓');}
+      }else{flash('EvenUCan v'+APP_VERSION+' - you are up to date');}
     }catch(e){flash('Update check failed — check your connection');}
   }
 })();
