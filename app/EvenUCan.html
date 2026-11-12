@@ -3849,7 +3849,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.149';
+const APP_VERSION='1.9.150';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -3895,6 +3895,17 @@ $('bAbout').onclick=showAbout;$('appIcon').onclick=()=>$('bAbout').click();
       if(d&&d.version&&semverGt(d.version,APP_VERSION))showBanner(d.version,d.notes,d.downloadUrl);
     }catch(e){/* network unavailable or rate-limited — silently ignore */}
   },3000);
+  async function checkForUpdatesManual(){
+    try{
+      const r=await fetch('https://raw.githubusercontent.com/bullbrand/EvenUCan/main/version.json',{cache:'no-store'});
+      if(!r.ok){flash('Could not reach update server — check your connection');return;}
+      const d=await r.json();
+      if(d&&d.version&&semverGt(d.version,APP_VERSION)){
+        WF.store.set&&WF.store.set('euDismissedVersion',null);// allow banner to show again
+        showBanner(d.version,d.notes,d.downloadUrl);
+      }else{flash('EvenUCan v'+APP_VERSION+' — you're up to date ✓');}
+    }catch(e){flash('Update check failed — check your connection');}
+  }
 })();
 // Hide / unhide faces. Hidden faces stay in the model (saved and exported); they just aren't drawn or clickable.
 function hideSelected(){
@@ -4891,7 +4902,8 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
       {label:'Wiring...',fn:BTN('bWiring')},{label:'Code for your board...',fn:EN('openCodeGated')},null,
       {label:'AI helper key...',fn:EN('askKey')},null,{label:'Check model for printing',fn:BTN('bCheck'),checked:()=>!!check}],
     Help:[{label:'Quick guide and shortcuts',key:'F1',fn:BTN('bHelp')},{label:'User manual (PDF)',fn:()=>window.open('EvenUCan User Manual.pdf','_blank')},
-      {label:'EvenUCan on GitHub',fn:()=>window.open('https://github.com/bullbrand/EvenUCan','_blank')},null,{label:'About EvenUCan',fn:BTN('bAbout')}]
+      {label:'EvenUCan on GitHub',fn:()=>window.open('https://github.com/bullbrand/EvenUCan','_blank')},null,
+      {label:'Check for updates',fn:()=>checkForUpdatesManual()},null,{label:'About EvenUCan',fn:BTN('bAbout')}]
   };
   // (1.9.35) A small colourful icon beside each item that has a matching one.
   const MENU_IC={'Start a project (step by step)...':'wizard','New':'new','Open...':'open','Save':'save','Save As...':'saveas',
@@ -4901,7 +4913,7 @@ document.querySelectorAll('#menubar button').forEach(b=>b.addEventListener('mous
     'Join':'join','Subtract':'subtract','Intersect':'intersect','Group':'group','Ungroup':'ungroup','Resize to an exact size...':'resize',
     'Lay all flat':'layall','Arrange on bed':'arrange','Zoom to fit everything':'extents','Perspective (natural)':'persp','Parallel (no perspective)':'ortho',
     'Parts library...':'parts','Open Cookbook...':'parts','Box designer (Enclosure)...':'enclosure','Wiring...':'wiring','Code for your board...':'code','AI helper key...':'aikey',
-    'Quick guide and shortcuts':'help','User manual (PDF)':'manual','EvenUCan on GitHub':'web','About EvenUCan':'about'};
+    'Quick guide and shortcuts':'help','User manual (PDF)':'manual','EvenUCan on GitHub':'web','About EvenUCan':'about','Check for updates':'web'};
   for(const L of Object.values(MENUS))for(const it of L)if(it&&!it.head&&!it.ic)it.ic=MENU_IC[it.label]||(/^(Flip|Turn|Mirror)/.test(it.label)?'flip':'');
   window.EvenUCanMenus=MENUS;// (for tests and add-ons)
   // (1.9.38) The grouped toolbar: every useful menu command also has a button on screen; the menus stay exactly as they are.
