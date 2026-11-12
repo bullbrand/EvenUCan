@@ -1,7 +1,7 @@
 npm install
-npm version 1.9.143 --no-git-tag-version
+npm version 1.9.144 --no-git-tag-version
 git add .
-git commit -m "Release v1.9.143"
+git commit -m "Release v1.9.144"
 git push
-git tag v1.9.143
-git push origin v1.9.143
+git tag v1.9.144
+git push origin v1.9.144
