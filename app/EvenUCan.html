@@ -3849,7 +3849,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.147';
+const APP_VERSION='1.9.149';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -6538,8 +6538,9 @@ async function buildSolids(L){
           const s=rotSide(ft.side,it.rot);
           const lp=ft.side==='xmin'?[0,ft.u]:ft.side==='xmax'?[o.w,ft.u]:ft.side==='ymin'?[ft.u,0]:[ft.u,o.d];
           const cut=ft.t==='cutout',round=cut?ft.shape!=='rect':ROUND_KINDS.has(ft.kind);
-          const [x,y]=pt(lp[0],lp[1]),u=s[0]==='y'?x:y,zc=zb+o.pcb+ft.zc;
+          const [x,y]=pt(lp[0],lp[1]),u=s[0]==='y'?x:y,zcRaw=zb+o.pcb+ft.zc;
           const pw=cut?ft.cw:round?Math.max(ft.pw,ft.ph):ft.pw,ph=round?pw:cut?ft.ch:ft.ph;
+          const zc=Math.min(zcRaw,H-ph/2-1);
           subs.push(wallCut(s,u-pw/2,u+pw/2,zc-ph/2,zc+ph/2,round?pw/2:Math.min(1.5,ph/2)));
           cutsPerWall[s].push([u-pw/2,u+pw/2]);
         }else if(ft.t==='port'||ft.t==='cutout'){// a socket pointing up or down, or a cut-out, through the lid or the floor
