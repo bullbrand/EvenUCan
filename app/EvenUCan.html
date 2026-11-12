@@ -3849,7 +3849,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.140';
+const APP_VERSION='1.9.143';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -4706,11 +4706,22 @@ lidPanel.addEventListener('keydown',e=>e.stopPropagation());
 tools.makelid=()=>{
   lidPanel.style.display='block';syncLidPanel();
   const col=[0.4,0.6,0.9];
+  // Returns all faces belonging to the same box as 'face'.
+  // Uses group ID when available; falls back to componentOf filtered by the clicked face's XY footprint.
+  const getBoxFaces=face=>{
+    if(face.g!=null)return model.faces.filter(f=>f.g===face.g);
+    const ids=componentOf(face.id);
+    const allC=model.faces.filter(f=>ids.has(f.id));
+    const fxs=face.pts.map(v=>v[0]),fys=face.pts.map(v=>v[1]);
+    const fx0=Math.min(...fxs),fx1=Math.max(...fxs),fy0=Math.min(...fys),fy1=Math.max(...fys);
+    const mx=Math.max((fx1-fx0)*0.5,0.015),my=Math.max((fy1-fy0)*0.5,0.015);
+    return allC.filter(f=>{const vs=f.pts,cx=vs.reduce((s,v)=>s+v[0],0)/vs.length,cy=vs.reduce((s,v)=>s+v[1],0)/vs.length;return cx>=fx0-mx&&cx<=fx1+mx&&cy>=fy0-my&&cy<=fy1+my;});
+  };
   return {
     label:'Lid',hint:'Click any face of your box — the lid will be sized to match it',
     move(e,m){
       const pt=inferPoint(m.x,m.y);setMarker(pt);preview.lines=[];
-      if(!pt||!pt.face||!pt.face.g)return;
+      if(!pt||!pt.face||pt.face.g==null)return;
       const F=model.faces.filter(f=>f.g===pt.face.g);
       if(!F.length)return;
       const vs=F.flatMap(f=>f.pts);
@@ -4723,8 +4734,7 @@ tools.makelid=()=>{
     async down(e,m){
       const pt=inferPoint(m.x,m.y);
       if(!pt||!pt.face)return flash('Click a face of the box');
-      if(!pt.face.g)return flash('Click a face of the box — not a guide or background');
-      const F=model.faces.filter(f=>f.g===pt.face.g);
+      const F=getBoxFaces(pt.face);
       if(F.length<4)return flash('Could not read the box — try clicking a different face');
       const vs=F.flatMap(f=>f.pts);
       const xs=vs.map(v=>v[0]),ys=vs.map(v=>v[1]),zs=vs.map(v=>v[2]);
@@ -4736,7 +4746,7 @@ tools.makelid=()=>{
       // Outer dims (meters) → mm interior
       const W=(x1-x0)*1000-2*tw,D=(y1-y0)*1000-2*tw,H=(z1-z0)*1000-lf;
       if(W<4||D<4||H<2)return flash('Box too small — '+((x1-x0)*1000).toFixed(1)+'×'+((y1-y0)*1000).toFixed(1)+'×'+((z1-z0)*1000).toFixed(1)+' mm',6000);
-      const st={wall:tw,floor:lf,lid:lidOpts.type==='press'?'press':'snap',groove:false,gasket:false,ears:false};
+      const st={wall:tw,floor:lf,lid:lidOpts.type==='press'?'press':'snap',groove:false,gasket:false,ears:false,...(pt.face.g==null?{corner_r:0}:{})};
       flash('Building lid for '+((x1-x0)*1000).toFixed(1)+'×'+((y1-y0)*1000).toFixed(1)+'×'+((z1-z0)*1000).toFixed(1)+' mm box…',8000);
       preview.lines=[];
       try{
@@ -4752,10 +4762,51 @@ tools.makelid=()=>{
         const gL=nid();
         for(const f of lidFaces){f.g=gL;f.color='#9fb8d6';}
         EW.softEdges(lidFaces);
+        // Snap fit: cut the matching click slots into the existing box
+        let boxCutOk=false;
+        if(st.lid==='snap'){
+          try{
+            // Build a no-snap base to get a cutter solid: cutter = base_no_snap minus base_with_snap
+            const rNS=await EW.buildSolids({W,D,H,st:{...st,lid:'press'},items:[]});
+            // Transform: buildSolids mm (inner origin) → scene metres
+            // scene = (x0+(mm+tw)/1000, y0+(mm+tw)/1000, z0+(mm+lf)/1000)
+            const baseT=p=>[x0+(p[0]+tw)/1000,y0+(p[1]+tw)/1000,z0+(p[2]+lf)/1000];
+            const cutterTris=mkTris(rNS.base,baseT);
+            const boxTris=mkTris(r.base,baseT);
+            // Convert to WF faces, build Manifold solids, subtract to get snap-slot cutter
+            const cutterFaces=facesFromTriangles(cutterTris);
+            const slottedFaces=facesFromTriangles(boxTris);
+            const w=await EW.engine(),pool2=[],K2=x=>{pool2.push(x);return x;};
+            try{
+              const mCutter=solidOf(w,K2,cutterFaces);
+              const mSlotted=solidOf(w,K2,slottedFaces);
+              const mBox=solidOf(w,K2,F);
+              if(mCutter&&mSlotted&&mBox){
+                // snapCuts = the material the snap slots removed: no-snap minus with-snap
+                const snapCuts=K2(mCutter.subtract(mSlotted));
+                if(!snapCuts.isEmpty()){
+                  const mBoxCut=K2(mBox.subtract(snapCuts));
+                  if(!mBoxCut.isEmpty()){
+                    const origColor=(F.find(f=>f.color)||{}).color||null;
+                    const origG=F[0].g!=null?F[0].g:null;
+                    const flat=flatPlanes(F);
+                    const newBoxFaces=facesOfSolid(mBoxCut,flat,origColor,origG);
+                    EW.softEdges(newBoxFaces);
+                    // Replace box faces in model
+                    const boxIds=new Set(F.map(f=>f.id));
+                    model.faces=model.faces.filter(f=>!boxIds.has(f.id)).concat(newBoxFaces);
+                    boxCutOk=true;
+                  }
+                }
+              }
+            }finally{for(const x of pool2)try{x.delete();}catch(e2){}}
+          }catch(e2){console.warn('Snap slot cut failed (lid still added):',e2);}
+        }
         pushUndo(null,'Make Lid');
         for(const f of lidFaces)model.faces.push(f);
         commitChange();WF.zoomExtents();
-        flash('Lid added — '+((x1-x0)*1000).toFixed(1)+'×'+((y1-y0)*1000).toFixed(1)+' mm.',4000);
+        const slotMsg=st.lid==='snap'?(boxCutOk?' with snap slots cut into box':''):'' ;
+        flash('Lid added'+slotMsg+' — '+((x1-x0)*1000).toFixed(1)+'×'+((y1-y0)*1000).toFixed(1)+' mm.',4000);
       }catch(e){console.error(e);flash('Could not build the lid: '+(e&&e.message||e),7000);}
     },
     cancel(){lidPanel.style.display='none';preview.lines=[];return false;}
@@ -6287,7 +6338,7 @@ function report(L){
 async function buildSolids(L){
   const w=await engine(),M=w.Manifold,pool=[];
   const K=m=>{pool.push(m);return m;};
-  const st=L.st,t=st.wall,f=st.floor,W=L.W,D=L.D,H=L.H,R=t+1,lt=st.floor;
+  const st=L.st,t=st.wall,f=st.floor,W=L.W,D=L.D,H=L.H,R=st.corner_r!=null?st.corner_r:t+1,lt=st.floor;
   try{
     const cube=(x0,y0,z0,x1,y1,z1)=>K(M.cube([x1-x0,y1-y0,z1-z0]).translate([x0,y0,z0]));
     const seg=r=>Math.max(16,Math.min(64,Math.round(r*10)));
