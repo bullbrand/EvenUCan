@@ -1,7 +1,7 @@
 {
   "name": "evenucan",
   "productName": "EvenUCan",
-  "version": "1.9.146",
+  "version": "1.9.147",
   "description": "3D enclosure designer for novice makers \u2014 ESPHome/Arduino/Pi code generator",
   "author": "David John Waugh",
   "license": "SEE LICENSE IN app/LICENSE.txt",
