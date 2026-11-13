@@ -367,21 +367,46 @@ function renderList(){
   _rlPending=true;
   requestAnimationFrame(()=>{
     _rlPending=false;
-    const L=$('plList'),parts=allParts();
-    _plPartsMap=new Map(parts.map(p=>[p.id,p]));
+    const L=$('plList'),all=allParts();
+    _plPartsMap=new Map(all.map(p=>[p.id,p]));
     if(_thumbObs){_thumbObs.disconnect();}
     const obs=getThumbObs();
-    L.innerHTML=parts.map(p=>{
-      const cached=thumbCache.get(p.id);
-      const thumb_el=cached?`<img width="64" height="44" src="${cached}" class="plThumb">`:`<canvas width="64" height="44"></canvas>`;
-      const canDel=!p.builtin&&!builtinById(p.id);
-      return `<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}">${thumb_el}<div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div>${canDel?`<input type="checkbox" class="plCheck" data-id="${esc(p.id)}" title="Tick to select for deletion"${plSelected.has(p.id)?' checked':''}>`:''}</div>`;
+    // Split by kind (Dev boards, Sensors, Motors…), each kind sorted A → Z (or in the order added), with a dropdown to show one kind.
+    const rank=p=>{const i=PL_ORDER.indexOf(TYPES[p.type]?p.type:'other');return i<0?PL_ORDER.length-1:i;};
+    const kindOf=p=>TYPES[p.type]?p.type:'other';
+    const counts={};all.forEach(p=>{counts[kindOf(p)]=(counts[kindOf(p)]||0)+1;});
+    if(plKind!=='all'&&!counts[plKind])plKind='all';
+    const byName=(a,b)=>String(a.name).localeCompare(String(b.name),undefined,{numeric:true,sensitivity:'base'});
+    const idx=new Map(all.map((p,i)=>[p.id,i]));
+    const parts=all.filter(p=>plKind==='all'||kindOf(p)===plKind)
+      .sort((a,b)=>rank(a)-rank(b)||(plSort==='added'?idx.get(a.id)-idx.get(b.id):byName(a,b)));
+    const kinds=PL_ORDER.filter(k=>counts[k]);
+    const bar=`<div class="plBar"><select id="plKindSel" title="Show one kind of part, or all of them"><option value="all"${plKind==='all'?' selected':''}>All kinds (${all.length})</option>${kinds.map(k=>`<option value="${k}"${plKind===k?' selected':''}>${esc(TYPES[k].name)} (${counts[k]})</option>`).join('')}</select><select id="plSortSel" title="Order inside each kind"><option value="az"${plSort==='az'?' selected':''}>A → Z</option><option value="added"${plSort==='added'?' selected':''}>Order added</option></select></div>`;
+    let lastKind=null;
+    L.innerHTML=bar+parts.map(p=>{
+      const head=plKind==='all'&&kindOf(p)!==lastKind?`<div class="plGroup">${esc(TYPES[kindOf(p)].name)} · ${counts[kindOf(p)]}</div>`:'';
+      lastKind=kindOf(p);
+      return head+plItemHtml(p);
     }).join('');
     L.querySelectorAll('.plItem canvas').forEach(cv=>obs.observe(cv));
     updateSelBar();
   });
 }
+let plKind='all',plSort='az';
+try{plKind=localStorage.getItem('ev.plKind')||'all';plSort=localStorage.getItem('ev.plSort')||'az';}catch(e){/* private mode: keep the defaults */}
+function plItemHtml(p){
+  const cached=thumbCache.get(p.id);
+  const thumb_el=cached?`<img width="64" height="44" src="${cached}" class="plThumb">`:`<canvas width="64" height="44"></canvas>`;
+  const canDel=!p.builtin&&!builtinById(p.id);
+  return `<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}">${thumb_el}<div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div>${canDel?`<input type="checkbox" class="plCheck" data-id="${esc(p.id)}" title="Tick to select for deletion"${plSelected.has(p.id)?' checked':''}>`:''}</div>`;
+}
 $('plList').addEventListener('change',e=>{
+  const sel=e.target.closest('#plKindSel,#plSortSel');
+  if(sel){
+    if(sel.id==='plKindSel')plKind=sel.value;else plSort=sel.value;
+    try{localStorage.setItem('ev.plKind',plKind);localStorage.setItem('ev.plSort',plSort);}catch(err){/* not saved: fine */}
+    renderList();return;
+  }
   const cb=e.target.closest('.plCheck');if(!cb)return;
   const id=cb.dataset.id;if(cb.checked)plSelected.add(id);else plSelected.delete(id);
   updateSelBar();

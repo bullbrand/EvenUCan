@@ -92,6 +92,10 @@
 .ewWin .ic{display:inline-block;width:16px;font-weight:700}
 .plBody{flex:1;display:grid;grid-template-columns:270px minmax(0,1fr);min-height:0}
 .plList{overflow:auto;border-right:1px solid var(--line);padding:6px}
+.plBar{position:sticky;top:-6px;z-index:3;display:flex;gap:6px;margin:-6px -6px 2px;padding:6px;background:#fff;border-bottom:1px solid var(--line)}
+.plBar select{flex:1;min-width:0;font-size:12px;padding:4px}
+.plBar select#plSortSel{flex:0 0 auto}
+.plGroup{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:10px 5px 3px}
 .plItem{display:flex;gap:8px;align-items:center;padding:5px;border-radius:5px;cursor:pointer}
 .plItem:hover{background:#f1f4fa}
 .plItem.on{background:#d5e1ff}

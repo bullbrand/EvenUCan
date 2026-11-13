@@ -114,8 +114,14 @@ const TYPES={
   sensor:{name:'Sensor',mount:'floor',color:'#24868a'},
   display:{name:'Display',mount:'floor',color:'#505050'},
   switch:{name:'Switch',mount:'floor',color:'#7d7d7d'},
+  motor:{name:'Motor / motor driver',mount:'floor',color:'#c0602a'},
+  relay:{name:'Relay / switching module',mount:'floor',color:'#a04a8a'},
+  light:{name:'LED / light',mount:'floor',color:'#d4a017'},
+  power:{name:'Power supply / regulator',mount:'floor',color:'#8a4a2a'},
   other:{name:'Other',mount:'floor',color:'#8a6a4a'}
 };
+// Order the Parts Library list is split into (a kind not listed here goes last, before "Other").
+const PL_ORDER=['board','sensor','display','motor','relay','light','mic','speaker','amp','charger','battery','power','switch','other'];
 const typeOf=p=>TYPES[p.type]||TYPES.other;
 // Feature types. x,y are the centre (mm, from the part's bottom-left corner as seen in its photo);
 // edge features sit on an edge (side) at a position along it (u).
