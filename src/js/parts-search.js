@@ -134,6 +134,14 @@ const COMMON_MODS=[
   {re:/relay/i,part:{id:'p-cm-relay',name:'1-channel 5 V relay module',type:'other',w:50,d:26,pcb:1.6,h:19,below:2.5,mount:'floor',
     pins:cmPins([['VCC','5v'],['GND','gnd'],['IN','sig']],13,2),features:[{t:'wire',side:'xmax',u:13,dia:6},{t:'hole',x:3,y:3,dia:3},{t:'hole',x:47,y:3,dia:3},{t:'hole',x:3,y:23,dia:3},{t:'hole',x:47,y:23,dia:3}]}}
 ];
+// Show these common modules in the Parts Library list too (they used to appear only after the wizard picked one).
+// Each stays marked "Approximate" (typical sizes: measure yours); a copy you already saved keeps winning over this one.
+for(const m of COMMON_MODS){
+  if(builtinById(m.part.id))continue;
+  const b=tidyPart(Object.assign(clone(m.part),{notes:CM_NOTE,acc:'approx',builtin:true}));
+  if(/^p-cm-relay/.test(b.id))b.type='relay';
+  BUILTIN.push(b);
+}
 function commonPart(m){
   const have=partById(m.part.id);if(have)return have;
   const c=tidyPart(Object.assign(clone(m.part),{notes:CM_NOTE,acc:'approx'}));
