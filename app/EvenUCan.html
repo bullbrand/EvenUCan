@@ -5353,6 +5353,7 @@ markDirty();
 .plBar{position:sticky;top:-6px;z-index:3;display:flex;gap:6px;margin:-6px -6px 2px;padding:6px;background:#fff;border-bottom:1px solid var(--line)}
 .plBar select{flex:1;min-width:0;font-size:12px;padding:4px}
 .plBar select#plSortSel{flex:0 0 auto}
+.plSizeWarn{background:#fff8e1;border:1px solid #f0d27a;color:#6b5200;padding:6px 8px;border-radius:5px;margin:4px 0}
 .plGroup{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:10px 5px 3px}
 .plItem{display:flex;gap:8px;align-items:center;padding:5px;border-radius:5px;cursor:pointer}
 .plItem:hover{background:#f1f4fa}
@@ -6307,6 +6308,7 @@ function report(L){
     if(it.bad)bad(nm+' '+esc(it.bad));
     if(it.warn)warn(nm+' '+esc(it.warn));
     if(accOf(p)==='approx')warn(nm+': its sizes are approximate (e.g. from a Fritzing picture, which is drawn for wiring diagrams): measure it and use "Check size" in the Parts Library before printing');
+    else if(accOf(p)!=='measured')warn(nm+': its sizes come from a drawing or a listing, not from your own part, and makers differ a little. If you have it in your hand, measure it and compare with the Parts Library: change the sizes there if they are different, then set Sizes to Measured');
     if(it.kind==='wall'){
       const F=p.features||[];
       if(F.some(f=>f.t==='mic'))ok(nm+': sound hole through the '+SIDE_NAME[it.wall].toLowerCase()+' wall'+(it.z0>2?', '+fx(it.z0)+' mm up':''));
@@ -7442,6 +7444,7 @@ ${aiProv()==='claude'?'<div class="ewNote">Claude is paid per use from your Anth
 <div class="ewNote"><b>Look up online</b>: type the part number and the AI finds the sizes and fills them in. Or save a dimension drawing and use <b>Read a drawing</b> (or drag it onto the picture, or Ctrl+V). Always check the draft before saving.</div></div>
 <label class="f"><span>Name</span><input type="text" data-p="name" value="${p.name==='New part'?'':esc(p.name)}" placeholder="New part: type its name"></label>
 <div class="ewRow"><label title="How far this part's sizes can be trusted. Fritzing pictures are drawn for wiring diagrams, so their outlines are often too small: measure the board and use Check size.">Sizes <select data-p="acc">${opt(ACC,accOf(p))}</select></label><button id="plCheck" title="Type the sizes you measured with calipers or a ruler: the outline changes, pins and features keep their spacing">Check size…</button></div>
+${accOf(p)==='measured'?'':'<div class="ewNote plSizeWarn">⚠ Sizes can differ a little between makers and batches. <b>If you have this part in your hand, measure it</b> (calipers or a ruler) and compare with the numbers below. If it is different, change the sizes (or use <b>Check size…</b>), then set <b>Sizes</b> to ✅ Measured.</div>'}
 <label class="f"><span>Type</span><select data-p="type">${opt(Object.fromEntries(Object.entries(TYPES).map(([k,v])=>[k,v.name])),p.type)}</select></label>
 <label class="f"><span>Shape</span><select data-p="shape">${opt({rect:'Rectangle',round:'Round'},p.shape)}</select></label>
 <label class="f"><span>${p.shape==='round'?'Diameter':'Length (left → right)'}</span><input type="number" data-p="w" value="${p.w}" step="0.1" min="0.5"> mm</label>

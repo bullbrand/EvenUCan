@@ -354,6 +354,7 @@ function report(L){
     if(it.bad)bad(nm+' '+esc(it.bad));
     if(it.warn)warn(nm+' '+esc(it.warn));
     if(accOf(p)==='approx')warn(nm+': its sizes are approximate (e.g. from a Fritzing picture, which is drawn for wiring diagrams): measure it and use "Check size" in the Parts Library before printing');
+    else if(accOf(p)!=='measured')warn(nm+': its sizes come from a drawing or a listing, not from your own part, and makers differ a little. If you have it in your hand, measure it and compare with the Parts Library: change the sizes there if they are different, then set Sizes to Measured');
     if(it.kind==='wall'){
       const F=p.features||[];
       if(F.some(f=>f.t==='mic'))ok(nm+': sound hole through the '+SIDE_NAME[it.wall].toLowerCase()+' wall'+(it.z0>2?', '+fx(it.z0)+' mm up':''));
