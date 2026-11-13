@@ -605,6 +605,8 @@ const store={get(k){try{return localStorage.getItem('opensketch.'+k);}catch(e){r
 // ---- Electronics side of a project (r1): the Enclosure Wizard, ESPHome answers and the user's own parts live in
 // their own storage keys (written by the Enclosure script below). These gather them for saving and put them back.
 const ELEC_KEYS={wizard:'enclosure.wizard',esphome:'esphome.form',parts:'parts',intent:'intent'};
+window.ESPH_KEY='esphome.form';
+window.ESPH_AI_KEY='esphome.ai';// persists the AI-written YAML across re-renders / page reloads
 // A phone topic saved in this browser by an older build (not an EvenUCan topic) is forgotten, so a fresh one is made.
 try{const tk='opensketch.intent_inputs.ntfy_topic',tv=localStorage.getItem(tk);if(tv!=null&&!/^evenucan-/.test(tv))localStorage.removeItem(tk);}catch(e){}
 const parseKey=k=>{const raw=store.get(k);if(raw==null)return null;try{return JSON.parse(raw);}catch(e){console.error('EvenUCan: stored "'+k+'" is not readable',e);return null;}};
@@ -635,6 +637,9 @@ function elecState(withParts){
     const own=parseKey(ELEC_KEYS.parts);
     e.parts=Array.isArray(own)?own.filter(p=>p&&ids.has(p.id)):[];
   }
+  // (r4) also save the AI-generated ESPHome YAML so it round-trips through the 3MF
+  const rawAi=store.get(ESPH_AI_KEY);
+  if(rawAi){try{e.esphomeAi=JSON.parse(rawAi);}catch(x){}}
   return e;
 }
 // Puts a saved project's electronics back. Parts are merged into the user's own parts (the file's copy of a part
@@ -647,6 +652,8 @@ function restoreElec(e){
   if(looked.length)e=Object.assign({},e,{parts:[...(Array.isArray(e.parts)?e.parts:[]),...looked.filter(p=>p&&p.id&&!(Array.isArray(e.parts)&&e.parts.some(q=>q&&q.id===p.id)))]});
   if(e.wizard&&Array.isArray(e.wizard.items))ok=store.trySet(ELEC_KEYS.wizard,JSON.stringify(e.wizard))&&ok;
   if(e.esphome&&typeof e.esphome==='object')ok=store.trySet(ELEC_KEYS.esphome,JSON.stringify(e.esphome))&&ok;
+  // (r4) restore AI-generated YAML if it was saved in the project
+  if(e.esphomeAi&&typeof e.esphomeAi==='object'){try{store.set(ESPH_AI_KEY,JSON.stringify(e.esphomeAi));}catch(x){}}
   if(e.intent)ok=restoreIntent(e.intent)&&ok;
   if(Array.isArray(e.parts)&&e.parts.length){
     const own=parseKey(ELEC_KEYS.parts);
@@ -2943,7 +2950,9 @@ const ICONS={
   standoff:'<path d="M2 21h20"/><path d="M7 21V9h10v12"/><ellipse cx="12" cy="9" rx="5" ry="1.6"/><path d="M10.4 9V4h3.2v5" stroke-dasharray="1.6 1.2"/>',
   boardmount:'<path d="M2 21h20"/><rect x="3" y="9" width="18" height="3" rx=".5"/><path d="M5.5 12v9M18.5 12v9"/><rect x="8" y="5" width="6" height="4"/><path d="M16 7h3"/>',
   makelid:'<path d="M3 8l9-4 9 4v3l-9 4-9-4z"/><path d="M3 8l9 4 9-4M12 12v3"/>',
-  parts:'<rect x="6" y="6" width="12" height="12" rx="1"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/>'
+  parts:'<rect x="6" y="6" width="12" height="12" rx="1"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/>',
+  clear:'<path d="M9 3h6v2H8.5L7 7h10l-1.5-2H15V3zM5 8h14l-1.5 13h-11zM10 11v7M14 11v7"/>',
+import:'<path d="M12 3v12M8 11l4 4 4-4M20 17v2a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2"/>'
 };
 const TOOLS=[['select','Select','Space'],null,['line','Line','L'],['rect','Rectangle','R'],['circle','Circle','C'],['arc','Arc','A'],['polygon','Polygon','N'],['solid','3D Shapes','D'],null,['push','Push/Pull','P'],['move','Move / Copy','M'],['rotate','Rotate','Q'],['round','Round / Chamfer edge','J'],['offset','Offset','F'],['follow','Follow Me','W'],['slice','Slice','X'],null,['erase','Eraser','E'],['paint','Paint Bucket','B'],null,['tape','Tape Measure','T'],['center','Find Centre','K'],null,['orbit','Orbit','O'],['pan','Pan','H'],['zoom','Zoom','Z']];
 // Icon colours by kind of tool, so the toolbar is quick to scan.
@@ -3008,9 +3017,30 @@ mkBtn('flat','Lay flat: click a face, and its object turns over to lie flat on t
 mkBtn('layall','Lay all flat: every separate piece turns over onto its own largest face, ready to print - handy after Generate makes several pieces at once',()=>layAllFlat());
 mkBtn('arrange','Arrange on bed: spreads every separate piece out sideways so none overlap, without changing how high up each one sits',()=>arrangeOnBed());
 for(const [ic,title,fn] of [['guides','Delete guides (Shift+E): remove all guide points left by the Tape Measure and Find Centre',()=>deleteGuides()],[''],['group','Group (G): keep the selection together, so it selects and moves as one piece',()=>groupSelected()],['ungroup','Ungroup (Shift+G): back to loose shapes',()=>ungroupSelected()],['join','Join (U): merge two or more objects into one solid; where they overlap or touch, the inside walls go',()=>joinSelected()],['subtract','Subtract (S): cut shapes out of an object. Click the object to keep, Shift+click the shapes to cut out of it, then Subtract',()=>subtractSelected()],['intersect','Intersect: keep only the part where the selected objects overlap',()=>intersectSelected()],['hide','Hide (Shift+H): hide the selected faces',()=>hideSelected()],['unhide','Unhide all (Shift+U): show all hidden faces again',()=>unhideAll()],['check','Check Model: is it ready to print? Problems are marked on the model',()=>openCheck()],[''],['enclosure','Enclosure Wizard: design a box around your electronics',()=>window.WFEnclosure&&WFEnclosure.openWizard()],['parts','Parts Library: your electronic parts (add new ones from a photo)',()=>window.WFEnclosure&&WFEnclosure.openLibrary()]])if(ic)mkBtn(ic,title,fn);
+mkBtn('clear','Clear build plate: discard everything and start a new project',()=>{if(confirm('Start a new project?\nThis will clear the build plate and all project data.')){docDirty=false;newProject();}});
+// (r4) Import a saved EvenUCan 3MF -- restores geometry plus idea, parts, box, wiring and code
+async function importProject(){
+  if(docDirty&&!confirm('Open a saved project?\nThis will replace the current build plate and all project data.'))return;
+  const IMPORT_TYPES=[{description:'EvenUCan project (3MF)',accept:{'model/3mf':['.3mf']}}];
+  if(window.showOpenFilePicker){
+    try{
+      const [h]=await window.showOpenFilePicker({types:IMPORT_TYPES});
+      const f=await h.getFile();
+      const had=await openBuffer(await f.arrayBuffer(),h.name);
+      if(!had)flash('This 3MF has no EvenUCan project data — only the 3D model was loaded.',5000);
+      else{fileHandle=h;flash('Project restored from '+h.name,3000);}
+      return;
+    }catch(err){if(err.name==='AbortError')return;console.warn('EvenUCan: import picker failed, using plain chooser',err);}
+  }
+  document.getElementById('importInput').click();
+}
+(()=>{const inp=document.createElement('input');inp.type='file';inp.id='importInput';inp.accept='.3mf';inp.style.display='none';
+  inp.addEventListener('change',async e=>{const f=e.target.files[0];if(f){const had=await openBuffer(await f.arrayBuffer(),f.name);if(!had)flash('This 3MF has no EvenUCan project data — only the 3D model was loaded.',5000);else flash('Project restored from '+f.name,3000);fileHandle=null;}e.target.value='';});
+  document.body.appendChild(inp);})();
+mkBtn('import','Import saved project: load a 3MF and restore idea, parts, box, wiring and code',()=>importProject());
 // The toolbar is made of groups. Drag a button to move it (the others slide aside and it snaps into place), or drag
 // a group by its grip. The order is remembered; right-click the toolbar to go back to the original order.
-const TB_DEFAULT=[['undo','redo'],['select'],['line','rect','circle','arc','polygon','solid','text'],['push','move','rotate','flip','offset','follow','round'],['erase','paint'],['tape','center'],['orbit','pan','zoom','extents'],['enclosure','parts']];
+const TB_DEFAULT=[['undo','redo'],['select'],['line','rect','circle','arc','polygon','solid','text'],['push','move','rotate','flip','offset','follow','round'],['erase','paint'],['tape','center'],['orbit','pan','zoom','extents'],['enclosure','parts','clear','import']];
 // (1.9.34) The rest (Copy/Paste, Group, Join, Subtract, Hide, Check, Lay flat, Arrange...) live in the menus; their buttons still
 // exist in TB_BTN, so the menus click them. A new storage key so an old, longer saved order doesn't bring the clutter back.
 const TB_KEYS=new Set(TB_DEFAULT.flat());
@@ -3849,7 +3879,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.153';
+const APP_VERSION='1.9.154';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5087,7 +5117,7 @@ window.WF={
   ghostsShown:v=>{if(v!==undefined){ghostOn=v;requestDraw();}return ghostOn;},
   clearSelection(){selection.clear();selChanged();},
   replaceModel(faces,name){if(tool.cancel)tool.cancel();model={faces,edges:[],guides:[]};fixIds();lastShape=null;selection.clear();if(name)docName=name;fileHandle=null;},
-  setTool,downloadBlob,download,store,bedText,fitsBed,readZip,pushPullMany,exportSTL,export3MF,
+  setTool,downloadBlob,download,store,bedText,fitsBed,readZip,pushPullMany,exportSTL,export3MF,saveFile,
   setBed(x,y,z){if(x>9&&y>9&&z>9){bed={x,y,z};store.set('bed',JSON.stringify(bed));}},
   setDocName(n){if(n){docName=String(n);setDirty(docDirty);}},
   // page position of a model point (for tests and add-ons)
@@ -5308,6 +5338,9 @@ markDirty();
 .ewHead{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
 .ewHead h2{font-size:15px;margin:0}
 .ewHead .ewNote{flex:1}
+.ewHints{margin:12px 0 4px;padding:8px 10px;background:var(--accent,#e8f4ff);border-left:3px solid var(--accent2,#4a90d9);border-radius:4px;font-size:12px}
+.ewHints b{display:block;margin-bottom:4px}
+.ewHint{margin:3px 0;line-height:1.4}
 .ewBody{flex:1;display:grid;grid-template-columns:380px minmax(0,1fr);min-height:0}
 .ewSide{overflow:auto;padding:4px 12px 12px;border-right:1px solid var(--line)}
 .ewMain{display:flex;flex-direction:column;min-width:0;min-height:0}
@@ -6824,6 +6857,22 @@ function runAuto(){
 function partOptions(sel,filter){
   return allParts().filter(filter||(()=>true)).map(p=>`<option value="${esc(p.id)}"${p.id===sel?' selected':''}>${esc(p.name)}</option>`).join('');
 }
+function smartHints(){
+  if(!wiz.items.length)return'';
+  const pts=wiz.items.map(it=>partById(it.pid)).filter(Boolean);
+  const tx=p=>((p.title||'')+' '+(p.family||'')+' '+(p.tags||[]).join(' ')).toLowerCase();
+  const hasSpeaker=pts.some(p=>/speaker|buzzer|piezo/.test(tx(p)));
+  const hasMic=pts.some(p=>/microphone|mic/.test(tx(p)));
+  const hasDisplay=pts.some(p=>partKind(p)==='display');
+  const hasStepper=pts.some(p=>/stepper/.test(tx(p)));
+  const hasDriver=pts.some(p=>/a4988|drv8825|tb67|l298|l293|uln2003|motor.?driver|stepper.?driver/.test(tx(p)));
+  const h=[];
+  if(hasSpeaker)h.push('<div class="ewHint">🔊 <b>Speaker / buzzer</b> — plan a ventilation grill on the facing wall so sound can get out</div>');
+  if(hasMic)h.push('<div class="ewHint">🎙 <b>Microphone</b> — plan a small hole, ideally centred on the facing wall</div>');
+  if(hasDisplay)h.push('<div class="ewHint">📺 <b>Display</b> — plan a viewport cutout on the facing wall or lid</div>');
+  if(hasStepper&&!hasDriver)h.push('<div class="ewHint">⚙️ <b>Stepper motor</b> — also needs a motor driver (A4988, DRV8825…) — consider adding it to your parts list</div>');
+  return h.length?'<div class="ewHints"><b>💡 Things to plan:</b>'+h.join('')+'</div>':'';
+}
 function renderSide(){
   const s=$('ewSide');
   const rows=wiz.items.map((it,i)=>{
@@ -6862,7 +6911,7 @@ ${wiz.size!=='auto'?`<div class="ewRow"><label>W <input type="number" data-w="sW
 <div class="ewRow"><label>Gap between parts <input type="number" data-w="gapOv" value="${esc(wiz.gapOv)}" min="0" step="0.5" placeholder="${STYLES[st].gap}"> mm</label></div>
 <div class="ewNote">Leave blank to use the style's own value.</div>
 <div class="ewRow"><label><input type="checkbox" data-w="inserts"${wiz.inserts?' checked':''}> Heat-set insert stand-offs for boards with screw holes</label></div>
-<div class="ewNote">Boards with holes get posts sized for brass inserts (M2 to M5); boards without holes still sit on rails with end stops. For a board in a box you draw yourself, use <b>Board mount</b> on the toolbar.</div>`;
+<div class="ewNote">Boards with holes get posts sized for brass inserts (M2 to M5); boards without holes still sit on rails with end stops. For a board in a box you draw yourself, use <b>Board mount</b> on the toolbar.</div>${smartHints()}`;
 }
 function wizChanged(rerender){saveWiz();if(rerender)renderSide();runAuto();}
 $('ewSide').addEventListener('change',e=>{
@@ -8710,8 +8759,6 @@ function planWiring(){
 
 // ---- ESPHome device file: a complete YAML for the controller, from the wiring plan and a few answers.
 // Each part gets the ESPHome section that matches its pin roles; the purpose decides what it does.
-const ESPH_KEY='esphome.form';
-const ESPH_AI_KEY='esphome.ai';// persists the AI-written YAML across re-renders / page reloads
 // A short fingerprint for a set of unknown parts: sorted "label:pin,pin" strings joined.
 // If the fingerprint matches what was stored, the AI result is still valid.
 const esphAiSig=unknown=>unknown.map(u=>u.label+':'+u.pins.map(p=>p.gpio).sort().join(',')).sort().join('|');
@@ -9309,7 +9356,7 @@ is <select data-ef="ruleOp"><option value="above"${f.ruleOp!=='below'?' selected
 <div id="wrAiOut">${wr.aiMsg||''}</div>
 `+_makeAiBtn+`<div class="ewRow"><label>AI <select id="wrProv">${Object.entries(PROVIDERS).map(([k,v])=>`<option value="${k}"${aiProv()===k?' selected':''}>${esc(v.name)}${aiKey(k)?' ✓':''}</option>`).join('')}</select></label><button id="wrKey">${keyLabel()}</button></div></div>`;
   h+=`<textarea readonly class="wrCode" id="wrEsp" style="height:200px;margin-top:6px">${esc(esphCurrent(r))}</textarea>
-<div class="ewRow"><button id="wrPfIde" class="primary hoMain" title="Put this device into your ESPHome folder, open ESPHome and show each step to get it on the board">Open in ESPHome</button><button class="sec" data-copy="wrEsp">Copy YAML</button><button class="sec" id="wrEspSave">Save .yaml…</button>${window.wfNative&&window.wfNative.esphomeCheck?'<button class="sec" id="wrEspCheck" title="Check the file with the ESPHome on this computer (the same as Validate in ESPHome Device Builder)">Check with ESPHome</button>':''}</div>
+<div class="ewRow"><button id="wrPfIde" class="primary hoMain" title="Put this device into your ESPHome folder, open ESPHome and show each step to get it on the board">Open in ESPHome</button><button class="sec" data-copy="wrEsp">Copy YAML</button><button class="sec" id="wrEspSave">Save .yaml…</button>${window.wfNative&&window.wfNative.esphomeCheck?'<button class="sec" id="wrEspCheck" title="Check the file with the ESPHome on this computer (the same as Validate in ESPHome Device Builder)">Check with ESPHome</button>':''}<button class="primary" id="wrSaveProject" title="Save the complete project as a 3MF — idea, parts, box, wiring and code all in one file you can reload or share" style="margin-left:auto">💾 Save project…</button></div>
 <div id="wrEspOut"></div>`+ntfyBox(intentTopic())+(r.warn.length?`<ul style="list-style:none;padding:0;margin:6px 0">${r.warn.map(w=>`<li class="warn"><span class="ic">!</span><span style="color:var(--text)">${esc(w)}</span></li>`).join('')}</ul>`:'')+
 `<div class="ewNote" style="margin-top:6px">Click <b>Open in ESPHome</b>: EvenUCan puts this device in your ESPHome folder, opens ESPHome and stays on screen with each step until it is on your board.</div>`;
   return h;
@@ -10041,6 +10088,7 @@ $('wrSide').addEventListener('click',e=>{
     return;
   }
   if(el.id==='wrEspSave'){const r=esphomeYaml(wr.plan,esphForm());if(r.yaml){WF.downloadBlob(r.slug+'.yaml',new Blob([esphCurrent(r)],{type:'text/yaml'}));WF.flash('Saved '+r.slug+'.yaml');}}
+  if(el.id==='wrSaveProject'){WF.saveFile&&WF.saveFile();return;}
   if(el.id==='wrEspCheck'){
     const r=esphomeYaml(wr.plan,esphForm()),out=$('wrEspOut');if(!r.yaml)return;
     el.disabled=true;out.innerHTML='<div class="ewNote">Checking with ESPHome… (the first check can take a minute)</div>';
@@ -12014,9 +12062,10 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
 <div class="ewRow" style="margin-top:6px"><input id="iwAddSearch" type="search" placeholder="Type what you're looking for — e.g. gyroscope, air quality, DHT22, screen…" style="flex:1;min-width:0" autocomplete="off"></div>
 <div id="iwAddResults" style="max-height:230px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;margin-top:6px"><div class="ewNote" style="padding:6px 8px">Type above to search your own parts and the full ready-made library.</div></div></div>`;
     }
+    const auditBanner=iw.audit?(iw.audit.verdict==='PASS'?'<div style="margin:10px 0;padding:8px 12px;border-radius:6px;border-left:4px solid #0a0;background:var(--bg2,#f5fff5)"><b>✅ Engineering check passed</b> — no issues found with the parts list.</div>':`<div style="margin:10px 0;padding:10px 12px;border-radius:6px;border-left:4px solid ${iw.audit.verdict==='FAIL'?'#c00':'#c80'};background:${iw.audit.verdict==='FAIL'?'#fff5f5':'#fffdf0'}"><b>${iw.audit.verdict==='FAIL'?'⛔ Engineering check: issues found':'⚠️ Engineering check: review recommended'}</b>${iw.audit.violations&&iw.audit.violations.length?'<ul style="margin:6px 0 2px;padding-left:18px">'+iw.audit.violations.map(v=>`<li><b>${esc(v.rule)}</b> — ${esc(v.detail)}</li>`).join('')+'</ul>':''}${iw.audit.corrections&&iw.audit.corrections.length?'<div style="margin-top:4px"><b>Suggested fixes:</b><ul style="margin:4px 0;padding-left:18px">'+iw.audit.corrections.map(c=>`<li>${esc(c)}</li>`).join('')+'</ul></div>':''}</div>`):'';
     b.innerHTML=`<h4 style="margin-top:0">${esc(A.name||'Your device')}</h4><p style="margin:4px 0 10px">${esc(A.summary)}</p>`+capHtml(issues)+`
 <h4>Which board runs it?</h4><div class="ewRow" role="group" aria-label="Platform" style="flex-wrap:wrap">${pfBtns}</div><p style="margin:4px 0">${why}<span class="ewNote">${esc(PF.about)}</span></p>${gone}
-<h4 id="iwPartsHead">The parts I picked, and why</h4><ul style="list-style:none;padding:0;margin:0">${rows}</ul>${missingWarning}${editor}${pow}`+
+<h4 id="iwPartsHead">The parts I picked, and why</h4><ul style="list-style:none;padding:0;margin:0">${rows}</ul>${missingWarning}${auditBanner}${editor}${pow}`+
       (A.code_description||A.esphome_notes?`<h4>How the code will work</h4><p class="ewNote" style="font-size:13px;margin:0">${esc(A.code_description||A.esphome_notes)}</p>`:'')+
       (pf!=='esphome'&&A.code_libraries.length?`<p class="ewNote" style="margin:4px 0 0">Libraries the AI suggested: ${esc(A.code_libraries.join(', '))}</p>`:'')+
       (ins?`<div class="efbox" style="line-height:1.4"><b>A few things I need from you</b><div class="ewNote">They are kept on this computer and saved with your project file, and written into the device's code.</div>${ins}</div>`:'')+ntfyBox(topic)+wifiIn;
@@ -12058,7 +12107,8 @@ async function intentAnalyse(){
     try{
       const _cl=iw.clarify||null;
       const _clNote=_cl?`\nUSER PREFERENCES (answered before this step):\n- Power: ${_cl.power==='battery'?'battery-powered — MANDATORY: you MUST include deep_sleep in every ESPHome config for this build (use the deep_sleep: component with a suitable sleep_duration); always select low-power components; in your explanation tell the user in plain English that you have set it up in battery-save mode so it will last as long as possible, that it will send a phone message when the battery is low, and that mains power is always simpler and more reliable if a cable can be run':_cl.power==='mains'?'mains adaptor (always-on)':'USB or mains adaptor (plugged in)'}\n- Phone alerts: ${_cl.phone?'yes — include ntfy notification support':'not needed'}\nFactor these into your parts selection and explanation.\n`:'';
-      const text=INTENT_PROMPT+_clNote+(window.ownedPartsNote?ownedPartsNote():'')+'\n\nWhat the beginner wants:\n"""'+desc+'"""';
+      const _rulesSection=PARTS_RULES_PROMPT.slice(0,PARTS_RULES_PROMPT.indexOf('\nOUTPUT FORMAT — FOLLOW EXACTLY'));
+      const text=INTENT_PROMPT+'\n\n---ENGINEERING SAFETY RULES (apply ALL when selecting parts; these override defaults)---\n'+_rulesSection+'\n---END OF ENGINEERING RULES---\n\n'+_clNote+(window.ownedPartsNote?ownedPartsNote():'')+'\n\nWhat the beginner wants:\n"""'+desc+'"""';
       // (PNA fix) Start the AI fetch and library load together so the Ollama fetch begins
       // immediately within Chrome's Private Network Access user-activation window — no await
       // before this point that could expire it. ensureLibraryReady() runs in parallel.
@@ -12076,10 +12126,20 @@ async function intentAnalyse(){
     if(iw.userPf&&PLATFORMS[iw.userPf]){iw.pf=iw.userPf;iw.override=iw.pf!==iw.analysis.platform;}iw.userPf=null;// (r4) the board they said they have
     iw.base=await intentMatch(iw.analysis.parts);iw.matches=pfMatches(iw.base,iw.pf);
     iw.power=(iw.base.find(m=>m.from==='power')||{}).power||'usb';iw.dropped=[];iw.edit=false;
-    iw.step='result';
+    iw.step='result';iw.audit=null;
+    if(aiKey())intentAudit().catch(e=>console.warn('EvenUCan: parts audit skipped',e));
     if(iwBack.style.display!=='grid')WF.flash('Your parts list is ready: click 💡 What do I want to build? to see it',8000);
   }catch(e){console.error('EvenUCan: could not match the parts for the project idea',e);iw.step='error';iw.err='Something went wrong while finding the parts: '+(e&&e.message||e);iw.raw='';}
   finally{_cdStop();iw.busy=false;renderIntent();}
+}
+async function intentAudit(){
+  if(!iw.base||!iw.base.length||!aiKey())return;
+  const list=iw.base.filter(m=>m.spec).map(m=>({search:m.spec.search,function:m.spec.function,part:m.part?m.part.name:null,from:m.from||null}));
+  if(!list.length)return;
+  const text=PARTS_AUDIT_PROMPT+'\n\nParts list to audit:\n'+JSON.stringify(list,null,2);
+  const {data}=await callAI(text);
+  if(!data||!data.verdict)return;
+  iw.audit=data;renderIntent();
 }
 async function intentApply(){
   const A=iw.analysis,inputs={},pf=pfOk(iw.pf);
@@ -12098,6 +12158,19 @@ async function intentApply(){
   const items=[];
   for(const m of iw.matches){if(!m.part)continue;const ex=items.find(i=>i.pid===m.part.id);if(ex)ex.qty=Math.min(10,ex.qty+1);else items.push({pid:m.part.id,qty:1,mount:'auto',wall:'auto'});}
   wiz.items=items;wiz.power=iw.power||'usb';saveWiz();lay=null;
+  // --- Dimension gate: warn / block if matched parts have unverified or estimated sizes ---
+  if(items.length){
+    const pNames=items.map(i=>{const p=partById(i.pid);return p?p.name:null;}).filter(Boolean);
+    if(pNames.length){
+      const dimCheck=await checkEnclosureDimensions(pNames).catch(()=>null);
+      if(dimCheck&&!dimCheck.ok&&dimCheck.unverified.length){
+        const list=dimCheck.unverified.map(n=>'• '+n).join('\n');
+        if(!confirm('Some parts have unverified dimensions — the enclosure may not fit:\n\n'+list+'\n\nOpen the Parts Library to measure them, then try again.\n\nClick OK to generate anyway, or Cancel to go back and fix them first.'))return;
+      }else if(dimCheck&&dimCheck.estimated&&dimCheck.estimated.length){
+        WF.flash('Note: '+dimCheck.estimated.join(', ')+' '+(dimCheck.estimated.length===1?'has':'have')+' estimated dimensions — measure before printing.',8000);
+      }
+    }
+  }
   // the ESPHome answers: the device's name and the idea as its description (unless the user wrote their own)
   const f=esphForm();if(A.name)f.name=A.name;f.purpose='sensor';
   if(!f.desc||(prev&&f.desc===prev.desc))f.desc=iw.desc;
