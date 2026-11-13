@@ -3851,7 +3851,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.157';
+const APP_VERSION='1.9.158';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -6696,7 +6696,7 @@ async function buildSolids(L){
     }
     if(D>=12){
       const bp=0.5,bch=7*bp,bcg=bp,bcw=5*bp;
-      const line1='MADE WITH',line2='EVENUCAN';
+      const line1='Made With',line2='Even-U-Can';
       const n1=[...line1].filter(c=>FONT5X7[c]).length,n2=[...line2].filter(c=>FONT5X7[c]).length;
       const tw1=n1*(bcw+bcg)-bcg,tw2=n2*(bcw+bcg)-bcg;
       if(tw1<=W-4&&tw2<=W-4){
