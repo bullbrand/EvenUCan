@@ -750,9 +750,13 @@ async function buildSolids(L){
       const n1=[...line1].filter(c=>FONT5X7[c]).length,n2=[...line2].filter(c=>FONT5X7[c]).length;
       const tw1=n1*(bcw+bcg)-bcg,tw2=n2*(bcw+bcg)-bcg;
       if(tw1<=W-4&&tw2<=W-4){
-        const bcy1=1.5+bch/2,bcy2=1.5+bch+0.5+bch/2;
-        const bm1=textFloor(line1,W/2,bcy1,0,0.4,bp);if(bm1)subs.push(bm1);
-        const bm2=textFloor(line2,W/2,bcy2,0,0.4,bp);if(bm2)subs.push(bm2);
+        // Branding goes on the OUTSIDE bottom face (z=-f), not the inside floor
+        const bz=-f+0.4;// cube runs bz-0.4 .. bz+0.1, so it cuts 0.4 mm up from the bottom face
+        const bcy1=D/2-bch*0.5-0.25,bcy2=D/2+bch*0.5+0.25;
+        // Mirror the text so it reads correctly when the box is flipped over to view the bottom
+        const mirrorBottom=m=>K(K(m.mirror([1,0,0])).translate([W,0,0]));
+        const bm1=textFloor(line1,W/2,bcy1,bz,0.4,bp);if(bm1)subs.push(mirrorBottom(bm1));
+        const bm2=textFloor(line2,W/2,bcy2,bz,0.4,bp);if(bm2)subs.push(mirrorBottom(bm2));
       }
     }
     // ---- base

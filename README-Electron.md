@@ -22,6 +22,32 @@ main.js             the small program that opens the window and shows EvenUCan.h
 preload.js          the few desktop-only helpers the page may use (saving files, opening ESPHome or the Arduino IDE...)
 netbridge.js        the desktop app's internet helper for the AI and Fill in automatically (only known AI sites; time and size limits)
 app/                the web app itself: HTML, parts-library JSON files, manual, licence
+                    (app/EvenUCan.html is generated: don't edit it by hand, edit src/ instead)
+src/                the source pieces that build app/EvenUCan.html
+  index.html          the page layout; each "<!-- INJECT path -->" line is replaced by that file's contents
+  styles.css          main stylesheet
+  wizard.css          wizard stylesheet
+  vendor/             embedded Anthropic SDK (anthropic.html) and Manifold WASM (manifold.html), minified
+  js/                 all the scripts, loaded in this order:
+    boot.js             start-up
+    geometry.js         geometry helpers
+    tools.js            drawing tools
+    app-shell.js        the main app window and shell
+    version.js          APP_VERSION
+    solids.js           3D solids
+    menus-start.js      menus and the start screen
+    wizard-catalogue.js wizard parts catalogue
+    wizard-engine.js    wizard logic
+    wizard-window.js    wizard window
+    parts-photo.js      identify parts from a photo
+    wiring.js           wiring
+    handoff-ai.js       AI hand-off
+    parts-import.js     parts import
+    intent-wizard.js    "what do you want to make?" wizard
+    parts-search.js     parts search / Fill in automatically
+    guide-cookbook.js   guides and cookbook
+build.js            run "node build.js" after editing src/ to regenerate app/EvenUCan.html
+bump-and-push.ps1   release script: bumps the version, runs build.js, commits and pushes
 build/              the app icons (placeholders for now: see section 4)
 .github/workflows/  the instructions GitHub follows to build the installers for you
 ```
