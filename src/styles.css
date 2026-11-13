@@ -1,0 +1,207 @@
+:root{--bg:#ececec;--panel:#f6f6f6;--line:#c9c9c9;--text:#222;--accent:#1e5af0;--muted:#666}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font:13px/1.3 "Segoe UI",system-ui,sans-serif;color:var(--text);background:var(--bg);overflow:hidden;user-select:none}
+#app{display:grid;grid-template-rows:auto auto auto 1fr auto;grid-template-columns:minmax(0,1fr);height:100vh}
+#menubar{display:flex;gap:4px;align-items:center;padding:3px 6px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
+/* Desktop-style menu bar: File, Edit, Draw, Modify, View, Tools, Help. One drop-down (#mdrop) is filled from MENUS. */
+#mbar{display:flex;align-items:center;gap:1px;flex:none}
+#menubar #mbar .mtop{border:1px solid transparent;background:none;padding:4px 10px;border-radius:5px;font-size:13.5px}
+#menubar #mbar .mtop:hover{background:#e6ecfa}
+#menubar #mbar .mtop[aria-expanded="true"]{background:#d5e1ff;border-color:#9db5f5}
+#menubar #mbar .mtop:focus-visible{outline:2px solid #f0a020;outline-offset:1px}
+.mspace{flex:1 1 0;min-width:6px}
+#menubar #bBuild{flex:none;padding:4px 12px}
+#legacyBtns{display:none!important}
+/* (1.9.35) Colourful icons from the #fiSprite symbols. Reset what an outer svg would otherwise pass down into them. */
+svg.fi{width:24px;height:24px;fill:#000;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;opacity:1;overflow:visible;pointer-events:none;flex:none}
+#toolbar svg.fi{width:24px;height:24px}
+#menubar #appIcon{flex:none;width:30px;height:30px;padding:2px;border:1px solid transparent;background:none;border-radius:7px;display:grid;place-items:center;margin-right:2px}
+#menubar #appIcon:hover{background:#e6ecfa}#menubar #appIcon img{width:24px;height:24px;display:block;border-radius:5px}
+#mdrop .it .mi{width:18px;height:18px;flex:none;display:grid;place-items:center;margin-left:-4px}
+#mdrop .it .mi svg.fi{width:18px;height:18px}
+#mdrop .it.off .mi{opacity:.35;filter:grayscale(1)}
+#mdrop{position:fixed;z-index:72;background:#fff;border:1px solid #c9cfda;border-radius:7px;box-shadow:0 6px 22px #0003;padding:4px 0;min-width:250px;max-height:calc(100vh - 50px);overflow-y:auto;font-size:13px;display:none;user-select:none}
+#mdrop .it{display:flex;align-items:center;gap:8px;padding:3px 14px 3px 8px;cursor:pointer;outline:none}
+#mdrop .it .ck{width:16px;flex:none;text-align:center;color:#1e5af0;font-weight:700}
+#mdrop .it .lb{flex:1;margin-right:14px}
+#mdrop .it kbd{background:none;border:none;color:#7a8394;font:12px "Segoe UI",sans-serif;padding:0}
+#mdrop .it:hover,#mdrop .it:focus{background:#e6ecfa}
+#mdrop .it.off{color:#aab0bb;cursor:default;background:none}
+#mdrop .sep{height:1px;width:auto;background:#e4e7ee;margin:4px 0}
+#mdrop .hd{padding:5px 14px 2px 52px;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.4px}
+@media (max-width:900px){.brand .tag{display:none}}
+@media (max-width:700px){.brand{display:none}#menubar #mbar .mtop{padding:4px 7px}}
+@media (max-width:520px){#bBuild .bl{display:none}}
+#menubar button,#menubar select{font:inherit;padding:4px 9px;border:1px solid var(--line);background:#fff;border-radius:4px;cursor:pointer;color:var(--text)}
+#menubar button:hover{background:#eef3ff}
+#menubar button.on{background:#d5e1ff;border-color:#9db5f5}
+.sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.brand{font-weight:700;margin:0 10px 0 4px;letter-spacing:.3px;white-space:nowrap}
+.brand .tag{font-weight:400;color:var(--muted);font-size:12px;margin-left:4px}
+/* Always-visible ownership mark in the corner of the 3D view. */
+#copyright{position:absolute;right:8px;bottom:6px;font-size:11px;color:#2c3440;background:#ffffffb8;padding:2px 7px;border-radius:3px;pointer-events:none;user-select:none;z-index:2}
+#toolbar{display:flex;flex-direction:row;flex-wrap:nowrap;align-items:center;gap:2px;padding:2px 6px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+#toolbar button{flex:none;width:32px;height:32px;border:1px solid transparent;background:none;border-radius:6px;cursor:pointer;display:grid;place-items:center;padding:0}
+#toolbar button:hover{background:#e6ecfa}
+#toolbar button.on{background:#d5e1ff;border-color:#9db5f5}
+/* each icon in its group's colour (--ic), with a faint fill of the same colour so it stands out */
+#toolbar svg:not(.fi){width:20px;height:20px;fill:none;stroke:var(--ic,#333);stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+#toolbar svg:not(.fi) :is(rect,circle,ellipse,path[d$="z"]){fill:color-mix(in srgb,var(--ic,#333) 16%,transparent)}
+#toolbar .gap{flex:none;width:1px;height:24px;background:var(--line);margin:0 4px}
+/* button groups: drag a button or a group's grip to rearrange */
+#toolbar .tbg{display:flex;align-items:center;gap:1px;padding:0 3px 0 0;margin-right:2px;border-right:1px solid var(--line)}
+#toolbar .tbg:last-child{border-right:none}
+/* (1.9.38) Grouped toolbar: every useful menu command has a button, in labelled groups. Click a group's name to fold it. */
+#toolbar.ribbon{flex-wrap:wrap;align-items:stretch;overflow:visible;row-gap:3px;padding:2px 4px}
+#toolbar.ribbon .tbg{flex:none;flex-direction:column;align-items:stretch;gap:1px;padding:0 5px;margin:0;border-right:1px solid var(--line)}
+#toolbar .tgh{width:auto;height:15px;display:flex;align-items:center;justify-content:flex-start;gap:3px;padding:0 3px;border:none;border-radius:3px;background:none;font:600 10.5px "Segoe UI",sans-serif;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+#toolbar .tgh:hover{background:#e6ecfa;color:var(--text)}
+#toolbar .tgh .ar{display:inline-block;font-size:9px;transition:transform .15s}
+#toolbar .tbg.shut .tgh .ar{transform:rotate(-90deg)}
+#toolbar .tbg.shut .tgb{display:none}
+#toolbar .tgb{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,28px);grid-auto-columns:28px;gap:1px}
+#toolbar.ribbon .tgb button{width:28px;height:28px;position:relative}
+#toolbar.ribbon .tgb svg.fi{width:22px;height:22px}
+#toolbar .tgb .tl{display:none}
+#toolbar .tgb .bd{position:absolute;right:-1px;bottom:0;font:700 7.5px/1 "Segoe UI",sans-serif;background:#fff;color:#1d3d75;border:1px solid #9fb1d6;border-radius:3px;padding:1px 2px;pointer-events:none}
+#toolbar button.off{opacity:.35;filter:grayscale(1);cursor:default}
+#toolbar button.off:hover{background:none}
+#toolbar.names .tgb{grid-template-rows:repeat(2,42px);grid-auto-columns:54px}
+#toolbar.names .tgb button{width:54px;height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+#toolbar.names .tgb .tl{display:block;font:10px/11px "Segoe UI",sans-serif;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52px}
+#toolbar.names .tgb .bd{bottom:auto;top:2px;right:2px}
+@media (max-width:1000px){#toolbar.ribbon{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}}/* small windows: slide the toolbar sideways */
+#toolbar .tgn{flex:none;width:auto;height:22px;align-self:center;padding:0 8px;margin-left:4px;border:1px solid var(--line);background:#fff;font:11px "Segoe UI",sans-serif;color:var(--text)}
+#toolbar .grip{flex:none;width:6px;height:22px;margin:0 2px 0 1px;cursor:grab;border-radius:2px;opacity:.35;background:radial-gradient(circle,#667 1px,transparent 1.4px) 0 0/3.5px 4px}
+#toolbar .grip:hover{opacity:.9;background-color:#e6ecfa}
+#toolbar.arranging,#toolbar.arranging *{cursor:grabbing!important}
+#toolbar .dragging{opacity:.45;outline:2px dashed #7a95e8;outline-offset:1px;border-radius:6px}
+#view{position:relative;overflow:hidden;background:#e6edf4 linear-gradient(#cfe0f1 0%,#eef3f8 55%,#e4e2dc 100%);forced-color-adjust:none}
+/* Keep the 3D view and tool buttons readable when Windows high-contrast / forced colours is on. */
+#toolbar,#menubar,#statusbar{forced-color-adjust:none}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#ov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#askBack{position:fixed;inset:0;background:#0004;display:grid;place-items:center;z-index:50}
+#askBox{background:#fff;border-radius:8px;padding:16px;width:min(380px,calc(100% - 32px));box-shadow:0 6px 24px #0004}
+#askBox .msg{white-space:pre-line;margin-bottom:10px;max-height:60vh;overflow:auto;overflow-wrap:anywhere;user-select:text}
+#askBox input{width:100%;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:4px}
+#askBox .btns{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+#askBox button{font:inherit;padding:5px 14px;border:1px solid var(--line);background:#fff;border-radius:4px;cursor:pointer}
+#askBox button[data-ok]{background:var(--accent);color:#fff;border-color:var(--accent)}
+#askBox.keyBox{width:min(540px,calc(100% - 32px));font-size:13.5px;line-height:1.45}
+#askBox.keyBox .kHead{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+#askBox.keyBox .kHead select{font:inherit;padding:3px 6px}
+#askBox.keyBox ol{margin:8px 0 10px 20px;padding:0}
+#askBox.keyBox .kOpen{justify-content:flex-start;margin:0 0 8px}
+#askBox.keyBox .kTest{min-height:20px;margin-top:6px}
+#askBox.keyBox .ok{color:#1a8a3a}#askBox.keyBox .bad{color:#c0201a}
+#askBox.keyBox button:disabled{opacity:.5;cursor:default}
+#checkPanel{width:330px;line-height:1.45}
+#checkPanel h3{margin:0 0 6px}
+#checkPanel .item{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid #eee}
+#checkPanel .ic{font-weight:700;width:18px;flex:none;text-align:center}
+#checkPanel .ok{color:#1a8a3a}
+#checkPanel .bad{color:#c0201a}
+#checkPanel .warn{color:#d06a00}
+#checkPanel button{font:inherit;font-size:12px;padding:2px 8px;margin-top:3px;border:1px solid var(--line);background:#fff;border-radius:4px;cursor:pointer}
+#checkPanel .verdict{margin:8px 0 4px;font-weight:700}
+#checkPanel .foot{display:flex;gap:6px;margin-top:6px}
+#statusbar{display:flex;align-items:center;gap:10px;padding:3px 8px;background:var(--panel);border-top:1px solid var(--line)}
+#hint{flex:1;min-width:0;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stats{color:var(--muted);white-space:nowrap}
+#vcbLabel{color:var(--muted);min-width:70px;text-align:right}
+#vcb{width:180px;font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:3px}
+#marker{position:absolute;pointer-events:none;display:none;left:0;top:0}
+#marker .dot{position:absolute;width:11px;height:11px;margin:-6px 0 0 -6px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #0007}
+#marker .lbl{position:absolute;left:10px;top:8px;background:#fffff2;border:1px solid #999;padding:1px 5px;font-size:11px;white-space:nowrap;border-radius:3px}
+#hist{position:absolute;left:8px;top:8px;width:172px;max-height:calc(100% - 16px);display:flex;flex-direction:column;background:#fffffff0;border:1px solid var(--line);border-radius:7px;box-shadow:0 2px 10px #0002;z-index:3;font-size:12.5px;user-select:none}
+#hist .hHead{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid #e3e6ea;cursor:pointer}
+#hist .hHead:hover{background:#f1f5fb}
+#hist .hArrow{font-size:10px;color:#667}
+#hist .hCount{margin-left:auto;color:var(--muted);font-size:11px}
+#hist .hList{list-style:none;margin:0;padding:3px 0;overflow-y:auto;flex:1;min-height:0}
+#hist li{display:flex;gap:6px;padding:3px 8px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hist li:hover{background:#eaf1ff}
+#hist li .n{color:#99a;min-width:22px;text-align:right;font-variant-numeric:tabular-nums}
+#hist li.cur{background:#2f7cf6;color:#fff;font-weight:600}#hist li.cur .n{color:#dbe7ff}
+#hist li.gone{color:#a3a8b0;font-style:italic}
+#hist .hFoot{padding:4px 8px 6px;color:var(--muted);font-size:11px;border-top:1px solid #e3e6ea}
+#hist.closed{width:auto}#hist.closed .hList,#hist.closed .hFoot,#hist.closed .hCount{display:none}#hist.closed .hHead{border-bottom:0}#hist.closed .hArrow{transform:rotate(180deg)}
+#vcube{position:absolute;right:var(--vcr,10px);top:10px;width:112px;z-index:4;transition:right .45s ease,top .45s ease,width .45s ease;user-select:none}
+#vcube canvas{display:block;width:100%;aspect-ratio:1;cursor:grab;touch-action:none}
+#vcube .vcHome{position:absolute;left:-2px;top:-2px;width:24px;height:24px;padding:0;font-size:16px;line-height:20px;border:1px solid var(--line);background:#fffd;border-radius:5px;cursor:pointer;color:#3a4250}
+#vcube .vcHome:hover{background:#eaf1ff}
+#vcube .vcPlane{display:none;margin:-4px auto 0;width:max-content;max-width:180px;font-size:11px;background:#e3eeff;border:1px solid #9bbcf2;color:#1a3fa0;border-radius:10px;padding:1px 8px;cursor:pointer;text-align:center}
+#vcube .vcIntro,#vcube .vcSkip{display:none}
+#vcube.center{right:calc(50% - 150px);top:calc(50% - 200px);width:300px}
+#vcube.center .vcHome,#vcube.center .vcPlane{display:none!important}
+#vcube.center .vcIntro{display:block;text-align:center;background:#fffe;border-radius:10px;padding:8px 12px;box-shadow:0 2px 12px #0002;margin:0 -60px 4px}
+#vcube.center .vcIntro b{display:block;font-size:17px;margin-bottom:2px}
+#vcube.center .vcIntro span{font-size:13px;color:#555}
+#vcube.center .vcSkip{display:block;margin:2px auto 0;font:inherit;font-size:13px;padding:5px 14px;border:1px solid var(--line);background:#fff;border-radius:16px;cursor:pointer}
+#vcube.center .vcSkip:hover{background:#eaf1ff}
+#dims{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+#dims .dim{position:absolute;left:0;top:0;pointer-events:auto;background:#fff;border:1.5px solid #2a5bd7;color:#1a3fa0;font-size:12px;line-height:16px;padding:1px 7px;border-radius:10px;cursor:pointer;white-space:nowrap;box-shadow:0 1px 3px #0003;user-select:none}
+#dims .dim:hover{background:#eaf1ff}
+#dims .dim.x{border-color:#d33;color:#a11}#dims .dim.y{border-color:#2a9a2a;color:#1d6e1d}#dims .dim.z{border-color:#2a5bd7;color:#1a3fa0}
+#dims input{position:absolute;left:0;top:0;width:84px;font:inherit;font-size:12px;padding:2px 5px;border:2px solid #2a5bd7;border-radius:5px;pointer-events:auto;box-shadow:0 1px 6px #0004}
+#box{position:absolute;border:1px solid #1e5af0;background:#1e5af018;display:none;pointer-events:none}
+#box.cross{border-style:dashed;background:#1ea05018;border-color:#1a8a40}
+.panel{position:absolute;right:8px;top:8px;background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px;box-shadow:0 2px 10px #0002;display:none}
+#palette{width:196px}
+#palette .sw{display:inline-block;width:36px;height:36px;margin:2px;border-radius:4px;border:2px solid #fff;box-shadow:0 0 0 1px #0003;cursor:pointer;vertical-align:top}
+#palette .sw.on{box-shadow:0 0 0 3px var(--accent)}
+#palette .name{margin:6px 0 4px;color:var(--muted)}
+#textPanel,#holePanel{width:220px}
+#standoffPanel,#boardPanel{width:250px;max-height:calc(100% - 24px);overflow:auto;box-sizing:border-box}
+#holePanel label,#standoffPanel label,#boardPanel label{display:block;margin:5px 0;font-size:12.5px;color:#333}
+#holePanel select,#holePanel input[type=number],#standoffPanel select,#standoffPanel input[type=number],#boardPanel select,#boardPanel input[type=number]{display:block;width:100%;box-sizing:border-box;margin-top:2px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px}
+#holePanel label.chk,#standoffPanel label.chk,#boardPanel label.chk{display:flex;align-items:center;gap:6px;margin:4px 0}
+#standoffPanel .warn{margin-top:6px;padding:6px 8px;background:#fff4e5;border:1px solid #f0b46a;border-radius:5px;font-size:12px;color:#8a4b00;line-height:1.35}
+#standoffPanel button,#boardPanel button{margin-top:6px;font:inherit;font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:4px;background:#f4f6fb;cursor:pointer}
+#holePanel .sizes,#standoffPanel .sizes,#boardPanel .sizes{margin-top:6px;padding:6px 8px;background:#f1f5fb;border-radius:5px;font-size:12px;color:#1a3fa0;line-height:1.35}
+#holePanel .note,#standoffPanel .note,#boardPanel .note{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.35}
+#textPanel label{display:block;margin:5px 0;font-size:12.5px;color:#333}
+#textPanel label input:not([type=checkbox]):not([type=radio]),#textPanel select{display:block;width:100%;box-sizing:border-box;margin-top:2px;font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px}
+#textPanel .row2{display:flex;gap:8px}#textPanel .row2 label{flex:1}#textPanel .row2 input{width:100%!important}
+#textPanel label.chk{display:flex;align-items:center;gap:6px;margin:3px 0}
+#textPanel .note{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.35}
+#shapes{width:130px}
+#shapes .name{margin:0 0 6px;color:var(--muted)}
+#shapes button{display:block;width:100%;margin:3px 0;padding:5px 8px;text-align:left;font:inherit;border:1px solid var(--line);background:#fff;border-radius:5px;cursor:pointer}
+#shapes button:hover{background:#eef3ff}
+#shapes button.on{background:#d5e1ff;border-color:#9db5f5;font-weight:600}
+#help{width:min(560px,calc(100% - 16px));max-height:calc(100% - 16px);overflow:auto;line-height:1.5}
+#bedPanel{width:290px}
+#bedPanel h3{margin:0 0 8px}
+#bedPanel .row{margin:6px 0}
+#bedPanel label{display:flex;align-items:center;gap:6px}
+#bedPanel input{width:80px;font:inherit;padding:3px 5px;margin-left:auto}
+#bedPanel select{font:inherit;flex:1}
+#bedPanel button{font:inherit;padding:4px 12px;border:1px solid var(--line);background:#fff;border-radius:4px;cursor:pointer}
+#bedPanel .note{color:var(--muted);font-size:12px;margin:8px 0 0}
+#help h3{margin:0 0 6px}
+#help table{border-collapse:collapse;width:100%}
+#help td{padding:2px 6px;border-bottom:1px solid #eee;vertical-align:top}
+#help td:first-child{white-space:nowrap;font-weight:600}
+kbd{background:#f1f1f1;border:1px solid #ccc;border-radius:3px;padding:0 4px;font:11px monospace}
+/* a box's grey hint disappears as soon as you click in it to type */
+input:focus::placeholder,textarea:focus::placeholder{color:transparent}
+/* quick tooltip for the toolbar and menu: name, shortcut key and what it does */
+#tip{position:fixed;z-index:60;pointer-events:none;background:#20242c;color:#fff;font-size:12px;line-height:1.35;padding:6px 9px;border-radius:6px;max-width:290px;box-shadow:0 3px 12px #0004;display:none}
+#tip b{font-size:13px}
+#tip kbd{background:#ffd43b;color:#222;border:none;font:700 11px ui-monospace,monospace;padding:1px 6px;margin-left:7px;border-radius:4px}
+#tip .d{display:block;margin-top:2px;color:#cfd6e4}
+/* right-click menu on the 3D view */
+#ctx{position:fixed;z-index:70;background:#fff;border:1px solid #c9cfda;border-radius:7px;box-shadow:0 6px 22px #0003;padding:4px 0;min-width:230px;font-size:13px;display:none;user-select:none}
+#ctx .it{display:flex;justify-content:space-between;gap:18px;padding:5px 12px;cursor:pointer}
+#ctx .it:hover{background:#e6ecfa}
+#ctx .it.off{color:#aab0bb;cursor:default;background:none}
+#ctx .it kbd{background:none;border:none;color:#7a8394;font:12px "Segoe UI",sans-serif;padding:0}
+#ctx .sep{height:1px;background:#e4e7ee;margin:4px 0}
+/* Messages float above everything, including the Parts and Enclosure windows. */
+#toast{position:fixed;left:50%;bottom:46px;transform:translateX(-50%);background:#222e;color:#fff;padding:7px 14px;border-radius:5px;display:none;pointer-events:none;z-index:60;max-width:min(720px,calc(100vw - 32px));text-align:center;box-shadow:0 2px 10px #0004}
+#updateBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:70;background:#1a6b3a;color:#fff;font-size:13px;padding:7px 40px 7px 14px;text-align:center;box-shadow:0 2px 6px #0003}
+#updateBanner a{color:#90ffb8;font-weight:700;text-decoration:underline}
+#updateBanner button{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;font-size:18px;line-height:1;cursor:pointer;padding:2px 6px;opacity:.8}
+#updateBanner button:hover{opacity:1}
