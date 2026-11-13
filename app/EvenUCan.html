@@ -3074,9 +3074,9 @@ cv.addEventListener('contextmenu',e=>e.preventDefault());
   document.addEventListener('mousedown',e=>{if(!menu.contains(e.target))hide();},true);
   document.addEventListener('keydown',e=>{if(e.key==='Escape')hide();},true);
   document.addEventListener('contextmenu',e=>{
-    e.preventDefault();e.stopPropagation();
     const t=e.target;
     if(!(t instanceof HTMLInputElement||t instanceof HTMLTextAreaElement))return;
+    e.preventDefault();e.stopPropagation();
     ctxTarget=t;
     const sel=t.selectionStart!==t.selectionEnd;
     const ro=t.readOnly||t.disabled;
@@ -3851,7 +3851,7 @@ $('bObj').onclick=exportOBJ;$('bStl').onclick=exportSTL;$('b3mf').onclick=export
 $('bUndo').onclick=undo;$('bRedo').onclick=redo;$('bHelp').onclick=toggleHelp;$('bResize').onclick=resizeModel;
 // ---- version: in the corner of the view, and the About box
 // Shown bottom right and in About. The desktop app may override it via wfNative.version().
-const APP_VERSION='1.9.158';
+const APP_VERSION='1.9.159';
 let appVersion=APP_VERSION;
 (async()=>{try{if(window.wfNative&&window.wfNative.version)appVersion=await window.wfNative.version();}catch(e){/* intentional */}
   $('copyright').textContent='EvenUCan '+(appVersion?'v'+appVersion+' ':'')+'· © 2026 David John Waugh';})();
@@ -5685,15 +5685,14 @@ function fieldsOf(f){
   const wall=isEdge(f);
   if(f.t==='port')return wall?['kind','thru','side','u','zc','pw','ph']:['kind','thru','x','y','pw','ph'];
   if(f.t==='cutout')return ['thru','shape',...(wall?['side','u','zc']:['x','y']),'cw',...(f.shape==='rect'?['ch']:[]),...(wall?['clear']:[])];
-  if(f.t==='button')return ['x','y','lid',...(f.lid==='pin'?[]:['dia']),...((f.lid==='flex'||f.lid==='push')?['btop']:[])];
+  if(f.t==='button')return ['x','y','lid',...(f.lid==='pin'?[]:['dia']),...(f.lid==='flex'?['btop']:[])];
   return FFIELDS[f.t];
 }
-const BUTTON_LID={hole:'finger hole',pin:'paper-clip hole',flex:'flex button',push:'push cap'};
+const BUTTON_LID={hole:'finger hole',pin:'paper-clip hole',flex:'flex button'};
 const BUTTON_HELP={
   hole:'A finger-size hole in the lid above the button.',
   pin:'A 1.5 mm hole in the lid: push a straightened paper clip through it to press the button. Good for reset buttons.',
-  flex:'One measurement: lay the part on the table and measure from the table up to the top of the button. Solder tails or pins underneath are fine: EvenUCan takes off "Pins / parts underneath" (set that once for the part), adds the posts and the box height itself, and leaves a 0.4 mm gap so it only presses when you push the tab.',
-  push:'A round press area in the lid — press its centre from outside to click the button underneath. Same measurement as flex: lay the part on the table and measure from the table up to the top of the button cap.'};
+  flex:'One measurement: lay the part on the table and measure from the table up to the top of the button. Solder tails or pins underneath are fine: EvenUCan takes off "Pins / parts underneath" (set that once for the part), adds the posts and the box height itself, and leaves a 0.4 mm gap so it only presses when you push the tab.'};
 const FLABEL={x:'X',y:'Y',dia:'Ø',cw:'Width',ch:'Height',fw:'Length',fd:'Width',u:'Along edge',zc:'Centre above PCB',pw:'Cut-out W',ph:'Cut-out H',len:'Depth',width:'Width',side:'Edge',dir:'Pins point',kind:'Type',thru:'Opens through',shape:'Shape',poke:'Pokes out (mm)',lid:'In the lid',btop:'Button top, from the table',clear:'Room behind it (mm)',mount:'Fitting'};
 // Port cut-out sizes: big enough for the plug's moulded body to reach the socket.
 const PORT_KINDS={'USB-C':[12.5,7],'2× USB-C':[25,8],'Micro-USB':[11,8],'Mini-USB':[11,8.5],'USB-A':[16,9],'DC barrel':[10,10],'3.5 mm jack':[7,7],'microSD':[14,3.5],'JST / wires':[7,5],'Custom':null};
@@ -6336,13 +6335,13 @@ function report(L){
       if(out>=poke-0.05)ok(nm+': LEDs stand '+fx(out)+' mm out of the lid (raised '+fx(it.zb)+' mm off the floor)');
       else warn(nm+': its LEDs only reach '+(out>0?fx(out)+' mm out of':fx(-out)+' mm below the top of')+' the lid, not '+fx(poke)+' mm out: set "Tallest part on top" to the LEDs\' real height above the board');
     }
-    for(const f of (p.features||[]).filter(f=>f.t==='button'&&(f.lid==='flex'||f.lid==='push'||f.lid==='pin'))){
+    for(const f of (p.features||[]).filter(f=>f.t==='button'&&(f.lid==='flex'||f.lid==='pin'))){
       const sw=it.zb+num(f.btop,it.o.pcb+1.5)-it.o.below,under=L.H+st.floor-Math.min(1.2,st.floor-0.4);
       if(f.lid==='pin'){const d=L.H+st.floor-sw;ok(nm+': 1.5 mm paper-clip hole above a button'+(d>18?' ('+fx(d)+' mm down: use a long pin)':''));}
-      else if(under-(sw+0.4)>=0.5)ok(nm+': button pressed through a '+(f.lid==='push'?'push cap':'flex tab')+' in the lid (post '+fx(under-(sw+0.4))+' mm long)');
-      else warn(nm+': a '+(f.lid==='push'?'push cap':'flex button')+'\'s switch is almost touching the lid: check its "Button top", or use a paper-clip hole');
+      else if(under-(sw+0.4)>=0.5)ok(nm+': button pressed through a flex tab in the lid (post '+fx(under-(sw+0.4))+' mm long)');
+      else warn(nm+': a flex button\'s switch is almost touching the lid: check its "Button top", or use a paper-clip hole');
     }
-    for(const f of (p.features||[]).filter(f=>f.t==='button'&&!(f.lid==='flex'||f.lid==='push'||f.lid==='pin'))){const depth=L.H-(it.zb+it.o.pcb+it.o.h);if(depth>6)warn(nm+': a button is '+fx(depth)+' mm below the lid: press it through the hole with a pin, or fit a taller button');}
+    for(const f of (p.features||[]).filter(f=>f.t==='button'&&!(f.lid==='flex'||f.lid==='pin'))){const depth=L.H-(it.zb+it.o.pcb+it.o.h);if(depth>6)warn(nm+': a button is '+fx(depth)+' mm below the lid: press it through the hole with a pin, or fit a taller button');}
   }
   if(st.headUp||st.headDown)ok('Dupont headroom: '+st.headUp+' mm above upward pins, '+st.headDown+' mm below downward pins');
   if(st.cable)ok('Cable slot in the wall for jumper wires and leads');
@@ -6429,7 +6428,6 @@ async function buildSolids(L){
     const adds=[],subs=[],lidAdds=[],lidSubs=[],lidAfter=[],cutsPerWall={xmin:[],xmax:[],ymin:[],ymax:[]};// lidAfter: added once the lid's holes are cut
     const lidHole=(x,y,r)=>lidSubs.push(cylZ(x,y,H-LIP-1,H+lt+1,r));
     const lidRect=(x0,y0,x1,y1)=>lidSubs.push(rbox(x0,y0,H-LIP-1,x1,y1,H+lt+1,0.6));
-    const mirrorLid=(m,cx,cy)=>K(K(K(K(m.translate([-cx,-cy,0])).mirror([1,0,0])).mirror([0,1,0])).translate([cx,cy,0]));
     // A flex button in the lid: a tab cut free on three sides by a 0.6 mm slot (the fourth side is the hinge), thinned
     // underneath so it springs, with a Ø3 post that stops just above the switch (stop: height of the post's end).
     // It is part of the lid, so nothing can fall into the box, and it prints with the lid (post pointing up).
@@ -6444,9 +6442,6 @@ async function buildSolids(L){
       if(lt-tabT>0.15)lidSubs.push(rect(s0,s1,-tw/2,tw/2,H-LIP-1,H+lt-tabT));
       const under=H+lt-tabT,end=Math.min(stop,under-0.5);
       lidAfter.push(cylZ(x,y,end,under+0.3,1.5,24));
-      // return the highest Y edge of the tab bounding box so label can sit 1mm above it
-      const corners=[[s0-g,tw/2+g],[s1,tw/2+g],[s0-g,-(tw/2+g)],[s1,-(tw/2+g)]];
-      return Math.max(...corners.map(([s,c])=>y+s*dy+c*dx));
     };
     // through the floor: cut up to just under the part (top), so rails or posts under it don't block the hole
     const floorHole=(x,y,r,top)=>subs.push(cylZ(x,y,-f-1,Math.max(0.3,top-0.2),r));
@@ -6513,7 +6508,7 @@ async function buildSolids(L){
           const wlbl=partShortName(p.name),wpx=0.5,wcw=5*wpx,wcg=wpx;
           const wn=[...wlbl.toUpperCase()].filter(c=>FONT5X7[c]).length;
           if(wn>0&&wn*(wcw+wcg)-wcg<=o.w-2&&7*wpx<=o.d-2){
-            const wm=textWall(wlbl,it.u0+o.w/2,it.z0+o.d/2,t,0.5);
+            const wm=textWall(wlbl,it.u0+o.w/2,it.z0+o.d/2,-t,0.5);
             if(wm)subs.push(toWall(wm,it.wall));
           }
         }
@@ -6637,21 +6632,15 @@ async function buildSolids(L){
           if(st.lid!=='screws')lidSubs.push(wallCut(s,u-hw-0.5,u+hw+0.5,H-LIP-1,H+0.05,0,-1,LIP_T+LID_CLEAR+1));
           cutsPerWall[s].push([u-hw,u+hw]);
         }else if(ft.t==='button'){const [x,y]=pt(ft.x,ft.y);
-          if(ft.lid==='flex'){const ftopY=flexButton(x,y,zb+num(ft.btop,o.pcb+1.5)-o.below+0.4);
-            {const lpx=0.7,lch=7*lpx,lcy_v=Math.min(ftopY+1+lch/2,D-1);const lm=textFloor('RST',x,lcy_v,H+lt,0.4,lpx);if(lm)lidSubs.push(mirrorLid(lm,x,lcy_v));}}
-          else if(ft.lid==='push'){const cr=Math.max(ft.dia/2+1.5,4),tabT=Math.min(1.2,lt-0.4),g=0.2;
-            lidSubs.push(cylZ(x,y,H-LIP-1,H+lt-tabT,cr+g,32));
-            const under=H+lt-tabT,end=Math.min(zb+num(ft.btop,o.pcb+1.5)-o.below+0.4,under-0.5);
-            if(under-end>=0.5)lidAfter.push(cylZ(x,y,end,under+0.3,1.5,24));
-            {const lpx=0.7,lch=7*lpx,lcy_v=Math.min(y+cr+1+lch/2,D-1);const lm=textFloor('BTN',x,lcy_v,H+lt,0.4,lpx);if(lm)lidSubs.push(mirrorLid(lm,x,lcy_v));}}
+          if(ft.lid==='flex')flexButton(x,y,zb+num(ft.btop,o.pcb+1.5)-o.below+0.4);
           else{const br=ft.lid==='pin'?0.75:ft.dia/2+0.6;lidHole(x,y,br);
-            {const lpx=0.7,lch=7*lpx,lbl=ft.lid==='pin'?'RST':'BTN',lcy_v=Math.min(y+br+1+lch/2,D-1);const lm=textFloor(lbl,x,lcy_v,H+lt,0.4,lpx);if(lm)lidSubs.push(mirrorLid(lm,x,lcy_v));}}}
+            {const lpx=0.5,lch=7*lpx,lcy=y-(br+0.5+lch/2);const lm=textFloor('BTN',x,(lcy>=1?lcy:y+(br+0.5+lch/2)),H+lt,0.4,lpx);if(lm)lidSubs.push(lm);}}}
         else if(ft.t==='led'){const [x,y]=pt(ft.x,ft.y);const lr=Math.max(1,ft.dia/2+0.3);lidHole(x,y,lr);
-          {const lpx=0.7,lch=7*lpx,lcy_v=Math.min(y+lr+1+lch/2,D-1);const lm=textFloor('LED',x,lcy_v,H+lt,0.4,lpx);if(lm)lidSubs.push(mirrorLid(lm,x,lcy_v));}}
+          {const lpx=0.5,lch=7*lpx,lcy=y-(lr+0.5+lch/2);const lm=textFloor('LED',x,(lcy>=1?lcy:y+(lr+0.5+lch/2)),H+lt,0.4,lpx);if(lm)lidSubs.push(lm);}}
         else if(ft.t==='mic'){const [x,y]=pt(ft.x,ft.y);const mr=Math.max(1.25,ft.dia/2+0.25);lidHole(x,y,mr);
-          {const lpx=0.7,lch=7*lpx,lcy_v=Math.min(y+mr+1+lch/2,D-1);const lm=textFloor('MIC',x,lcy_v,H+lt,0.4,lpx);if(lm)lidSubs.push(mirrorLid(lm,x,lcy_v));}}
+          {const lpx=0.5,lch=7*lpx,lcy=y-(mr+0.5+lch/2);const lm=textFloor('MIC',x,(lcy>=1?lcy:y+(mr+0.5+lch/2)),H+lt,0.4,lpx);if(lm)lidSubs.push(lm);}}
         else if(ft.t==='opening'){const [x,y]=pt(ft.x,ft.y);const or2=Math.max(1,ft.dia/2+0.4);lidHole(x,y,or2);
-          {const lpx=0.7,lch=7*lpx,lcy_v=Math.min(y+or2+1+lch/2,D-1);const lm=textFloor('OPN',x,lcy_v,H+lt,0.4,lpx);if(lm)lidSubs.push(mirrorLid(lm,x,lcy_v));}}
+          {const lpx=0.5,lch=7*lpx,lcy=y-(or2+0.5+lch/2);const lm=textFloor('OPN',x,(lcy>=1?lcy:y+(or2+0.5+lch/2)),H+lt,0.4,lpx);if(lm)lidSubs.push(lm);}}
         else if(ft.t==='window'){const r=rectW(ft.x-ft.fw/2,ft.y-ft.fd/2,ft.x+ft.fw/2,ft.y+ft.fd/2);lidRect(r[0]-0.3,r[1]-0.3,r[2]+0.3,r[3]+0.3);}
         else if(ft.t==='heat'){const r=rectW(ft.x-ft.fw/2,ft.y-ft.fd/2,ft.x+ft.fw/2,ft.y+ft.fd/2);vents(r[0],r[1],r[2],r[3]);}
         else if(ft.t==='cone'){const r=rectW(ft.x-ft.cw/2+1,ft.y-ft.ch/2+1,ft.x+ft.cw/2-1,ft.y+ft.ch/2-1);vents(r[0],r[1],r[2],r[3]);}
@@ -6696,17 +6685,13 @@ async function buildSolids(L){
     }
     if(D>=12){
       const bp=0.5,bch=7*bp,bcg=bp,bcw=5*bp;
-      const line1='Made With',line2='Even-U-Can';
+      const line1='MADE WITH',line2='EVENUCAN';
       const n1=[...line1].filter(c=>FONT5X7[c]).length,n2=[...line2].filter(c=>FONT5X7[c]).length;
       const tw1=n1*(bcw+bcg)-bcg,tw2=n2*(bcw+bcg)-bcg;
       if(tw1<=W-4&&tw2<=W-4){
-        // Place branding on exterior bottom face — no floor item conflicts possible
-        const bz=-f+0.4;// z0 so that cube(z0-0.4 to z0+0.1) cuts from bottom face (-f) upward 0.5mm
-        const yMid=(bch+0.5)/2,bcy1=D/2-bch*0.5-0.25,bcy2=D/2+bch*0.5+0.25;
-        // Mirror the text so it reads correctly when the box is flipped over to view the bottom
-        const mirrorBottom=m=>K(K(m.mirror([1,0,0])).translate([W,0,0]));
-        const bm1=textFloor(line1,W/2,bcy1,bz,0.4,bp);if(bm1)subs.push(mirrorBottom(bm1));
-        const bm2=textFloor(line2,W/2,bcy2,bz,0.4,bp);if(bm2)subs.push(mirrorBottom(bm2));
+        const bcy1=1.5+bch/2,bcy2=1.5+bch+0.5+bch/2;
+        const bm1=textFloor(line1,W/2,bcy1,0,0.4,bp);if(bm1)subs.push(bm1);
+        const bm2=textFloor(line2,W/2,bcy2,0,0.4,bp);if(bm2)subs.push(bm2);
       }
     }
     // ---- base
@@ -7509,7 +7494,7 @@ $('plEdit').addEventListener('change',e=>{
     const f=ed.features[+el.dataset.fi];
     if(el.dataset.fk==='thru')setThru(f,el.value);else f[el.dataset.fk]=el.value;
     // a first guess for a new flex button: a small switch on the board, the part resting on what sticks out underneath
-    if(el.dataset.fk==='lid'&&(el.value==='flex'||el.value==='push')&&f.btop===FEAT.button.def.btop)f.btop=+(ed.below+ed.pcb+1.5).toFixed(2);
+    if(el.dataset.fk==='lid'&&el.value==='flex'&&f.btop===FEAT.button.def.btop)f.btop=+(ed.below+ed.pcb+1.5).toFixed(2);
     if(el.dataset.fk==='kind'&&PORT_KINDS[el.value]){[f.pw,f.ph]=PORT_KINDS[el.value];}
     markDirty();renderFeats();drawEd();
   }
