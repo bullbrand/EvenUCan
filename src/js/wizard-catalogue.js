@@ -120,6 +120,8 @@ const TYPES={
   power:{name:'Power supply / regulator',mount:'floor',color:'#8a4a2a'},
   other:{name:'Other',mount:'floor',color:'#8a6a4a'}
 };
+// Colour choice for LED parts (type "light"): one part per size, the user ticks the colour.
+const LED_COLOURS={red:'Red',green:'Green',yellow:'Yellow',orange:'Orange',blue:'Blue',white:'White'};
 // Order the Parts Library list is split into (a kind not listed here goes last, before "Other").
 const PL_ORDER=['board','sensor','display','motor','relay','light','mic','speaker','amp','charger','battery','power','switch','other'];
 const typeOf=p=>TYPES[p.type]||TYPES.other;

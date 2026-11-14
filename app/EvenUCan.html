@@ -5664,6 +5664,8 @@ const TYPES={
   power:{name:'Power supply / regulator',mount:'floor',color:'#8a4a2a'},
   other:{name:'Other',mount:'floor',color:'#8a6a4a'}
 };
+// Colour choice for LED parts (type "light"): one part per size, the user ticks the colour.
+const LED_COLOURS={red:'Red',green:'Green',yellow:'Yellow',orange:'Orange',blue:'Blue',white:'White'};
 // Order the Parts Library list is split into (a kind not listed here goes last, before "Other").
 const PL_ORDER=['board','sensor','display','motor','relay','light','mic','speaker','amp','charger','battery','power','switch','other'];
 const typeOf=p=>TYPES[p.type]||TYPES.other;
@@ -7338,7 +7340,7 @@ function plItemHtml(p){
   const cached=thumbCache.get(p.id);
   const thumb_el=cached?`<img width="64" height="44" src="${cached}" class="plThumb">`:`<canvas width="64" height="44"></canvas>`;
   const canDel=!p.builtin&&!builtinById(p.id);
-  return `<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}">${thumb_el}<div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div>${canDel?`<input type="checkbox" class="plCheck" data-id="${esc(p.id)}" title="Tick to select for deletion"${plSelected.has(p.id)?' checked':''}>`:''}</div>`;
+  return `<div class="plItem${ed&&ed.id===p.id?' on':''}" data-id="${esc(p.id)}">${thumb_el}<div class="t"><b>${esc(p.name)}</b><small>${esc(typeOf(p).name)}${p.type==='light'&&LED_COLOURS[p.colour]?' · '+LED_COLOURS[p.colour]:''} · ${fx(p.w)} × ${fx(p.d)} mm${p.builtin?' · built-in':builtinById(p.id)?' · edited':''}${accOf(p)==='unknown'?'':' · <span title="Sizes: '+esc(ACC[accOf(p)].slice(2))+'">'+ACC[accOf(p)].split(' ')[0]+'</span>'}</small></div>${canDel?`<input type="checkbox" class="plCheck" data-id="${esc(p.id)}" title="Tick to select for deletion"${plSelected.has(p.id)?' checked':''}>`:''}</div>`;
 }
 $('plList').addEventListener('change',e=>{
   const sel=e.target.closest('#plKindSel,#plSortSel');
@@ -7446,6 +7448,7 @@ ${aiProv()==='claude'?'<div class="ewNote">Claude is paid per use from your Anth
 <div class="ewRow"><label title="How far this part's sizes can be trusted. Fritzing pictures are drawn for wiring diagrams, so their outlines are often too small: measure the board and use Check size.">Sizes <select data-p="acc">${opt(ACC,accOf(p))}</select></label><button id="plCheck" title="Type the sizes you measured with calipers or a ruler: the outline changes, pins and features keep their spacing">Check size…</button></div>
 ${accOf(p)==='measured'?'':'<div class="ewNote plSizeWarn">⚠ Sizes can differ a little between makers and batches. <b>If you have this part in your hand, measure it</b> (calipers or a ruler) and compare with the numbers below. If it is different, change the sizes (or use <b>Check size…</b>), then set <b>Sizes</b> to ✅ Measured.</div>'}
 <label class="f"><span>Type</span><select data-p="type">${opt(Object.fromEntries(Object.entries(TYPES).map(([k,v])=>[k,v.name])),p.type)}</select></label>
+${p.type==='light'?`<label class="f"><span>Colour</span><select data-p="colour">${opt(LED_COLOURS,LED_COLOURS[p.colour]?p.colour:'red')}</select></label><div class="ewNote">Pick the colour of the LED you have. Always put a resistor in series. Typical: red, yellow, orange and green about 330 Ω at 5 V or 150 Ω at 3.3 V; blue and white about 150 Ω at 5 V or 47 Ω at 3.3 V (they need nearly 3 V themselves, so they look dim on 3.3 V).</div>`:''}
 <label class="f"><span>Shape</span><select data-p="shape">${opt({rect:'Rectangle',round:'Round'},p.shape)}</select></label>
 <label class="f"><span>${p.shape==='round'?'Diameter':'Length (left → right)'}</span><input type="number" data-p="w" value="${p.w}" step="0.1" min="0.5"> mm</label>
 ${p.shape==='round'?'':`<label class="f"><span>Width (bottom → top)</span><input type="number" data-p="d" value="${p.d}" step="0.1" min="0.5"> mm</label>

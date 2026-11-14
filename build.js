@@ -22,6 +22,7 @@ if(fs.existsSync(curJson)){
       features:p.features,pins,acc:p.confidence==='low'?'approx':'drawing',
       notes:(p.notes||'')+' Sources: '+(p.sources||[]).map(s=>s.url).join(' ')};
     if(board&&/esp32-?s3/i.test(p.name))o.mcu='esp32s3'; // so the wiring and ESPHome code know the chip
+    if(p.colour)o.colour=p.colour; // LED parts: the user picks the colour in the part editor
     return o;
   });
   fs.writeFileSync(path.join(src,'js','parts-curated.js'),
