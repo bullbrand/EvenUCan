@@ -53,6 +53,7 @@ function renderSide(){
 <div class="ewRow"><input id="ewAddSearch" type="search" placeholder="Search all parts…" style="flex:1;min-width:0" autocomplete="off"><button id="ewAdd">Add</button></div>
 <div class="ewRow" id="ewAddSelRow"><select id="ewAddSel" style="flex:1;width:100%">${partOptions(null)}</select></div>
 <div class="ewNote">Not in the list? Open the <a href="#" id="ewLib2">Parts Library</a> to add one from a photo.</div>
+<div class="mfNote">📏 <b>Check your sizes.</b> Parts with the same part number can differ in size from one maker to the next. The box is built from the sizes in your list, so measure the real part in your hand, compare it with the built-in one, and correct it in the Parts Library if it differs. If the sizes are not right, the box cannot be guaranteed to fit.</div>
 ${rows||'<div class="ewNote">No parts yet.</div>'}
 <h4>2. Power</h4>
 <div class="ewRow" style="flex-wrap:wrap"><label><input type="radio" name="ewPow" value="usb"${wiz.power!=='battery'&&wiz.power!=='mains'?' checked':''}> USB cable</label><label><input type="radio" name="ewPow" value="mains"${wiz.power==='mains'?' checked':''}> Mains adapter (USB plug)</label><label><input type="radio" name="ewPow" value="battery"${wiz.power==='battery'?' checked':''}> Battery inside</label></div>

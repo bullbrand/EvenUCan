@@ -5366,6 +5366,8 @@ markDirty();
 .plBar{position:sticky;top:-6px;z-index:3;display:flex;gap:6px;margin:-6px -6px 2px;padding:6px;background:#fff;border-bottom:1px solid var(--line)}
 .plBar select{flex:1;min-width:0;font-size:12px;padding:4px}
 .plBar select#plSortSel{flex:0 0 auto}
+.mfNote{background:#fff8e1;border:1px solid #f0d27a;color:#5c4600;padding:8px 12px;border-radius:6px;margin:8px 0;font-size:12.5px;line-height:1.5}
+#plMfNote{margin:8px 14px 0}
 .plSizeWarn{background:#fff8e1;border:1px solid #f0d27a;color:#6b5200;padding:6px 8px;border-radius:5px;margin:4px 0}
 .plGroup{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:10px 5px 3px}
 .plItem{display:flex;gap:8px;align-items:center;padding:5px;border-radius:5px;cursor:pointer}
@@ -5550,6 +5552,7 @@ markDirty();
     <button id="plX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
   <div id="plSelBar" class="plSelBar"><span id="plSelCount"></span><button class="plSelDelBtn" id="plSelDelBtn">Delete selected</button><button class="plSelClrBtn" id="plSelClrBtn">Clear</button></div>
   <div id="plBgBar" style="display:none;padding:5px 10px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;font-size:12px;align-items:center;gap:8px;flex-shrink:0"><span id="plBgMsg" style="flex:1"></span><button id="plBgStop" style="background:#fff;border:1px solid #ccc;color:#555;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px">Stop</button></div>
+  <div class="mfNote" id="plMfNote">📏 <b>Measure your own parts.</b> Two parts with the same name and part number can still be different sizes, because each maker builds them a little differently, sometimes by several millimetres. The sizes in this list are a good starting point, but <b>the box is designed from these sizes</b>. If they do not match the part in your hand, the box may not fit it. So whenever you can, <b>measure the part you have</b> (with calipers, or with the 📏 Measure from photos button), compare it with the built-in part, and correct the size here.</div>
   <div class="plBody"><div class="plList" id="plList"></div><div class="plEdit" id="plEdit"></div></div>
 </div></div>
 <input type="file" id="plFile" accept=".json,application/json" style="display:none">
@@ -7034,6 +7037,7 @@ function renderSide(){
 <div class="ewRow"><input id="ewAddSearch" type="search" placeholder="Search all parts…" style="flex:1;min-width:0" autocomplete="off"><button id="ewAdd">Add</button></div>
 <div class="ewRow" id="ewAddSelRow"><select id="ewAddSel" style="flex:1;width:100%">${partOptions(null)}</select></div>
 <div class="ewNote">Not in the list? Open the <a href="#" id="ewLib2">Parts Library</a> to add one from a photo.</div>
+<div class="mfNote">📏 <b>Check your sizes.</b> Parts with the same part number can differ in size from one maker to the next. The box is built from the sizes in your list, so measure the real part in your hand, compare it with the built-in one, and correct it in the Parts Library if it differs. If the sizes are not right, the box cannot be guaranteed to fit.</div>
 ${rows||'<div class="ewNote">No parts yet.</div>'}
 <h4>2. Power</h4>
 <div class="ewRow" style="flex-wrap:wrap"><label><input type="radio" name="ewPow" value="usb"${wiz.power!=='battery'&&wiz.power!=='mains'?' checked':''}> USB cable</label><label><input type="radio" name="ewPow" value="mains"${wiz.power==='mains'?' checked':''}> Mains adapter (USB plug)</label><label><input type="radio" name="ewPow" value="battery"${wiz.power==='battery'?' checked':''}> Battery inside</label></div>

@@ -105,6 +105,8 @@
 .plBar{position:sticky;top:-6px;z-index:3;display:flex;gap:6px;margin:-6px -6px 2px;padding:6px;background:#fff;border-bottom:1px solid var(--line)}
 .plBar select{flex:1;min-width:0;font-size:12px;padding:4px}
 .plBar select#plSortSel{flex:0 0 auto}
+.mfNote{background:#fff8e1;border:1px solid #f0d27a;color:#5c4600;padding:8px 12px;border-radius:6px;margin:8px 0;font-size:12.5px;line-height:1.5}
+#plMfNote{margin:8px 14px 0}
 .plSizeWarn{background:#fff8e1;border:1px solid #f0d27a;color:#6b5200;padding:6px 8px;border-radius:5px;margin:4px 0}
 .plGroup{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:10px 5px 3px}
 .plItem{display:flex;gap:8px;align-items:center;padding:5px;border-radius:5px;cursor:pointer}
