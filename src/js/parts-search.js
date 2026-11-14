@@ -138,6 +138,7 @@ const COMMON_MODS=[
 // Each stays marked "Approximate" (typical sizes: measure yours); a copy you already saved keeps winning over this one.
 for(const m of COMMON_MODS){
   if(builtinById(m.part.id))continue;
+  if(/^p-cm-relay|^p-cm-pir$|^p-cm-led5mm$/.test(m.part.id))continue;// curated relays, HC-SR501 and 5 mm LED replace these in the list (the wizard search still uses them)
   const b=tidyPart(Object.assign(clone(m.part),{notes:CM_NOTE,acc:'approx',builtin:true}));
   if(/^p-cm-relay/.test(b.id))b.type='relay';
   BUILTIN.push(b);

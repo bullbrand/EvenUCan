@@ -185,6 +185,9 @@ const BUILTIN=[
 ];
 // Boards checked against the maker's own drawing with tools/curate-parts.js (src/js/parts-curated.js, made by build.js)
 if(typeof CURATED_PARTS!=='undefined')for(const c of CURATED_PARTS)BUILTIN.push(c);
+// Old built-ins that a curated part now replaces: dropped from the list. Projects saved with the old id are pointed at the curated one.
+const DUP_ALIAS={'p-mvzgm549177o':'c-arduino-uno-r4-wifi','p-mvvkfthdqtf5':'c-arduino-nano-a000005'};
+for(let i=BUILTIN.length-1;i>=0;i--)if(DUP_ALIAS[BUILTIN[i].id]&&BUILTIN.some(b=>b.id===DUP_ALIAS[BUILTIN[i].id]))BUILTIN.splice(i,1);
 for(const b of BUILTIN)b.builtin=true;
 // ---- pins, for the wiring diagram. x,y: position on the part (mm, same frame as its features; approximate
 // where the maker gives no drawing). r: the pin's role, which the wiring rules work from (see ROLES).
@@ -261,7 +264,7 @@ function allParts(){
   const own=new Map(custom.map(p=>[p.id,p]));
   return [...BUILTIN.map(b=>own.get(b.id)||b),...custom.filter(c=>!builtinById(c.id))];
 }
-const partById=id=>allParts().find(p=>p.id===id)||null;
+const partById=id=>allParts().find(p=>p.id===id)||allParts().find(p=>p.id===DUP_ALIAS[id])||null;
 const newPartId=()=>'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 // How far a part's sizes can be trusted, shown as a label and checked by the Enclosure report: measured (checked
 // with calipers), drawing (a maker's dimension drawing or a CAD library) or approx (Fritzing pictures, which are
