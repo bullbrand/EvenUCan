@@ -70,7 +70,7 @@ input[type=file]{display:none}
 const $=id=>document.getElementById(id);
 const R=(v,n=2)=>+(+v).toFixed(n);
 const MAXDIM=2400;
-const blank=kind=>({kind,src:null,name:'',cal:[],mm:100,scale:0,roi:null,corners:null,k:0,holes:[],pinRows:[],lines:null,box:null,hasBoard:true,sens:1});
+const blank=kind=>({kind,src:null,name:'',cal:[],mm:100,scale:0,roi:null,corners:null,k:0,fix:1,holes:[],pinRows:[],lines:null,box:null,hasBoard:true,sens:1});
 const P={top:blank('top'),side:blank('side')};
 const TYPES=[['board','Board / microcontroller'],['sensor','Sensor'],['display','Display'],['motor','Motor / driver'],['relay','Relay'],['light','LED / light'],['mic','Microphone'],['speaker','Speaker / buzzer'],['amp','Amplifier'],['charger','Charger'],['battery','Battery'],['power','Power supply'],['switch','Switch / button'],['other','Something else']];
 let cur='top',stepIdx=0,mode=null,drag=null,roiDrag=null,manualPts=null,pendingHole=null,pinDraft=null,pinForm={count:8,names:''},zoom=100,saved=[],lastMsg='';
@@ -186,7 +186,7 @@ const toLocal=(r,p)=>{const f=frame(r);const v=[p[0]-f.O[0],p[1]-f.O[1]];return[
 
 // ============================== numbers from the clicks ==============================
 function updateScale(r){
-  if(r.cal.length===2){const d=Math.hypot(r.cal[1][0]-r.cal[0][0],r.cal[1][1]-r.cal[0][1]);r.scale=d>2&&r.mm>0?r.mm/d:0;r.calPx=d;}else r.scale=0;
+  if(r.cal.length===2){const d=Math.hypot(r.cal[1][0]-r.cal[0][0],r.cal[1][1]-r.cal[0][1]);r.scale=d>2&&r.mm>0?r.mm/d*(r.fix||1):0;r.calPx=d;}else r.scale=0;
 }
 function initLines(r){
   if(!r.box)return;
@@ -352,6 +352,7 @@ const STEPS=[
   ${f?`<p class="ok">Size from above: <b>${R(f.w,1)} × ${R(f.d,1)} mm</b></p>`:''}
   <div class="row"><button data-act="redraw" class="small">↺ Draw the box again</button><button data-act="manual" class="small">✋ Click the 4 corners myself</button>${r.corners?'<button data-act="turn" class="small">⟳ Turn 90°</button>':''}</div>
   ${r.roi?`<label>Outline sensitivity <input type="range" id="sens" min="40" max="200" value="${Math.round(r.sens*100)}"></label><div class="note">Slide if the outline is too big or too small.</div>`:''}
+  ${r.corners?`<div class="card"><b>Got your calipers?</b> Measure the <b>long side</b> of the part and type it here. The tool then corrects its scale from your number.<br><label>Long side by calipers <input type="number" id="capL" step="any" min="1" placeholder="mm" style="width:100px" value="${r.capL||''}"> mm</label>${r.fix&&r.fix!==1?`<br><span class="ok">✓ Scale corrected by ${R((r.fix-1)*100,2)}%</span>`:''}</div>`:''}
   ${r.corners?'<div class="card">The pink dot is the <b>corner the measurements start from</b>, and the arrows show the lengths. Use <b>Turn 90°</b> so that it matches how you want the part drawn (for example the USB end on the left).</div>':''}`;},
   ok:()=>!!P.top.corners},
  {k:'top',mode:'holes',title:'Mounting holes (optional)',
@@ -383,6 +384,7 @@ const STEPS=[
    return `<p>${r.lines?'The <b>green lines</b> mark the top and bottom of the part. Drag them (use the magnifier) if they are not right.'+(r.hasBoard?' The <b>orange lines</b> mark the circuit board: its top and its underside.':''):'Drag a <b>loose box</b> all round the part, like before.'}</p>
    <label class="chk"><input type="checkbox" id="hasBoard" ${r.hasBoard?'checked':''}> It has a flat circuit board (tick for boards and modules; untick for a solid thing like a motor)</label>
    ${hh?`<p class="ok">Total height <b>${R(hh.total,1)} mm</b>${r.hasBoard?`<br>Below the board: ${R(hh.below,1)} mm · Board: ${R(hh.pcb,1)} mm · Above the board: ${R(hh.h,1)} mm`:''}</p>`:''}${chk}
+   ${r.lines?`<div class="card"><b>Got your calipers?</b> Measure the <b>total height</b> and type it here to correct the scale.<br><label>Total height by calipers <input type="number" id="caph" step="any" min="1" placeholder="mm" style="width:100px" value="${r.capH||''}"> mm</label>${r.fix&&r.fix!==1?`<br><span class="ok">✓ Scale corrected by ${R((r.fix-1)*100,2)}%</span>`:''}</div>`:''}
    <div class="row"><button data-act="redraw" class="small">↺ Draw the box again</button>${r.lines&&r.hasBoard?'<button data-act="pcb16" class="small">Board is 1.6 mm thick</button>':''}</div>
    ${r.roi?`<label>Outline sensitivity <input type="range" id="sens" min="40" max="200" value="${Math.round(r.sens*100)}"></label>`:''}`;},
   ok:()=>!!heights(P.side)},
@@ -460,7 +462,7 @@ function render(){
 // the numbers in the panel are redrawn without losing what the user is typing
 function refresh(light){
   const r=rec(),st=STEPS[stepIdx];
-  if(light&&document.activeElement&&/^(calmm|pname|pcount|pnames)$/.test(document.activeElement.id)){draw();$('bNext').disabled=!st.ok();return;}
+  if(light&&document.activeElement&&/^(calmm|pname|pcount|pnames|capL|caph)$/.test(document.activeElement.id)){draw();$('bNext').disabled=!st.ok();return;}
   render();
 }
 $('bBack').onclick=()=>{if(stepIdx>0){stepIdx--;manualPts=null;pendingHole=null;pinDraft=null;lastMsg='';render();}};
@@ -481,6 +483,12 @@ $('stepBody').addEventListener('input',e=>{
   const id=e.target.id,r=rec();
   if(id==='calmm'){r.mm=+e.target.value||0;updateScale(r);draw();$('bNext').disabled=!STEPS[stepIdx].ok();}
   else if(id==='sens'){r.sens=(+e.target.value)/100;clearTimeout(window._st);window._st=setTimeout(runDetect,150);}
+  else if(id==='capL'){const v=+e.target.value;r.capL=v;
+    if(v>0&&r.corners&&r.scale){const f=frame(r),cur=Math.max(f.w,f.d)/(r.fix||1);r.fix=v/cur;updateScale(r);}else if(!(v>0)){r.fix=1;updateScale(r);}
+    draw();const tc=document.querySelector('#stepBody .ok');}
+  else if(id==='caph'){const v=+e.target.value;r.capH=v;
+    if(v>0&&r.lines&&r.scale){const hh=heights(r),cur=hh.total/(r.fix||1);r.fix=v/cur;updateScale(r);}else if(!(v>0)){r.fix=1;updateScale(r);}
+    draw();}
   else if(id==='pcount'){pinForm.count=e.target.value;draw();}
   else if(id==='pnames'){pinForm.names=e.target.value;}
   else if(id==='pname'){form.name=e.target.value;const b=document.querySelector('[data-act=addpart]');if(b){b.disabled=!form.name.trim();}drawPreview();}
