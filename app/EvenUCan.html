@@ -11847,9 +11847,10 @@ function briefDoctor(desc,A,pf,power){
   const window_=has(/between .{1,25} and |\b\d{1,2}\s*(am|pm)?\s*(to|until|till|-)\s*\d{1,2}\s*(am|pm)\b|outside (those )?hours|office hours|after hours|overnight|at night/);
   const reportWhen=has(/daily|each day|every day|weekly|every week|each week|on request|when i ask/);
   const outdoors=has(/shed|garage|garden|outside|outdoor|greenhouse|barn|gate|fence|yard|porch|flap|kennel|hutch|coop|pond|roof|caravan|boat|\brv\b/);
-  const counting=has(/how many|count|log\b|history|record|report|statistic|how often|times a day|per day/);
+  const counting=has(/how many|\bcount(s|ed|ing)?\b|\blog\b|history|\brecord(s|ed|ing)?\b|\breport\b|statistic|how often|times a day|per day/);
   const mains=has(/\b(230|240|110|120)\s*v\b|mains (light|lamp|socket|appliance|device)|\bkettle|\bheater\b|\bplug socket\b|light bulb|household/);
-  const loads=hasP(/relay|pump|valve|solenoid|motor|siren|buzzer 12|fan|heater|12 ?v/)||has(/pump|valve|solenoid|motor|pour|dispens|water the|irrigat|lock|latch|siren|heater|fan\b/);
+  const servoOnly=has(/\bservo\b/)&&!has(/relay|\bpump\b|valve|solenoid|12 ?v|siren|heater|\bjacks?\b|winch/);
+  const loads=!servoOnly&&(hasP(/relay|pump|valve|solenoid|motor|siren|buzzer 12|fan|heater|12 ?v/)||has(/pump|valve|solenoid|motor|pour|dispens|water the|irrigat|lock|latch|siren|heater|fan\b/));
   const guard=has(/intrud|someone|somebody|burglar|thief|thieves|break.?in|trespass|security|alarm|\benters?\b|who.{0,12}(in|enter)/);
   const flap=has(/\bflap\b|cat ?door|pet ?door/);
   const pet=has(/\bdog\b|\bcat\b|\bpet\b|puppy|kitten|rabbit|chicken|\bhen\b/);
@@ -11877,7 +11878,7 @@ function briefDoctor(desc,A,pf,power){
   if(mains){
     add('risk','Mains voltage (230 V / 120 V) can kill. Do not switch it with a hobby relay board unless it is rated for it and fully enclosed.','Use a ready-made, enclosed, certified smart plug or relay unit, and have an electrician do the mains wiring.');
   }
-  const retrigger=has(/motion|movement|\bpir\b|vibration|knock|door|gate|flap|someone enters/);
+  const retrigger=has(/\bmotion\b|\bmovement\b|\bpir\b|\bvibration\b|\bknock\b|\bdoor\b|\bgate\b|\bflap\b|someone enters/);
   if(wantsPhone&&online&&retrigger&&!reportWhen){
     add('assumed','While it keeps triggering, it sends at most one phone message every 5 minutes.','A motion sensor fires again and again while someone is moving. Without a limit one visit could send dozens of alerts and you would stop reading them.');
   }
@@ -11923,7 +11924,7 @@ function briefDoctor(desc,A,pf,power){
   if(pet&&(outdoors||flap)){
     add('risk','Animals chew and knock things: put the box and its wires out of reach or inside a chew-proof cover, and keep the flap swinging freely.','A chewed battery or wire is dangerous to the animal.');
   }
-  const motors=has(/\bmotors?\b|\bjacks?\b|actuator|winch|linear|gearbox|leveller|leveler|levelling|leveling/);
+  const motors=!servoOnly&&has(/\bmotors?\b|\bjacks?\b|actuator|winch|linear|gearbox|leveller|leveler|levelling|leveling/);
   if(motors){
     add('ask','How much current does each motor draw when it pushes hard or stalls? Vehicle jacks and winches can draw 20 A or more.','A typical relay board is rated about 10 A and its contacts burn out. The relays, the wire and the fuse must all be rated above the stall current, and the supply must be able to give it.');
     add('added','A maximum run time for every move, so a stuck or fully extended motor stops itself.','Without it a stalled motor draws full current until something overheats or the fuse blows.');
@@ -11932,6 +11933,21 @@ function briefDoctor(desc,A,pf,power){
     add('added','An interlock: the two relays of one motor (up and down) can never be on at the same time, with a short pause before it reverses.','Both relays on at once connects the supply straight across itself, which is a dead short. The interlock is in the code and does not depend on you pressing buttons carefully.');
   }
   if(motors&&has(/motorhome|caravan|camper|\brv\b|van\b|boat|vehicle|trailer|truck/))add('ask','Where does the 12 V come from? A vehicle or boat battery can supply the heavy current, but a small mains adapter cannot.','Jack motors need a battery or a large supply. Use thick wire, keep the runs short, and put the fuse close to the battery.');
+  if(servoOnly){
+    add('added','Power the servo from the 5 V supply, not from the ESP32 3.3 V pin, with the grounds joined and a 470 to 1000 microfarad capacitor across the servo power wires.','A servo takes a surge when it starts. Taken from the wrong pin, that surge resets the board or makes the servo twitch.');
+    add('added','A time limit on every servo move.','A jammed servo that keeps pushing overheats and burns out.');
+  }
+  if(has(/\bfeed(s|er|ing)?\b|\bfood\b|\btreats?\b/)&&has(/\bcat\b|\bdog\b|\bpet\b|\bfish\b|rabbit|hamster|\bbird\b/)){
+    add('added','A daily limit on feeding: the extra-feed button can only add a small number of extra portions a day (for example 2), and a feed is never repeated within a few minutes.','A button that feeds on every press can overfeed an animal, which is a health problem.');
+    add('risk','A food chute can jam, or the portion can vary with the type of food. Test the portion size with your own food, and check the first few days.','Dry food differs in size and stickiness. The servo time and angle are tuned by testing.');
+    add('assumed','If the time is not known (for example after a power cut before Wi-Fi connects), it does not feed on its own.','This stops a reset from dumping a whole day of food at once.');
+  }
+  if(wantsPhone&&online&&has(/every \d+ ?(seconds?|minutes?|mins?|hours?)|each \d+ ?(minutes?|hours?)/)&&has(/\bwhen\b.{0,60}(dry|low|high|below|above|too |over|under)/)){
+    add('assumed','The phone message is sent once, when the reading first crosses the limit. It is not sent again on every check, but it reminds you again after 24 hours if the reading is still bad.','If the soil is dry and it checks every 10 minutes, a message on every check would send over a hundred a day.');
+  }
+  if(has(/\bleds?\b/)){
+    add('added','A resistor for each LED (about 220 to 330 ohms).','An LED with no resistor draws too much current and burns out, and can damage the ESP32 pin.');
+  }
   const watering=loads&&has(/water|irrigat|pump|valve|drip|sprinkl|plant|tank|reservoir/);
   if(watering){
     add('added','A safety limit on watering: the pump may run at most 30 seconds at a time, and must rest at least 1 hour before it can run again.','If a sensor fails or a wire comes loose, always dry would run the pump until the tank is empty or the floor is flooded. Change the numbers in the code if you need to.');
