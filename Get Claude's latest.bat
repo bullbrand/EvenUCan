@@ -3,7 +3,9 @@ cd /d "%~dp0"
 echo.
 echo Getting the latest EvenUCan work from Claude...
 echo.
+REM These two files are rebuilt from the source pieces every time, so it is safe to throw the old copies away first.
 git checkout -- app/EvenUCan.html
+git checkout -- src/js/parts-curated.js
 git pull origin worktree-curated-parts
 if errorlevel 1 (
   echo.
