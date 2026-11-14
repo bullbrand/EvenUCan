@@ -72,7 +72,7 @@ function briefDoctor(desc,A,pf,power){
     add('risk','Mains in a damp or outdoor place (shed, garage): keep the charger and plug dry and off the floor, on a socket protected by an RCD (residual-current device), and use the cable rated for the job.','Damp and mains do not mix. Where possible put the charger indoors and run a low-voltage USB cable out to the device.');
   }
   if(guard){
-    if(has(/button|silence|mute|snooze/))add('assumed','Your button only silences the buzzer after it has started. It does not stop the alarm going off when you walk in yourself. I assumed you can also switch the alarm OFF before you go in (a second button, a switch or a phone message), or that it waits about 20 seconds before sounding.','Otherwise the first person it catches, every time, is you.');
+    if(has(/\bbutton\b|silence|mute|snooze/))add('assumed','Your button only silences the buzzer after it has started. It does not stop the alarm going off when you walk in yourself. I assumed you can also switch the alarm OFF before you go in (a second button, a switch or a phone message), or that it waits about 20 seconds before sounding.','Otherwise the first person it catches, every time, is you.');
     else add('assumed','Nothing stops it going off when you walk in yourself. I assumed you can switch it OFF before you go in (a button or a phone message), or that it waits about 20 seconds before sounding.','Otherwise the first person it catches, every time, is you.');
     add('risk','Motion sensors trigger on pets, spiders, insects, heaters and sun through glass; door contacts miss a window.','A door contact plus a motion sensor together give far fewer false alarms than either alone.');
   }
