@@ -8,6 +8,8 @@
 #coTip .coStep{font-size:12px;font-weight:700;color:#8a6d00;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
 #coTip .coBtns{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
 @media (prefers-reduced-motion:reduce){#coRing{animation:none}}
+/* Backup reminder: a slim bar at the bottom, never a blocking box */
+#bkBar{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:8000;max-width:calc(100vw - 20px);box-sizing:border-box;gap:10px;align-items:center;flex-wrap:wrap;background:#fffbe6;color:#222;border:2px solid #ffd43b;border-radius:10px;padding:8px 12px;font-size:14px;box-shadow:0 6px 22px #0005}
 /* (r4) Welcome window */
 .wcBig{display:block;width:100%;box-sizing:border-box;padding:14px 16px;border-radius:10px;font:inherit;font-size:13.5px;line-height:1.5;cursor:pointer;text-align:center}
 .wcBig.primary{background:var(--accent);color:#fff;border:1px solid var(--accent);font-weight:600;box-shadow:0 3px 12px #1e5af044}
