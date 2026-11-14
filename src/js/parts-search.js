@@ -268,8 +268,9 @@ const suBack=$('suBack');
 let su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false};
 function renderSetup(){
   const b=$('suBody'),f=$('suFoot'),P=$('suProg');
+  if($('suNever'))su.never=$('suNever').checked;// keep the tick when the step changes
   if(su.step==='su1'){
-    P.textContent='Step 1 of 2 — Your 3D printer';
+    P.textContent='Step 1 of 4 — Your 3D printer';
     b.innerHTML=
       '<div style="font-size:14px;font-weight:600;margin-bottom:6px">What 3D printer do you have?</div>'+
       '<div style="color:var(--text2);margin-bottom:10px">This sets the build plate size so EvenUCan can warn you if your box is too big to print.</div>'+
@@ -296,17 +297,39 @@ function renderSetup(){
       $('suBedX').value=x;$('suBedY').value=y;$('suBedZ').value=z;
     });
   }else if(su.step==='su2'){
+    P.textContent='Step 2 of 4 — Your board and software';
+    const cur=WF.store.get('pref_pf')||'';
+    b.innerHTML=
+      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">What will you program your gadgets with?</div>'+
+      '<div style="color:var(--text2);margin-bottom:10px">EvenUCan uses this to pick the right kind of code and the right board. Not sure? Leave it on "Not sure yet": you can change it for each project.</div>'+
+      Object.entries(WC_PF).map(([k,p])=>'<label style="display:flex;gap:8px;align-items:center;margin:7px 0;font-size:14px"><input type="radio" name="suPf" value="'+k+'"'+(cur===k?' checked':'')+'> '+esc(p.label)+(p.tip?' <span class="ewNote">← '+esc(p.tip)+'</span>':'')+'</label>').join('');
+    f.innerHTML='<button id="suBack2" class="wcBig wcPlain">← Back</button><button id="suNext2" class="primary wcBig">Next →</button>'+
+      '<button id="suSkip2" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">Skip for now</button>';
+  }else if(su.step==='su3'){
     const has=!!aiKey(),P2=PROVIDERS[aiProv()];
-    P.textContent='Step 2 of 2 — AI helper';
+    P.textContent='Step 3 of 4 — AI helper (optional)';
     b.innerHTML=
       '<div style="font-size:14px;font-weight:600;margin-bottom:6px">Set up an AI key</div>'+
       '<div style="color:var(--text2);margin-bottom:10px">The AI plans the parts, box and code from your description. Free keys work great — no credit card needed. You can always change this later in <b>Tools → AI key</b>.</div>'+
       aiHelperBox(true)+
       (has?'<div style="color:var(--ok);margin-top:4px">✅ '+esc(P2.name)+' key is set up — you\'re ready!</div>':'');
-    f.innerHTML='<button id="suBack2" class="wcBig wcPlain">← Back</button>'+
-      '<button id="suDone" class="primary wcBig">Let\'s build! →</button>';
+    f.innerHTML='<button id="suBack3" class="wcBig wcPlain">← Back</button>'+
+      '<button id="suNext3" class="primary wcBig">Next →</button>'+
+      '<button id="suSkip3" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">Skip, no AI for me</button>';
+  }else if(su.step==='su4'){
+    P.textContent='Step 4 of 4 — You are ready';
+    b.innerHTML=
+      '<div style="font-size:16px;font-weight:600;margin-bottom:6px">🧭 Want me to show you around?</div>'+
+      '<div style="color:var(--text2);margin-bottom:6px">I will build a small first project with you. The screen goes dim and I <b>ring the one button to click next</b>, all the way from the idea to sending the code to your board. It takes about five minutes and needs no AI.</div>'+
+      '<div class="ewNote">You can run it again any time from <b>🧭 First project</b> at the top.</div>';
+    f.innerHTML='<button id="suGuide" class="primary wcBig">Yes, guide me through my first project →</button>'+
+      '<button id="suNoGuide" class="wcBig wcPlain">No thanks, I will look around myself</button>'+
+      '<button id="suBack4" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">← Back</button>';
   }
+  // on every step: leave the setup, and ask not to see it again
+  f.insertAdjacentHTML('beforeend','<div style="flex-basis:100%;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:4px;font-size:12.5px"><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="suNever"'+(su.never?' checked':'')+'> Don\'t show this setup again</label><button id="suSkipAll" class="linkBtn">Skip the setup</button></div>');
 }
+function suFinish(){WF.store.set('setup_done','1');suBack.style.display='none';}
 suBack.addEventListener('click',e=>{
   const id=e.target.id;
   if(id==='suNext1'||id==='suSkip1'){
@@ -317,8 +340,17 @@ suBack.addEventListener('click',e=>{
       if(x>9&&y>9&&z>9&&window.WF&&window.WF.setBed)window.WF.setBed(x,y,z);
     }
     su.step='su2';renderSetup();
+  }else if(id==='suNext2'||id==='suSkip2'){
+    const r=document.querySelector('input[name="suPf"]:checked');
+    if(id==='suNext2'&&r&&PLATFORMS[r.value]){WF.store.set('pref_pf',r.value);iw.w.pf=r.value;iw.noai.pf=r.value;}
+    su.step='su3';renderSetup();
   }else if(id==='suBack2'){su.step='su1';renderSetup();}
-  else if(id==='suDone'){WF.store.set('setup_done','1');suBack.style.display='none';openStartupChoice();}
+  else if(id==='suNext3'||id==='suSkip3'){su.step='su4';renderSetup();}
+  else if(id==='suBack3'){su.step='su2';renderSetup();}
+  else if(id==='suBack4'){su.step='su3';renderSetup();}
+  else if(id==='suGuide'){suFinish();coachStart();}
+  else if(id==='suNoGuide'){suFinish();openStartupChoice();}
+  else if(id==='suSkipAll'){if($('suNever')&&$('suNever').checked)WF.store.set('setup_done','1');suBack.style.display='none';openStartupChoice();}
   // AI key buttons reused from aiHelperBox — same IDs as welcome wizard
   else if(id==='wcAiGem')askKey('gemini').then(renderSetup);
   else if(id==='wcAiNv')askKey('nvidia').then(renderSetup);
@@ -333,7 +365,8 @@ suBack.addEventListener('click',e=>{
 });
 function openSetup(){
   if(setupDone())return false;
-  su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false,_preset:''};
+  su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false,_preset:'',never:false};
+  $('suFoot').innerHTML='';// forget a tick left from an earlier opening
   suBack.style.display='grid';
   renderSetup();
   return true;
@@ -625,6 +658,7 @@ function wcRender(){
 <div style="font-size:15px;margin-bottom:10px">What would you like to do today?</div></div>${aiHelperBox()}<div style="text-align:center;padding:2px 4px">
 <button id="wcIdea" class="primary wcBig"><span style="font-size:18px">💡 I have an idea for a gadget</span><br><span style="font-weight:400">Tell the AI helper what it should do: it picks the parts and writes the code</span></button>
 <button id="wcNoAi" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧰 Carry on without AI</span><br><span class="ewNote">Start from a ready-made example, or tick the parts you have</span></button>
+<button id="wcGuide" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧭 New here? Build my first project with a guide</span><br><span class="ewNote">I ring each button to click, from the idea to your board</span></button>
 <div class="wcOr"><span>or</span></div>
 <button id="wcDraw" class="wcBig wcPlain"><span style="font-size:15px">✏️ I want to draw something myself</span><br><span class="ewNote">(close this and use the drawing canvas)</span></button>
 <div style="margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,#7048e8 5%,var(--bg2));text-align:left"><b>🍳 New: Open Cookbook</b> — tick the parts you own at home, set quantities, then press <b>💡 What can I build?</b> and the AI suggests up to 6 projects you can start today. Find it in the <b>Tools</b> menu or the <b>🍳 Cookbook</b> button in the top bar.</div>
@@ -769,6 +803,7 @@ iwBack.addEventListener('click',e=>{
     const t=$('wcDesc');if(t){t.value=iw.w.text;t.focus();}WF.flash('Filled in the example, and ticked what it does in Step 2',3500);return;}
   switch(el.id){
     case 'wcIdea':go('w1');break;
+    case 'wcGuide':coachStart();break;
     case 'wcDraw':wcKeep();closeIntent();break;
     case 'wcNoAi':wcKeep();iw.welcome=true;iw.err='';iw.step='noai';renderIntent();break;
     case 'wcNoAiBack':noaiKeep();go('welcome');break;

@@ -249,6 +249,7 @@ if(location.protocol==='file:'){
     </nav>
     <span class="mspace"></span>
     <button id="bBuild" title="Start a new gadget: describe what it should do and EvenUCan plans the parts, the box and the code, step by step">💡 <span class="bl">Start a project</span></button>
+    <button id="bGuide" title="New here? A guided walk-through: build your first project, one highlighted button at a time" style="padding:4px 10px">🧭 <span class="bl">First project</span></button>
     <button id="bCookbook" title="Cookbook: tick the parts you own at home, then ask the AI what you can build today" style="padding:4px 10px">🍳 <span class="bl">Cookbook</span></button>
     <button id="bProjects" title="Save and reload your builds so you can pick up where you left off" style="padding:4px 10px">💾 <span class="bl">Projects</span></button>
     <!-- The old menu-bar buttons stay here, hidden, so every id and handler keeps working; the menus click them. -->
@@ -5258,6 +5259,13 @@ markDirty();
 <style>
 /* ---- Enclosure Wizard and Parts Library windows */
 .ewBack{position:fixed;inset:0;background:#0006;display:none;place-items:center;z-index:40}
+/* Guided first project (coach.js): a ring round the next button on a dimmed screen, and a tip card beside it */
+#coRing{position:fixed;display:none;z-index:9000;pointer-events:none;border-radius:10px;border:4px solid #ffd43b;box-shadow:0 0 0 9999px #0008,0 0 18px 4px #ffd43b;animation:coPulse 1.1s ease-in-out infinite}
+@keyframes coPulse{50%{box-shadow:0 0 0 9999px #0008,0 0 30px 10px #ffd43b}}
+#coTip{position:fixed;display:none;z-index:9001;width:min(330px,calc(100vw - 20px));box-sizing:border-box;background:#fffbe6;color:#222;border:3px solid #ffd43b;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.45;box-shadow:0 8px 28px #0006}
+#coTip .coStep{font-size:12px;font-weight:700;color:#8a6d00;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
+#coTip .coBtns{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+@media (prefers-reduced-motion:reduce){#coRing{animation:none}}
 /* (r4) Welcome window */
 .wcBig{display:block;width:100%;box-sizing:border-box;padding:14px 16px;border-radius:10px;font:inherit;font-size:13.5px;line-height:1.5;cursor:pointer;text-align:center}
 .wcBig.primary{background:var(--accent);color:#fff;border:1px solid var(--accent);font-weight:600;box-shadow:0 3px 12px #1e5af044}
@@ -12058,8 +12066,9 @@ const suBack=$('suBack');
 let su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false};
 function renderSetup(){
   const b=$('suBody'),f=$('suFoot'),P=$('suProg');
+  if($('suNever'))su.never=$('suNever').checked;// keep the tick when the step changes
   if(su.step==='su1'){
-    P.textContent='Step 1 of 2 — Your 3D printer';
+    P.textContent='Step 1 of 4 — Your 3D printer';
     b.innerHTML=
       '<div style="font-size:14px;font-weight:600;margin-bottom:6px">What 3D printer do you have?</div>'+
       '<div style="color:var(--text2);margin-bottom:10px">This sets the build plate size so EvenUCan can warn you if your box is too big to print.</div>'+
@@ -12086,17 +12095,39 @@ function renderSetup(){
       $('suBedX').value=x;$('suBedY').value=y;$('suBedZ').value=z;
     });
   }else if(su.step==='su2'){
+    P.textContent='Step 2 of 4 — Your board and software';
+    const cur=WF.store.get('pref_pf')||'';
+    b.innerHTML=
+      '<div style="font-size:14px;font-weight:600;margin-bottom:6px">What will you program your gadgets with?</div>'+
+      '<div style="color:var(--text2);margin-bottom:10px">EvenUCan uses this to pick the right kind of code and the right board. Not sure? Leave it on "Not sure yet": you can change it for each project.</div>'+
+      Object.entries(WC_PF).map(([k,p])=>'<label style="display:flex;gap:8px;align-items:center;margin:7px 0;font-size:14px"><input type="radio" name="suPf" value="'+k+'"'+(cur===k?' checked':'')+'> '+esc(p.label)+(p.tip?' <span class="ewNote">← '+esc(p.tip)+'</span>':'')+'</label>').join('');
+    f.innerHTML='<button id="suBack2" class="wcBig wcPlain">← Back</button><button id="suNext2" class="primary wcBig">Next →</button>'+
+      '<button id="suSkip2" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">Skip for now</button>';
+  }else if(su.step==='su3'){
     const has=!!aiKey(),P2=PROVIDERS[aiProv()];
-    P.textContent='Step 2 of 2 — AI helper';
+    P.textContent='Step 3 of 4 — AI helper (optional)';
     b.innerHTML=
       '<div style="font-size:14px;font-weight:600;margin-bottom:6px">Set up an AI key</div>'+
       '<div style="color:var(--text2);margin-bottom:10px">The AI plans the parts, box and code from your description. Free keys work great — no credit card needed. You can always change this later in <b>Tools → AI key</b>.</div>'+
       aiHelperBox(true)+
       (has?'<div style="color:var(--ok);margin-top:4px">✅ '+esc(P2.name)+' key is set up — you\'re ready!</div>':'');
-    f.innerHTML='<button id="suBack2" class="wcBig wcPlain">← Back</button>'+
-      '<button id="suDone" class="primary wcBig">Let\'s build! →</button>';
+    f.innerHTML='<button id="suBack3" class="wcBig wcPlain">← Back</button>'+
+      '<button id="suNext3" class="primary wcBig">Next →</button>'+
+      '<button id="suSkip3" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">Skip, no AI for me</button>';
+  }else if(su.step==='su4'){
+    P.textContent='Step 4 of 4 — You are ready';
+    b.innerHTML=
+      '<div style="font-size:16px;font-weight:600;margin-bottom:6px">🧭 Want me to show you around?</div>'+
+      '<div style="color:var(--text2);margin-bottom:6px">I will build a small first project with you. The screen goes dim and I <b>ring the one button to click next</b>, all the way from the idea to sending the code to your board. It takes about five minutes and needs no AI.</div>'+
+      '<div class="ewNote">You can run it again any time from <b>🧭 First project</b> at the top.</div>';
+    f.innerHTML='<button id="suGuide" class="primary wcBig">Yes, guide me through my first project →</button>'+
+      '<button id="suNoGuide" class="wcBig wcPlain">No thanks, I will look around myself</button>'+
+      '<button id="suBack4" class="wcBig wcPlain" style="font-size:12px;color:var(--text2)">← Back</button>';
   }
+  // on every step: leave the setup, and ask not to see it again
+  f.insertAdjacentHTML('beforeend','<div style="flex-basis:100%;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:4px;font-size:12.5px"><label style="display:inline-flex;gap:6px;align-items:center"><input type="checkbox" id="suNever"'+(su.never?' checked':'')+'> Don\'t show this setup again</label><button id="suSkipAll" class="linkBtn">Skip the setup</button></div>');
 }
+function suFinish(){WF.store.set('setup_done','1');suBack.style.display='none';}
 suBack.addEventListener('click',e=>{
   const id=e.target.id;
   if(id==='suNext1'||id==='suSkip1'){
@@ -12107,8 +12138,17 @@ suBack.addEventListener('click',e=>{
       if(x>9&&y>9&&z>9&&window.WF&&window.WF.setBed)window.WF.setBed(x,y,z);
     }
     su.step='su2';renderSetup();
+  }else if(id==='suNext2'||id==='suSkip2'){
+    const r=document.querySelector('input[name="suPf"]:checked');
+    if(id==='suNext2'&&r&&PLATFORMS[r.value]){WF.store.set('pref_pf',r.value);iw.w.pf=r.value;iw.noai.pf=r.value;}
+    su.step='su3';renderSetup();
   }else if(id==='suBack2'){su.step='su1';renderSetup();}
-  else if(id==='suDone'){WF.store.set('setup_done','1');suBack.style.display='none';openStartupChoice();}
+  else if(id==='suNext3'||id==='suSkip3'){su.step='su4';renderSetup();}
+  else if(id==='suBack3'){su.step='su2';renderSetup();}
+  else if(id==='suBack4'){su.step='su3';renderSetup();}
+  else if(id==='suGuide'){suFinish();coachStart();}
+  else if(id==='suNoGuide'){suFinish();openStartupChoice();}
+  else if(id==='suSkipAll'){if($('suNever')&&$('suNever').checked)WF.store.set('setup_done','1');suBack.style.display='none';openStartupChoice();}
   // AI key buttons reused from aiHelperBox — same IDs as welcome wizard
   else if(id==='wcAiGem')askKey('gemini').then(renderSetup);
   else if(id==='wcAiNv')askKey('nvidia').then(renderSetup);
@@ -12123,7 +12163,8 @@ suBack.addEventListener('click',e=>{
 });
 function openSetup(){
   if(setupDone())return false;
-  su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false,_preset:''};
+  su={step:'su1',bedX:220,bedY:220,bedZ:250,bedSet:false,_preset:'',never:false};
+  $('suFoot').innerHTML='';// forget a tick left from an earlier opening
   suBack.style.display='grid';
   renderSetup();
   return true;
@@ -12415,6 +12456,7 @@ function wcRender(){
 <div style="font-size:15px;margin-bottom:10px">What would you like to do today?</div></div>${aiHelperBox()}<div style="text-align:center;padding:2px 4px">
 <button id="wcIdea" class="primary wcBig"><span style="font-size:18px">💡 I have an idea for a gadget</span><br><span style="font-weight:400">Tell the AI helper what it should do: it picks the parts and writes the code</span></button>
 <button id="wcNoAi" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧰 Carry on without AI</span><br><span class="ewNote">Start from a ready-made example, or tick the parts you have</span></button>
+<button id="wcGuide" class="wcBig wcPlain" style="margin-top:8px"><span style="font-size:15px">🧭 New here? Build my first project with a guide</span><br><span class="ewNote">I ring each button to click, from the idea to your board</span></button>
 <div class="wcOr"><span>or</span></div>
 <button id="wcDraw" class="wcBig wcPlain"><span style="font-size:15px">✏️ I want to draw something myself</span><br><span class="ewNote">(close this and use the drawing canvas)</span></button>
 <div style="margin-top:12px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:color-mix(in srgb,#7048e8 5%,var(--bg2));text-align:left"><b>🍳 New: Open Cookbook</b> — tick the parts you own at home, set quantities, then press <b>💡 What can I build?</b> and the AI suggests up to 6 projects you can start today. Find it in the <b>Tools</b> menu or the <b>🍳 Cookbook</b> button in the top bar.</div>
@@ -12559,6 +12601,7 @@ iwBack.addEventListener('click',e=>{
     const t=$('wcDesc');if(t){t.value=iw.w.text;t.focus();}WF.flash('Filled in the example, and ticked what it does in Step 2',3500);return;}
   switch(el.id){
     case 'wcIdea':go('w1');break;
+    case 'wcGuide':coachStart();break;
     case 'wcDraw':wcKeep();closeIntent();break;
     case 'wcNoAi':wcKeep();iw.welcome=true;iw.err='';iw.step='noai';renderIntent();break;
     case 'wcNoAiBack':noaiKeep();go('welcome');break;
@@ -12829,6 +12872,104 @@ const COOKBOOK_RECIPES=[
    extra:['A 12V supply: the buck converter makes 5V for the ESP32 from it','Hose fittings for 1/2 inch threads','The valve needs some water pressure to work'],
    build:'A timed garden tap on an ESP32 with a 12V solenoid valve switched by a relay board, a YF-S201 flow sensor, a DS3231 clock and an LM2596 buck converter making 5V from the 12V supply.'}
 ];
+// ---- (coach-r1) "Build my first project": a guided walk-through. It dims the screen, rings the one button to click next
+// and waits for the click, from the first idea right through to sending the code to ESPHome / the Arduino IDE.
+// It uses no AI. It only points at buttons that already exist, so every step is the real app, not a pretend one.
+document.body.insertAdjacentHTML('beforeend','<div id="coRing" aria-hidden="true"></div><div id="coTip" role="status" aria-live="polite"></div>');
+const coRing=$('coRing'),coTip=$('coTip');
+const coach={on:false,i:0,steps:[],last:null,timer:null,since:0,pending:false};
+// Which ready-made example to build, by the board the user said they use (setup asks this). ESPHome is the default.
+const COACH_EX={esphome:1,esp32ide:0,arduino:4,raspberrypi:1};
+function coachSteps(pf){
+  const k=COACH_EX[pf]!==undefined?COACH_EX[pf]:1,ex=NOAI_EX[k]||NOAI_EX[1];
+  const ide=ideName(ex.pf);
+  return [
+    {sel:'#wcNoAi',text:'Let\'s build a real gadget together, with no AI and no key. Click the <b>highlighted button</b>: <b>Carry on without AI</b>.'},
+    {sel:'[data-noex="'+k+'"]',text:'Pick a ready-made idea. Click the highlighted one: <b>'+esc(ex.label)+'</b>. (Later you can tick any parts you like.)'},
+    {sel:'#iwApply',text:'These are the parts for it. Happy? Click <b>Looks good. Next: Box</b>.'},
+    {sel:'#ewGen',text:'Now the box. Click <b>Generate base + lid</b> and EvenUCan designs a box that fits every part.'},
+    {sel:'#gNext',text:'Your box is made, and you can turn it round with the mouse. You can download it for your 3D printer later. Click the highlighted button to go on to the <b>wiring</b>.'},
+    {sel:'#gNext',text:'This is the wiring list: which pin joins to which. Tick each wire off as you connect it. When you are ready, click the highlighted button for the <b>code</b>.'},
+    {sel:'#gNext:not([disabled])',text:'Your code is written for you. Click the highlighted button to send it to <b>'+esc(ide)+'</b>.'}
+  ];
+}
+function coachVisible(el){
+  if(!el||el.disabled)return false;
+  const r=el.getBoundingClientRect();if(r.width<2||r.height<2)return false;
+  const s=getComputedStyle(el);if(s.visibility==='hidden'||s.display==='none')return false;
+  return r.bottom>0&&r.right>0&&r.top<innerHeight&&r.left<innerWidth;
+}
+function coachFind(){
+  const st=coach.steps[coach.i];if(!st)return null;
+  return [...document.querySelectorAll(st.sel)].find(el=>el!==coach.last&&coachVisible(el))||null;
+}
+function coachShow(el){
+  const st=coach.steps[coach.i],n=coach.steps.length;
+  const r=el?el.getBoundingClientRect():null;
+  if(r){
+    coRing.style.cssText='display:block;left:'+(r.left-6)+'px;top:'+(r.top-6)+'px;width:'+(r.width+12)+'px;height:'+(r.height+12)+'px';
+  }else coRing.style.display='none';
+  const wait=!el&&Date.now()-coach.since>7000;
+  coTip.innerHTML='<div class="coStep">Step '+(coach.i+1)+' of '+n+'</div><div>'+(el?st.text:'Getting the next screen ready…'+(wait?'<br>Can\'t see the button? Press <b>Skip this step</b>.':''))+'</div>'+
+    '<div class="coBtns"><button id="coSkip">Skip this step</button><button id="coStop" class="linkBtn">Stop the guide</button></div>';
+  coTip.style.display='block';
+  const w=coTip.offsetWidth,h=coTip.offsetHeight;
+  let x,y;
+  if(r){x=Math.min(Math.max(10,r.left),innerWidth-w-10);y=r.bottom+14;if(y+h>innerHeight-10)y=Math.max(10,r.top-h-14);}
+  else{x=Math.max(10,(innerWidth-w)/2);y=Math.max(10,innerHeight-h-30);}
+  coTip.style.left=x+'px';coTip.style.top=y+'px';
+}
+function coachTick(){
+  if(!coach.on||coach.pending)return;
+  const el=coachFind();
+  if(el&&coach.i>=0){
+    const r=el.getBoundingClientRect();
+    if(r.top<60||r.bottom>innerHeight-60)el.scrollIntoView({block:'center'});
+  }
+  coachShow(el);
+}
+function coachNext(){
+  coach.pending=false;coach.i++;coach.since=Date.now();
+  if(coach.i>=coach.steps.length)return coachFinish();
+  coachTick();
+}
+function coachFinish(){
+  coachStop(true);
+  WF.store.set('coach_done','1');
+  WF.flash('🎉 You did it! That is how every EvenUCan project goes. Start your own with 💡 Start a project.',9000);
+}
+function coachStop(done){
+  coach.on=false;coach.pending=false;clearInterval(coach.timer);
+  coRing.style.display='none';coTip.style.display='none';
+  if(!done)WF.flash('Guide stopped. You can run it again any time from 🧭 First project.',5000);
+}
+async function coachStart(){
+  if(coach.on)return;
+  if((!WF.docEmpty||intentNow())&&!await askConfirm('The guide builds a small practice project in a fresh start.\n\nIf you are working on something, save it first (💾 Save at the top) so you can open it again.\n\nStart the guide?'))return;
+  const pf=WF.store.get('pref_pf')||'esphome';
+  coach.steps=coachSteps(pf);coach.i=0;coach.last=null;coach.since=Date.now();coach.pending=false;coach.on=true;
+  try{closeWizard();closeWiring();}catch(e){}
+  gStep=null;drawGuide();
+  iw.w={text:'',does:[],pf:'auto',noShow:wcSeen()};iw.welcome=true;iw.step='welcome';iw.err='';iw.busy=false;
+  iwBack.style.display='grid';renderIntent();
+  coach.timer=setInterval(coachTick,300);coachTick();
+}
+// The click on the ringed button is the user's own click: let it do its job, then go on to the next step.
+document.addEventListener('click',e=>{
+  if(!coach.on)return;
+  const id=e.target&&e.target.id;
+  if(id==='coSkip'){coach.last=null;coachNext();return;}
+  if(id==='coStop'){coachStop(false);return;}
+  if(coach.pending)return;
+  const st=coach.steps[coach.i];if(!st)return;
+  const hit=e.target.closest&&e.target.closest(st.sel);
+  if(!hit||hit.disabled)return;
+  coach.last=hit;coach.pending=true;coRing.style.display='none';coTip.style.display='none';
+  setTimeout(coachNext,coach.i===coach.steps.length-1?900:450);
+},true);
+document.addEventListener('keydown',e=>{if(coach.on&&e.key==='Escape')coachStop(false);},true);
+$('bGuide').onclick=()=>coachStart();
+window.addEventListener('resize',()=>{if(coach.on)coachTick();});
 // ---------------------------------------------------------------- keys and menu wiring
 // While a window is open, keys belong to it (so typing doesn't switch drawing tools).
 document.addEventListener('keydown',e=>{
