@@ -198,7 +198,7 @@ function tidyIntent(d,desc){
   // Each rule: if the description does NOT mention any of the trigger words, remove parts matching the sensor pattern.
   const _d=desc.toLowerCase();
   const _notAsked=(triggers,partPattern)=>!triggers.some(w=>_d.includes(w))&&A.parts.some(p=>partPattern.test(p.search+' '+p.category));
-  const _removeParts=pat=>{ A.parts=A.parts.filter(p=>!pat.test(p.search+' '+p.category)); };
+  const _removeParts=pat=>{ A.parts=A.parts.filter(p=>!pat.test(p.search+' '+p.category)||/reed|magnet|hall.?sensor|contact switch|limit switch/i.test(p.search)); };// (Brief Doctor) a reed/magnet/limit switch is never a motion sensor, even when the AI files it under sensors-motion
   if(_notAsked(['tilt','level','angle','balance','lean','gyro','accelero']          ,/mpu.?6050|accelero|tilt/i))      _removeParts(/mpu.?6050|accelero|tilt/i);
   if(_notAsked(['temperature','temp','hot','cold','heat','climate','weather','humid'],/bme280|bmp280|dht|temperature|humidity|sensors-temp|sensors-humid/i)&&/soil|plant|pot|moist|water/i.test(_d)) _removeParts(/bme280|bmp280|dht22|dht11|temperature|humidity|sensors-temp|sensors-humid/i);
   if(_notAsked(['light','bright','lux','dark','sun','day','night']                  ,/bh1750|ldr|photo|light.level|sensors-light/i))  _removeParts(/bh1750|ldr|photo.?resistor|light.level|sensors-light/i);

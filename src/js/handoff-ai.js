@@ -36,7 +36,7 @@ function capIssues(pf,desc,A,power,dropped){
   if(power==='battery'&&pf==='raspberrypi')
     out.push({k:'pi-battery',block:false,msg:'A Raspberry Pi uses a lot of power: a small battery runs it for only a few hours.',fixes:[['pow-mains','Use a mains adapter instead'],['esphome','Switch to an ESP32']]});
   else if(power==='battery'&&net&&pf!=='arduino'&&!dropped.includes('wifi'))
-    out.push({k:'wifi-battery',block:false,msg:'Wi-Fi uses a lot of power: on the 1000 mAh battery an ESP32 lasts about a day before it needs charging. For weeks of running, use a mains adapter.',fixes:[['pow-mains','Use a mains adapter instead']]});
+    out.push({k:'wifi-battery',block:false,msg:/deep.?sleep|sleeps? between|light.?sleep/i.test([A.summary,A.esphome_notes,A.code_description,A.esphome_yaml_hint].join(' '))?'This device sleeps between events, which is the right way to run on a battery. Each time it wakes and joins Wi-Fi it uses power, so on a 1000 mAh battery expect weeks, not months, and less on busy days. Use a mains adapter if you never want to charge it.':'Wi-Fi uses a lot of power: on the 1000 mAh battery an ESP32 lasts about a day before it needs charging. For weeks of running, use a mains adapter.',fixes:[['pow-mains','Use a mains adapter instead']]});
   return out;
 }
 const capHtml=list=>list.map(c=>`<div class="capBox${c.block?'':' soft'}" role="alert"><b>${c.block?'⛔ ':'⚠️ '}${esc(c.msg)}</b>${c.block?'<div class="ewNote">Pick one to carry on:</div>':''}<div>`+
