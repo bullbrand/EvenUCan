@@ -18,7 +18,7 @@ if(fs.existsSync(curJson)){
       if(board&&r==='sig')r='nc';
       else if(board&&(r==='sda'||r==='scl')){r='gpio';if(n!=='SDA'&&n!=='SCL')n+=' ('+(q.r==='sda'?'SDA':'SCL')+')';}
       const o={n,r,x:q.x,y:q.y};if(q.g!==undefined)o.g=q.g;return o;});
-    const o={id:p.id,name:p.name+' (curated)',type:p.type,shape:'rect',w:p.w,d:p.d,pcb:p.pcb,h:p.h,below:p.below,mount:'floor',
+    const o={id:p.id,name:p.name+' (curated)',type:p.type,shape:'rect',w:p.w,d:p.d,pcb:p.pcb,h:p.h,below:p.below,mount:p.mount==='wall'||p.mount==='outside'?p.mount:'floor',
       features:p.features,pins,acc:p.confidence==='low'?'approx':'drawing',
       notes:(p.notes||'')+' Sources: '+(p.sources||[]).map(s=>s.url).join(' ')};
     if(board&&/esp32-?s3/i.test(p.name))o.mcu='esp32s3'; // so the wiring and ESPHome code know the chip
