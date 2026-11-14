@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Measure a part from photos</title>
+<style>
+:root{--bg:#f3f4f6;--panel:#fff;--line:#c9ccd1;--text:#1d1f23;--muted:#5d636d;--accent:#1e5af0;--ok:#16794c;--warn:#a85d00;--bad:#b42318;--hi:#fff4c2}
+@media (prefers-color-scheme:dark){:root{--bg:#16181c;--panel:#20242a;--line:#3a3f47;--text:#e8eaed;--muted:#a3a9b3;--accent:#6c9bff;--ok:#4cc38a;--warn:#f0a83c;--bad:#ff7a70;--hi:#3d3412}}
+*{box-sizing:border-box}
+body{margin:0;font:17px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text)}
+header{padding:12px 16px;background:var(--panel);border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+header h1{margin:0;font-size:21px}
+header span{color:var(--muted);font-size:15px}
+main{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:14px;padding:14px;max-width:1500px;margin:0 auto}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+#stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:420px}
+#scroll{overflow:auto;max-height:76vh;background:#222;position:relative;touch-action:pan-x pan-y}
+#cv{display:block;cursor:crosshair;touch-action:none}
+#stageBar{display:flex;gap:12px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);font-size:15px;flex-wrap:wrap}
+#stageBar input[type=range]{width:180px}
+#panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;align-self:start}
+#stepNo{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+#stepTitle{margin:2px 0 8px;font-size:22px}
+.card{background:var(--hi);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:15px}
+.note{color:var(--muted);font-size:15px}
+.ok{color:var(--ok);font-weight:600}.warn{color:var(--warn);font-weight:600}.bad{color:var(--bad);font-weight:600}
+button,.btn,select,input[type=text],input[type=number]{font:inherit;min-height:44px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:6px 12px}
+button,.btn{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button.primary,.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.small{min-height:36px;padding:3px 10px;font-size:15px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+#stepBtns{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+#stepBtns .primary{flex:1}
+label.chk{display:flex;gap:8px;align-items:center;margin:6px 0}
+input[type=checkbox]{width:22px;height:22px}
+ul.holes{list-style:none;padding:0;margin:6px 0}
+ul.holes li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);font-size:15px}
+details{margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+summary{cursor:pointer;font-weight:600}
+#loupe{position:fixed;display:none;width:150px;height:150px;border-radius:50%;border:3px solid var(--accent);overflow:hidden;pointer-events:none;z-index:50;box-shadow:0 4px 18px #0008;background:#000}
+#loupe canvas{width:100%;height:100%;display:block}
+#preview{width:100%;max-width:360px;display:block;margin:8px 0;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<header><h1>📏 Measure a part from photos</h1><span>Two photos and a steel ruler. It works out the sizes and makes a file for EvenUCan.</span></header>
+<main>
+  <section id="stage">
+    <div id="scroll"><canvas id="cv" width="900" height="560"></canvas></div>
+    <div id="stageBar"><label>Zoom <input type="range" id="zoom" min="100" max="500" value="100"></label><span class="note" id="hint">Choose your photo to begin.</span></div>
+  </section>
+  <aside id="panel">
+    <div id="stepNo"></div><h2 id="stepTitle"></h2>
+    <div id="stepBody"></div>
+    <div id="stepBtns"><button id="bBack">← Back</button><button id="bNext" class="primary">Next →</button></div>
+    <details id="sess"><summary id="sessSum">Parts measured so far: 0</summary><div id="sessBody"></div></details>
+  </aside>
+</main>
+<div id="loupe"><canvas width="150" height="150"></canvas></div>
+<input type="file" id="file" accept="image/*">
+<script>
+'use strict';
+// ---------------------------------------------------------------------------------------------------------------
+// Measure a part from photos. The top photo gives length, width and the mounting holes; the side photo gives the
+// height. A steel ruler in each photo sets the scale. All the work happens in this page: no photo leaves the computer.
+// ---------------------------------------------------------------------------------------------------------------
+const $=id=>document.getElementById(id);
+const R=(v,n=2)=>+(+v).toFixed(n);
+const MAXDIM=2400;
+const blank=kind=>({kind,src:null,name:'',cal:[],mm:100,scale:0,roi:null,corners:null,k:0,holes:[],pinRows:[],lines:null,box:null,hasBoard:true,sens:1});
+const P={top:blank('top'),side:blank('side')};
+const TYPES=[['board','Board / microcontroller'],['sensor','Sensor'],['display','Display'],['motor','Motor / driver'],['relay','Relay'],['light','LED / light'],['mic','Microphone'],['speaker','Speaker / buzzer'],['amp','Amplifier'],['charger','Charger'],['battery','Battery'],['power','Power supply'],['switch','Switch / button'],['other','Something else']];
+let cur='top',stepIdx=0,mode=null,drag=null,roiDrag=null,manualPts=null,pendingHole=null,pinDraft=null,pinForm={count:8,names:''},zoom=100,saved=[],lastMsg='';
+try{saved=JSON.parse(localStorage.getItem('evenucan.measured')||'[]');if(!Array.isArray(saved))saved=[];}catch(e){saved=[];}
+const rec=()=>P[cur];
+const unit=v=>{const l=Math.hypot(v[0],v[1])||1;return[v[0]/l,v[1]/l];};
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
+
+// ============================== loading a photo ==============================
+async function loadPhoto(kind,file){
+  let bmp;
+  try{bmp=await createImageBitmap(file,{imageOrientation:'from-image'});}
+  catch(e){bmp=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(file);});}
+  const w0=bmp.width||bmp.naturalWidth,h0=bmp.height||bmp.naturalHeight,k=Math.min(1,MAXDIM/Math.max(w0,h0));
+  const c=document.createElement('canvas');c.width=Math.round(w0*k);c.height=Math.round(h0*k);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  P[kind]=Object.assign(blank(kind),{src:c,name:file.name});
+  refresh();
+}
+function pickPhoto(kind){const f=$('file');f.onchange=async()=>{const fl=f.files&&f.files[0];f.value='';if(fl)try{await loadPhoto(kind,fl);}catch(e){console.error(e);setHint('That photo could not be opened. Try another.');}};f.click();}
+
+// ============================== finding the part ==============================
+function median(a){a.sort((x,y)=>x-y);return a[a.length>>1];}
+function otsu(hist,total){
+  let sum=0;for(let i=0;i<256;i++)sum+=i*hist[i];
+  let sB=0,wB=0,best=0,thr=0;
+  for(let i=0;i<256;i++){wB+=hist[i];if(!wB)continue;const wF=total-wB;if(!wF)break;sB+=i*hist[i];const mB=sB/wB,mF=(sum-sB)/wF,v=wB*wF*(mB-mF)*(mB-mF);if(v>best){best=v;thr=i;}}
+  return thr;
+}
+function morph(m,w,h,grow){// one step of growing (or shrinking) a mask by one pixel (plus-shaped)
+  const o=new Uint8Array(m.length);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x;
+    const a=m[i],l=x>0?m[i-1]:(grow?0:1),r=x<w-1?m[i+1]:(grow?0:1),u=y>0?m[i-w]:(grow?0:1),d=y<h-1?m[i+w]:(grow?0:1);
+    o[i]=grow?(a|l|r|u|d):(a&l&r&u&d);
+  }
+  return o;
+}
+// roi: {x0,y0,x1,y1} loosely round the part. Returns the part's outline points and its straight bounding box, or null.
+function segment(src,roi,sens){
+  const x0=Math.max(0,Math.floor(Math.min(roi.x0,roi.x1))),y0=Math.max(0,Math.floor(Math.min(roi.y0,roi.y1)));
+  const x1=Math.min(src.width,Math.ceil(Math.max(roi.x0,roi.x1))),y1=Math.min(src.height,Math.ceil(Math.max(roi.y0,roi.y1)));
+  const w=x1-x0,h=y1-y0;if(w<12||h<12)return null;
+  const D=src.getContext('2d').getImageData(x0,y0,w,h).data;
+  const b=Math.max(2,Math.round(Math.min(w,h)*0.04)),rs=[],gs=[],bs=[];
+  for(let y=0;y<h;y+=2)for(let x=0;x<w;x+=2){if(x<b||y<b||x>=w-b||y>=h-b){const i=(y*w+x)*4;rs.push(D[i]);gs.push(D[i+1]);bs.push(D[i+2]);}}
+  const br=median(rs),bg=median(gs),bb=median(bs);
+  const dist=new Float32Array(w*h);let mx=0;
+  for(let i=0;i<w*h;i++){const dr=D[i*4]-br,dg=D[i*4+1]-bg,db=D[i*4+2]-bb;const v=Math.sqrt(dr*dr*0.3+dg*dg*0.59+db*db*0.11+(dr*dr+dg*dg+db*db)*0.1);dist[i]=v;if(v>mx)mx=v;}
+  if(mx<12)return null;// nothing stands out from the background
+  const hist=new Float64Array(256);for(let i=0;i<w*h;i++)hist[Math.min(255,Math.round(dist[i]/mx*255))]++;
+  const thr=otsu(hist,w*h)/255*mx*sens;
+  let m=new Uint8Array(w*h);for(let i=0;i<w*h;i++)m[i]=dist[i]>thr?1:0;
+  const r=Math.max(1,Math.round(Math.min(w,h)/160));
+  for(let i=0;i<r;i++)m=morph(m,w,h,true);for(let i=0;i<r;i++)m=morph(m,w,h,false);
+  // the biggest blob
+  const lab=new Int32Array(w*h),stack=new Int32Array(w*h);let best=0,bestN=0,n=0;
+  for(let s=0;s<w*h;s++){
+    if(!m[s]||lab[s])continue;n++;let sp=0,area=0;stack[sp++]=s;lab[s]=n;
+    while(sp){const i=stack[--sp];area++;const x=i%w,y=(i/w)|0;
+      if(x>0&&m[i-1]&&!lab[i-1]){lab[i-1]=n;stack[sp++]=i-1;}
+      if(x<w-1&&m[i+1]&&!lab[i+1]){lab[i+1]=n;stack[sp++]=i+1;}
+      if(y>0&&m[i-w]&&!lab[i-w]){lab[i-w]=n;stack[sp++]=i-w;}
+      if(y<h-1&&m[i+w]&&!lab[i+w]){lab[i+w]=n;stack[sp++]=i+w;}}
+    if(area>bestN){bestN=area;best=n;}
+  }
+  if(!best||bestN<30)return null;
+  const pts=[];let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=y*w+x;if(lab[i]!==best)continue;
+    const edge=x===0||y===0||x===w-1||y===h-1||lab[i-1]!==best||lab[i+1]!==best||lab[i-w]!==best||lab[i+w]!==best;
+    if(edge){pts.push([x0+x+0.5,y0+y+0.5]);}
+    if(x<minX)minX=x;if(x>maxX)maxX=x;if(y<minY)minY=y;if(y>maxY)maxY=y;
+  }
+  const touches=minX<=1||minY<=1||maxX>=w-2||maxY>=h-2;// reaches the edge of the box: the box was too tight
+  return {pts,bbox:{l:x0+minX,r:x0+maxX+1,t:y0+minY,b:y0+maxY+1},touches,area:bestN};
+}
+function hull(points){
+  const p=points.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  if(p.length<3)return p;
+  const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}
+  const up=[];for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}
+  lo.pop();up.pop();return lo.concat(up);
+}
+// the smallest tilted rectangle round the outline: 4 corners, in clockwise order on the screen
+function minRect(pts){
+  const H=hull(pts);if(H.length<3)return null;
+  let best=null;
+  for(let i=0;i<H.length;i++){
+    const a=H[i],b=H[(i+1)%H.length],u=unit([b[0]-a[0],b[1]-a[1]]),v=[-u[1],u[0]];
+    let u0=1e18,u1=-1e18,v0=1e18,v1=-1e18;
+    for(const q of H){const pu=dot(q,u),pv=dot(q,v);if(pu<u0)u0=pu;if(pu>u1)u1=pu;if(pv<v0)v0=pv;if(pv>v1)v1=pv;}
+    u0-=0.5;u1+=0.5;v0-=0.5;v1+=0.5;// the outline points are pixel centres: add half a pixel each side
+    const area=(u1-u0)*(v1-v0);
+    if(!best||area<best.area)best={area,u,v,u0,u1,v0,v1};
+  }
+  const P4=(pu,pv)=>[best.u[0]*pu+best.v[0]*pv,best.u[1]*pu+best.v[1]*pv];
+  let c=[P4(best.u0,best.v0),P4(best.u1,best.v0),P4(best.u1,best.v1),P4(best.u0,best.v1)];
+  let s=0;for(let i=0;i<4;i++){const a=c[i],b=c[(i+1)%4];s+=a[0]*b[1]-b[0]*a[1];}
+  if(s<0)c=[c[0],c[3],c[2],c[1]];
+  return c;
+}
+function bestK(c){// start at the corner that makes the first edge point most nearly to the right
+  let k=0,bv=-2;for(let i=0;i<4;i++){const e=unit([c[(i+1)%4][0]-c[i][0],c[(i+1)%4][1]-c[i][1]]);if(e[0]>bv+1e-9){bv=e[0];k=i;}}return k;
+}
+function frame(r){
+  const c=r.corners,k=r.k,O=c[k],A=c[(k+1)%4],B=c[(k+2)%4],Dd=c[(k+3)%4];
+  const ex=[(A[0]-O[0]+B[0]-Dd[0])/2,(A[1]-O[1]+B[1]-Dd[1])/2],ey=[(Dd[0]-O[0]+B[0]-A[0])/2,(Dd[1]-O[1]+B[1]-A[1])/2];
+  return {O,ex:unit(ex),ey:unit(ey),w:Math.hypot(ex[0],ex[1])*r.scale,d:Math.hypot(ey[0],ey[1])*r.scale};
+}
+const toLocal=(r,p)=>{const f=frame(r);const v=[p[0]-f.O[0],p[1]-f.O[1]];return[dot(v,f.ex)*r.scale,dot(v,f.ey)*r.scale];};
+
+// ============================== numbers from the clicks ==============================
+function updateScale(r){
+  if(r.cal.length===2){const d=Math.hypot(r.cal[1][0]-r.cal[0][0],r.cal[1][1]-r.cal[0][1]);r.scale=d>2&&r.mm>0?r.mm/d:0;r.calPx=d;}else r.scale=0;
+}
+function initLines(r){
+  if(!r.box)return;
+  const s=r.scale||1,pcb=1.6/s;
+  r.lines={top:r.box.t,bottom:r.box.b,boardBot:r.box.b,boardTop:Math.max(r.box.t,r.box.b-pcb)};
+}
+function heights(r){
+  if(!r.lines||!r.scale)return null;
+  const L=r.lines,s=r.scale,total=(L.bottom-L.top)*s;
+  if(!r.hasBoard)return {below:0,pcb:0,h:Math.max(0,total),total};
+  return {below:Math.max(0,(L.bottom-L.boardBot)*s),pcb:Math.max(0,(L.boardBot-L.boardTop)*s),h:Math.max(0,(L.boardTop-L.top)*s),total};
+}
+function topSize(){const r=P.top;if(!r.corners||!r.scale)return null;return frame(r);}
+
+// ============================== drawing on the photo ==============================
+const cv=$('cv'),ctx=cv.getContext('2d');
+function u(){return cv.width/Math.max(1,cv.getBoundingClientRect().width);}// photo pixels per screen pixel
+function layout(){
+  const r=rec();
+  if(!r.src)return;
+  const fitW=$('scroll').clientWidth||800;
+  cv.style.width=Math.round(fitW*zoom/100)+'px';cv.style.height=Math.round(fitW*zoom/100*r.src.height/r.src.width)+'px';
+}
+function label(t,x,y,col){
+  const k=u(),f=Math.round(15*k);ctx.font='600 '+f+'px system-ui,sans-serif';
+  const w=ctx.measureText(t).width;ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(x-4*k,y-f,w+8*k,f+6*k);ctx.fillStyle=col||'#fff';ctx.fillText(t,x,y);
+}
+function draw(){
+  const r=rec();
+  if(!r.src){cv.width=900;cv.height=560;ctx.fillStyle='#2b2f36';ctx.fillRect(0,0,900,560);ctx.fillStyle='#8a919c';ctx.font='24px system-ui,sans-serif';ctx.textAlign='center';ctx.fillText('Your photo will show here',450,285);ctx.textAlign='left';return;}
+  if(cv.width!==r.src.width||cv.height!==r.src.height){cv.width=r.src.width;cv.height=r.src.height;}
+  layout();ctx.drawImage(r.src,0,0);
+  const k=u(),lw=Math.max(1.5,2*k),hr=8*k;
+  ctx.lineWidth=lw;
+  // the ruler marks
+  if(r.cal.length){
+    ctx.strokeStyle='#ffd43b';ctx.fillStyle='#ffd43b';
+    if(r.cal.length===2){ctx.beginPath();ctx.moveTo(...r.cal[0]);ctx.lineTo(...r.cal[1]);ctx.stroke();}
+    r.cal.forEach((p,i)=>{ctx.beginPath();ctx.arc(p[0],p[1],hr*0.7,0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(p[0]-hr*1.6,p[1]);ctx.lineTo(p[0]+hr*1.6,p[1]);ctx.moveTo(p[0],p[1]-hr*1.6);ctx.lineTo(p[0],p[1]+hr*1.6);ctx.stroke();label(String(i+1),p[0]+hr,p[1]-hr,'#ffd43b');});
+    if(r.scale)label(R(r.mm,1)+' mm',(r.cal[0][0]+r.cal[1][0])/2,(r.cal[0][1]+r.cal[1][1])/2-12*k,'#ffd43b');
+  }
+  if(roiDrag||(r.roi&&mode==='roi')){const q=roiDrag||r.roi;ctx.strokeStyle='#4dd0e1';ctx.setLineDash([8*k,6*k]);ctx.strokeRect(Math.min(q.x0,q.x1),Math.min(q.y0,q.y1),Math.abs(q.x1-q.x0),Math.abs(q.y1-q.y0));ctx.setLineDash([]);}
+  if(cur==='top'&&r.corners){
+    const c=r.corners;ctx.strokeStyle='#4cff9a';ctx.beginPath();c.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.stroke();
+    if(r.scale){const f=frame(r);
+      // origin and the two directions
+      ctx.strokeStyle='#ff5d8f';ctx.fillStyle='#ff5d8f';ctx.beginPath();ctx.moveTo(f.O[0],f.O[1]);ctx.lineTo(f.O[0]+f.ex[0]*40*k,f.O[1]+f.ex[1]*40*k);ctx.moveTo(f.O[0],f.O[1]);ctx.lineTo(f.O[0]+f.ey[0]*40*k,f.O[1]+f.ey[1]*40*k);ctx.stroke();
+      ctx.beginPath();ctx.arc(f.O[0],f.O[1],hr*0.6,0,7);ctx.fill();
+      const A=c[(r.k+1)%4],B=c[(r.k+2)%4],D=c[(r.k+3)%4];
+      label(R(f.w,1)+' mm',(f.O[0]+A[0])/2,(f.O[1]+A[1])/2-8*k,'#4cff9a');
+      label(R(f.d,1)+' mm',(f.O[0]+D[0])/2+8*k,(f.O[1]+D[1])/2,'#4cff9a');
+    }
+    if(mode==='corners'||mode==='roi'){ctx.fillStyle='#4cff9a';for(const p of c){ctx.beginPath();ctx.arc(p[0],p[1],hr,0,7);ctx.fill();}}
+  }
+  if(manualPts){ctx.fillStyle='#4cff9a';manualPts.forEach((p,i)=>{ctx.beginPath();ctx.arc(p[0],p[1],hr,0,7);ctx.fill();label(String(i+1),p[0]+hr,p[1]-hr,'#4cff9a');});}
+  if(cur==='top'&&r.corners&&r.scale){ // the mounting holes
+    ctx.strokeStyle='#ff9f1c';r.holes.forEach((h,i)=>{ctx.beginPath();ctx.arc(h.px,h.py,Math.max(h.rpx,3*k),0,7);ctx.stroke();ctx.beginPath();ctx.moveTo(h.px-5*k,h.py);ctx.lineTo(h.px+5*k,h.py);ctx.moveTo(h.px,h.py-5*k);ctx.lineTo(h.px,h.py+5*k);ctx.stroke();label('H'+(i+1),h.px+hr,h.py-hr,'#ff9f1c');});
+    if(pendingHole){ctx.beginPath();ctx.arc(pendingHole.x,pendingHole.y,hr*0.5,0,7);ctx.stroke();}
+  }
+  if(cur==='top'&&r.corners&&r.scale){
+    ctx.fillStyle='#4dd0e1';ctx.strokeStyle='#4dd0e1';
+    const dotsOf=(a,b,n)=>Array.from({length:n},(_,i)=>{const t=n>1?i/(n-1):0;return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];});
+    for(const row of r.pinRows)for(const q of dotsOf(row.a,row.b,row.count)){ctx.beginPath();ctx.arc(q[0],q[1],4*k,0,7);ctx.fill();}
+    if(pinDraft){const b=pinDraft.b||pinDraft.a,n=pinDraft.b?Math.max(1,Math.min(80,+pinForm.count||1)):1;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(pinDraft.a[0],pinDraft.a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();for(const q of dotsOf(pinDraft.a,b,n)){ctx.beginPath();ctx.arc(q[0],q[1],5*k,0,7);ctx.stroke();}}
+  }
+  if(cur==='side'){
+    if(r.box&&mode!=='lines'){ctx.strokeStyle='#4cff9a';ctx.strokeRect(r.box.l,r.box.t,r.box.r-r.box.l,r.box.b-r.box.t);}
+    if(r.lines&&mode==='lines'){
+      const L=r.lines,x0=r.box?r.box.l-30*k:0,x1=r.box?r.box.r+30*k:cv.width,defs=[['top','Top','#4cff9a'],['bottom','Bottom','#4cff9a']];
+      if(r.hasBoard)defs.push(['boardTop','Board top','#ff9f1c'],['boardBot','Board underside','#ff9f1c']);
+      for(const [key,name,col] of defs){ctx.strokeStyle=col;ctx.beginPath();ctx.moveTo(x0,L[key]);ctx.lineTo(x1,L[key]);ctx.stroke();ctx.fillStyle=col;ctx.beginPath();ctx.arc(x1,L[key],hr*0.8,0,7);ctx.fill();label(name,x0,L[key]-5*k,col);}
+      const hh=heights(r);if(hh)label(R(hh.total,1)+' mm tall',(r.box?r.box.l:20),L.top-14*k,'#4cff9a');
+    }
+  }
+}
+function setHint(t){lastMsg=t;$('hint').textContent=t;}
+
+// ============================== the mouse and finger ==============================
+function pt(e){const b=cv.getBoundingClientRect();return[(e.clientX-b.left)*cv.width/b.width,(e.clientY-b.top)*cv.height/b.height];}
+const near=(p,q,rad)=>Math.hypot(p[0]-q[0],p[1]-q[1])<=rad;
+function loupe(e,p,on){
+  const L=$('loupe'),r=rec();
+  if(!on||!r.src||!['cal','corners','holes','lines','roi','pins'].includes(mode)){L.style.display='none';return;}
+  const c=L.firstElementChild.getContext('2d'),S=34;c.imageSmoothingEnabled=false;
+  c.fillStyle='#000';c.fillRect(0,0,150,150);c.drawImage(r.src,p[0]-S/2,p[1]-S/2,S,S,0,0,150,150);
+  c.strokeStyle='#ff3b6b';c.lineWidth=1.5;c.beginPath();c.moveTo(75,0);c.lineTo(75,150);c.moveTo(0,75);c.lineTo(150,75);c.stroke();
+  const touch=e.pointerType==='touch';
+  L.style.left=Math.max(4,Math.min(innerWidth-154,e.clientX+(touch?-75:24)))+'px';L.style.top=Math.max(4,Math.min(innerHeight-154,e.clientY-(touch?190:170)))+'px';L.style.display='block';
+}
+cv.addEventListener('pointerdown',e=>{
+  const r=rec();if(!r.src||!mode)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){/* some devices cannot capture: carry on */}
+  const p=pt(e),k=u();loupe(e,p,true);
+  if(mode==='cal'){
+    let i=r.cal.length<2?r.cal.length:(Math.hypot(p[0]-r.cal[0][0],p[1]-r.cal[0][1])<=Math.hypot(p[0]-r.cal[1][0],p[1]-r.cal[1][1])?0:1);
+    r.cal[i]=p;drag={t:'cal',i};updateScale(r);refresh(true);
+  }else if(mode==='roi'){roiDrag={x0:p[0],y0:p[1],x1:p[0],y1:p[1]};drag={t:'roi'};draw();}
+  else if(mode==='corners'){
+    if(manualPts){manualPts.push(p);if(manualPts.length===4){const cx=manualPts.reduce((a,q)=>a+q[0],0)/4,cy=manualPts.reduce((a,q)=>a+q[1],0)/4;
+        r.corners=manualPts.slice().sort((a,b)=>Math.atan2(a[1]-cy,a[0]-cx)-Math.atan2(b[1]-cy,b[0]-cx));r.k=bestK(r.corners);manualPts=null;}
+      refresh(true);return;}
+    if(r.corners){const i=r.corners.findIndex(q=>near(p,q,18*k));if(i>=0)drag={t:'corner',i};}
+  }else if(mode==='holes'){
+    if(!pendingHole){pendingHole={x:p[0],y:p[1]};setHint('Now click on the EDGE of that hole, so it can work out the hole size.');draw();}
+    else{const rad=Math.hypot(p[0]-pendingHole.x,p[1]-pendingHole.y);if(rad>1.5){r.holes.push({px:pendingHole.x,py:pendingHole.y,rpx:rad});}pendingHole=null;setHint('Hole added. Click the centre of the next hole, or press Next.');refresh(true);}
+  }else if(mode==='pins'){
+    if(!pinDraft||pinDraft.b)pinDraft={a:p,b:null};else pinDraft.b=p;
+    refresh(true);
+  }else if(mode==='lines'&&r.lines){
+    const L=r.lines,keys=r.hasBoard?['top','bottom','boardTop','boardBot']:['top','bottom'];
+    let bk=null,bd=1e9;for(const key of keys){const d=Math.abs(p[1]-L[key]);if(d<bd){bd=d;bk=key;}}
+    if(bd<=26*k)drag={t:'line',key:bk};
+  }
+});
+cv.addEventListener('pointermove',e=>{
+  const r=rec();if(!r.src)return;const p=pt(e);
+  loupe(e,p,!!(drag||mode==='cal'||mode==='holes'||mode==='pins'||manualPts||mode==='corners'||mode==='lines'));
+  if(!drag)return;
+  if(drag.t==='cal'){r.cal[drag.i]=p;updateScale(r);refresh(true);}
+  else if(drag.t==='roi'){roiDrag.x1=p[0];roiDrag.y1=p[1];draw();}
+  else if(drag.t==='corner'){r.corners[drag.i]=p;refresh(true);}
+  else if(drag.t==='line'){r.lines[drag.key]=Math.max(0,Math.min(cv.height,p[1]));refresh(true);}
+});
+function endDrag(e){
+  const r=rec();$('loupe').style.display='none';
+  if(drag&&drag.t==='roi'&&roiDrag){
+    const q=roiDrag;roiDrag=null;
+    if(Math.abs(q.x1-q.x0)<20||Math.abs(q.y1-q.y0)<20){setHint('That box is too small. Drag from one corner to the opposite corner, all the way round the part.');}
+    else{r.roi=q;runDetect();}
+  }
+  drag=null;refresh(true);
+}
+cv.addEventListener('pointerup',endDrag);cv.addEventListener('pointercancel',endDrag);
+cv.addEventListener('pointerleave',()=>{if(!drag)$('loupe').style.display='none';});
+$('zoom').oninput=()=>{zoom=+$('zoom').value;draw();};
+window.addEventListener('resize',draw);
+
+// ============================== detecting ==============================
+function runDetect(){
+  const r=rec();if(!r.roi)return;
+  const seg=segment(r.src,r.roi,r.sens);
+  if(!seg){r.corners=null;r.box=null;r.lines=null;setHint('I could not see the part in that box. Use a plainer background, or move the slider, or pick the corners by hand.');refresh(true);return;}
+  if(cur==='top'){const c=minRect(seg.pts);if(!c){setHint('Could not work out the outline. Try again.');return;}r.corners=c;r.k=bestK(c);}
+  else{r.box=seg.bbox;initLines(r);}
+  setHint(seg.touches?'The outline touches the edge of your box. Draw the box a little bigger, all round the part (but keep the ruler out of it).':'Part found. Check the green outline fits it, and drag any dot to fix it.');
+  refresh(true);
+}
+
+// ============================== the steps ==============================
+const fileBtn=(kind,txt)=>`<button class="primary" data-act="pick" data-kind="${kind}">📷 ${txt}</button>`;
+const STEPS=[
+ {k:'top',mode:null,title:'Photo from above',
+  body:()=>`<p>Put the part on a plain, matt surface (not shiny) with a <b>steel ruler</b> right beside it. Take the photo <b>straight down from above</b>.</p>
+  <div class="card"><b>For the best result</b><br>• Hold the camera <b>40–50 cm up</b> and <b>zoom in</b> rather than getting close.<br>• Keep the camera pointing <b>straight down</b>, not tilted.<br>• A <b>dark</b> mat for light boards, a <b>light</b> one for dark parts.<br>• Soft light from above, no hard shadows.<br>• A tall part looks bigger than the ruler beside it: put the ruler on a book of the same height, or lay a flat part on the ruler.</div>
+  ${fileBtn('top',P.top.src?'Choose a different photo':'Take or choose the photo from above')}${P.top.src?`<p class="ok">✓ ${esc(P.top.name)}</p>`:''}`,
+  ok:()=>!!P.top.src},
+ {k:'top',mode:'cal',title:'Set the scale',
+  body:()=>{const r=P.top;return `<p>Click <b>two marks on the ruler</b> that are far apart, for example the <b>0</b> mark and the <b>100 mm</b> mark. The magnifier helps you aim. You can drag a point to adjust it.</p>
+  <div class="row"><label>Distance between the marks <input type="number" id="calmm" value="${r.mm}" min="1" step="any" style="width:100px"> mm</label></div>
+  ${r.scale?`<p class="ok">✓ Scale set: 1 mm = ${R(1/r.scale,1)} pixels</p>${r.calPx<cv.width*0.18?'<p class="warn">The two marks are close together. Marks farther apart give a more accurate scale.</p>':''}`:'<p class="note">Click mark 1, then mark 2.</p>'}`;},
+  ok:()=>P.top.scale>0},
+ {k:'top',mode:'roi',title:'Find the part',
+  body:()=>{const r=P.top,f=topSize();return `<p>${r.corners?'Check the <b>green outline</b> fits the part. Drag a green dot if it is not quite right.':'Drag a <b>loose box</b> all round the part, from one corner to the opposite one. Keep the ruler outside the box.'}</p>
+  ${f?`<p class="ok">Size from above: <b>${R(f.w,1)} × ${R(f.d,1)} mm</b></p>`:''}
+  <div class="row"><button data-act="redraw" class="small">↺ Draw the box again</button><button data-act="manual" class="small">✋ Click the 4 corners myself</button>${r.corners?'<button data-act="turn" class="small">⟳ Turn 90°</button>':''}</div>
+  ${r.roi?`<label>Outline sensitivity <input type="range" id="sens" min="40" max="200" value="${Math.round(r.sens*100)}"></label><div class="note">Slide if the outline is too big or too small.</div>`:''}
+  ${r.corners?'<div class="card">The pink dot is the <b>corner the measurements start from</b>, and the arrows show the lengths. Use <b>Turn 90°</b> so that it matches how you want the part drawn (for example the USB end on the left).</div>':''}`;},
+  ok:()=>!!P.top.corners},
+ {k:'top',mode:'holes',title:'Mounting holes (optional)',
+  body:()=>{const r=P.top;return `<p>If the part has screw holes, click the <b>centre</b> of a hole, then click its <b>edge</b>. No holes? Just press Next.</p>
+  <ul class="holes">${r.holes.map((h,i)=>{const l=toLocal(r,[h.px,h.py]);return `<li><span><b>H${i+1}</b> ${R(h.rpx*2*r.scale,1)} mm wide, at ${R(l[0],1)}, ${R(l[1],1)} mm</span><button class="small" data-act="delhole" data-i="${i}">Remove</button></li>`;}).join('')||'<li class="note">No holes added.</li>'}</ul>`;},
+  ok:()=>true},
+ {k:'top',mode:'pins',title:'Pins (optional)',
+  body:()=>{const r=P.top;return `<p>For a row of pins or sockets: click the <b>first pin</b>, then the <b>last pin</b> of the row. Say how many pins there are and type their names from the printing on the board. Then press <b>Add this row</b>. Do each row the same way. No pins to add? Press Next.</p>
+  <div class="row"><label>How many pins in this row <input type="number" id="pcount" value="${pinForm.count}" min="1" max="80" style="width:80px"></label></div>
+  <label>Names in order, separated by commas (or leave empty)<br><textarea id="pnames" rows="3" style="width:100%;font:inherit;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:6px" placeholder="e.g. 3V3, EN, GND, 5V, 4, 16, 17">${esc(pinForm.names)}</textarea></label>
+  <div class="row"><button class="primary small" data-act="addrow" ${pinDraft?'':'disabled'}>＋ Add this row</button></div>
+  <ul class="holes">${r.pinRows.map((w,i)=>`<li><span><b>Row ${i+1}</b>: ${w.count} pin${w.count===1?'':'s'}${w.names.length?' ('+esc(w.names.slice(0,4).join(', '))+(w.names.length>4?'…':'')+')':''}</span><button class="small" data-act="delrow" data-i="${i}">Remove</button></li>`).join('')||'<li class="note">No pins added.</li>'}</ul>
+  <div class="note">The tool cannot read the printing on a board, so the names are yours. EvenUCan uses them for the wiring and the code.</div>`;},
+  ok:()=>true},
+ {k:'side',mode:null,title:'Photo from the side',
+  body:()=>`<p>Now stand the part on its edge (or lay the camera low) and take a photo <b>from the side</b>, with the camera <b>level with the part</b>, 40–50 cm away and zoomed in. Stand a <b>steel ruler upright</b> beside it, <b>in line with the part</b>.</p>
+  <div class="card">The plain, matt background matters here too. You should see the board's thickness and anything underneath it, like header pins.</div>
+  ${fileBtn('side',P.side.src?'Choose a different photo':'Take or choose the side photo')}${P.side.src?`<p class="ok">✓ ${esc(P.side.name)}</p>`:''}`,
+  ok:()=>!!P.side.src},
+ {k:'side',mode:'cal',title:'Set the scale (side photo)',
+  body:()=>{const r=P.side;return `<p>Click <b>two marks on the ruler</b>, far apart, like before.</p>
+  <div class="row"><label>Distance between the marks <input type="number" id="calmm" value="${r.mm}" min="1" step="any" style="width:100px"> mm</label></div>
+  ${r.scale?`<p class="ok">✓ Scale set: 1 mm = ${R(1/r.scale,1)} pixels</p>`:'<p class="note">Click mark 1, then mark 2.</p>'}`;},
+  ok:()=>P.side.scale>0},
+ {k:'side',mode:'roi',title:'Height',
+  body:()=>{const r=P.side,hh=heights(r),f=topSize();
+   let chk='';if(r.box&&f&&r.scale){const wd=(r.box.r-r.box.l)*r.scale,dw=Math.abs(wd-f.w),dd=Math.abs(wd-f.d),best=dw<=dd?f.w:f.d,diff=Math.abs(wd-best)/best*100;
+     chk=diff<3?`<p class="ok">✓ Cross-check: the part is ${R(wd,1)} mm wide in this photo, matching ${R(best,1)} mm from above.</p>`:`<p class="warn">Cross-check: the part looks ${R(wd,1)} mm wide here, but ${R(best,1)} mm from above. One of the two scales may be off, or the box cuts into the part.</p>`;}
+   return `<p>${r.lines?'The <b>green lines</b> mark the top and bottom of the part. Drag them (use the magnifier) if they are not right.'+(r.hasBoard?' The <b>orange lines</b> mark the circuit board: its top and its underside.':''):'Drag a <b>loose box</b> all round the part, like before.'}</p>
+   <label class="chk"><input type="checkbox" id="hasBoard" ${r.hasBoard?'checked':''}> It has a flat circuit board (tick for boards and modules; untick for a solid thing like a motor)</label>
+   ${hh?`<p class="ok">Total height <b>${R(hh.total,1)} mm</b>${r.hasBoard?`<br>Below the board: ${R(hh.below,1)} mm · Board: ${R(hh.pcb,1)} mm · Above the board: ${R(hh.h,1)} mm`:''}</p>`:''}${chk}
+   <div class="row"><button data-act="redraw" class="small">↺ Draw the box again</button>${r.lines&&r.hasBoard?'<button data-act="pcb16" class="small">Board is 1.6 mm thick</button>':''}</div>
+   ${r.roi?`<label>Outline sensitivity <input type="range" id="sens" min="40" max="200" value="${Math.round(r.sens*100)}"></label>`:''}`;},
+  ok:()=>!!heights(P.side)},
+ {k:'top',mode:null,title:'Name it and save it',
+  body:()=>{const f=topSize(),hh=heights(P.side),d=draftPart();return `<div class="row"><label style="flex:1">Name<br><input type="text" id="pname" value="${esc(form.name)}" placeholder="e.g. 4-channel relay module" style="width:100%"></label></div>
+   <div class="row"><label>Kind<br><select id="ptype">${TYPES.map(([v,l])=>`<option value="${v}"${form.type===v?' selected':''}>${l}</option>`).join('')}</select></label>
+   <label>It goes<br><select id="pmount"><option value="floor"${form.mount==='floor'?' selected':''}>on the floor of the box</option><option value="wall"${form.mount==='wall'?' selected':''}>on a wall of the box</option><option value="outside"${form.mount==='outside'?' selected':''}>outside the box</option></select></label></div>
+   <label class="chk"><input type="checkbox" id="pround" ${form.round?'checked':''}> It is round (a round motor, button or buzzer)</label>
+   <canvas id="preview" width="360" height="220"></canvas>
+   <p>${f&&hh?`<b>${R(d.w,1)} × ${R(d.d,1)} mm</b>, total height ${R(hh.total,1)} mm, ${d.features.length} hole${d.features.length===1?'':'s'}, ${d.pins.length} pin${d.pins.length===1?'':'s'}.`:''}</p>
+   <div class="row"><button class="primary" data-act="addpart" ${form.name.trim()?'':'disabled title="Give it a name first"'}>✓ Add this part</button></div>
+   <p class="note">Ports, pins and other details can be added later in EvenUCan's Parts Library.</p>`;},
+  ok:()=>false,last:true}
+];
+const form={name:'',type:'board',mount:'floor',round:false};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// a pin's job, guessed from its name (it can be changed later in EvenUCan)
+function roleOf(n){
+  const t=String(n).trim().toLowerCase().replace(/[\s_-]/g,'');
+  if(/^(gnd|ground|0v|vss)$/.test(t))return 'gnd';if(/^(3v3|3\.3v|33v|3v)$/.test(t))return '3v3';if(/^(5v|5\.0v|5vin|usb5v)$/.test(t))return '5v';
+  if(/^(vin|v\+|vbus|vbat)$/.test(t))return 'vin';if(/^(vcc|vdd|v)$/.test(t))return 'vcc';if(/^(sda|sdi)$/.test(t))return 'sda';if(/^(scl|sck|scli)$/.test(t))return 'scl';
+  if(/^(ao|aout|a0)$/.test(t))return 'ao';if(/^(do|dout)$/.test(t))return 'do';if(/^trig/.test(t))return 'trig';if(/^echo/.test(t))return 'echo';if(/^(nc|n\/c)$/.test(t))return 'nc';
+  if(/^bat\+$/.test(t))return 'bat+';if(/^bat-$/.test(t))return 'bat-';
+  return form.type==='board'?'gpio':'sig';
+}
+function draftPart(){
+  const f=topSize(),hh=heights(P.side),r=P.top;
+  let w=f?f.w:10,d=f?f.d:10;if(form.round){w=d=(w+d)/2;}
+  const features=r.corners&&r.scale&&!form.round?r.holes.map(h=>{const l=toLocal(r,[h.px,h.py]);return {t:'hole',x:R(l[0],2),y:R(l[1],2),dia:R(h.rpx*2*r.scale,1)};}):[];
+  const pins=[];
+  if(r.corners&&r.scale&&!form.round)for(const row of r.pinRows)for(let i=0;i<row.count;i++){
+    const t=row.count>1?i/(row.count-1):0,l=toLocal(r,[row.a[0]+(row.b[0]-row.a[0])*t,row.a[1]+(row.b[1]-row.a[1])*t]),nm=(row.names[i]||('Pin '+(pins.length+1))).slice(0,16);
+    const o={n:nm,r:roleOf(nm),x:R(l[0],2),y:R(l[1],2)},g=/^(?:gpio|io|d)?(\d{1,2})$/i.exec(nm);if(g&&o.r==='gpio')o.g=+g[1];pins.push(o);
+  }
+  return {w:R(w),d:R(d),pcb:hh?R(hh.pcb):0,h:hh?R(hh.h):0,below:hh?R(hh.below):0,features,pins};
+}
+function makePart(){
+  const d=draftPart(),name=form.name.trim()||'Measured part';
+  const t=document.createElement('canvas'),s=Math.min(1,360/P.top.src.width);t.width=Math.round(P.top.src.width*s);t.height=Math.round(P.top.src.height*s);
+  t.getContext('2d').drawImage(P.top.src,0,0,t.width,t.height);
+  return {id:'m-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)+'-'+Date.now().toString(36),name,type:form.type,shape:form.round?'round':'rect',
+    w:d.w,d:d.d,pcb:d.pcb,h:d.h,below:d.below,mount:form.mount,features:d.features,pins:d.pins,acc:'measured',
+    notes:'Measured from two photos with a steel ruler (EvenUCan photo measuring), good to about 0.5 mm. Hole positions are from the top-left corner of the part as seen from above. Check tight fits with calipers.',
+    photo:t.toDataURL('image/jpeg',0.7)};
+}
+function drawPreview(){
+  const c=$('preview');if(!c)return;const g=c.getContext('2d'),d=draftPart();g.clearRect(0,0,c.width,c.height);
+  const k=Math.min((c.width-40)/d.w,(c.height-40)/d.d),x0=(c.width-d.w*k)/2,y0=(c.height-d.d*k)/2;
+  g.fillStyle='#2a7a4b';g.strokeStyle='#9ee7bd';g.lineWidth=2;
+  if(form.round){g.beginPath();g.arc(c.width/2,c.height/2,d.w*k/2,0,7);g.fill();g.stroke();}else{g.fillRect(x0,y0,d.w*k,d.d*k);g.strokeRect(x0,y0,d.w*k,d.d*k);}
+  g.strokeStyle='#ffd43b';for(const h of d.features){g.beginPath();g.arc(x0+h.x*k,y0+h.y*k,Math.max(2,h.dia*k/2),0,7);g.stroke();}
+  g.fillStyle='#4dd0e1';for(const q of d.pins){g.fillRect(x0+q.x*k-2,y0+q.y*k-2,4,4);}
+  g.fillStyle='#fff';g.font='13px system-ui';g.fillText(d.w+' mm',c.width/2-22,y0-6>10?y0-6:12);g.fillText(d.d+' mm',4,c.height/2);
+}
+function render(){
+  const st=STEPS[stepIdx];cur=st.k;mode=st.mode;
+  $('stepNo').textContent='Step '+(stepIdx+1)+' of '+STEPS.length;$('stepTitle').textContent=st.title;$('stepBody').innerHTML=st.body();
+  const last=stepIdx===STEPS.length-1;
+  $('bBack').disabled=stepIdx===0;$('bNext').style.display=last?'none':'';$('bNext').disabled=!st.ok();
+  if(mode==='corners'||(mode==='roi'&&rec().corners))mode=mode==='roi'?'corners':mode;
+  if(st.mode==='roi'&&rec().corners&&cur==='top')mode='corners';
+  if(st.mode==='roi'&&cur==='side'&&rec().lines)mode='lines';
+  if(manualPts)mode='corners';
+  if(st.mode==='roi'&&cur==='top'&&!rec().corners&&!manualPts)mode='roi';
+  if(!rec().src)setHint('Choose your photo to begin.');
+  else if(!lastMsg||/^(Choose|Click|Drag|Part found|The outline)/.test(lastMsg)===false||true){
+    if(st.mode==='cal')setHint('Click ruler mark 1, then mark 2.');
+    else if(st.mode==='roi')setHint(rec().corners||rec().lines?'Drag the dots or lines to fine-tune.':'Drag a loose box all round the part.');
+    else if(st.mode==='pins')setHint(pinDraft?(pinDraft.b?'Set the number and names, then press Add this row.':'Now click the LAST pin of the row.'):'Click the FIRST pin of a row.');
+    else if(st.mode==='holes')setHint(pendingHole?'Now click on the EDGE of that hole.':'Click the centre of a mounting hole.');
+    else setHint(lastMsg&&/outline|Part found|box|found/.test(lastMsg)?lastMsg:'');
+  }
+  draw();drawPreview();renderSession();
+}
+// the numbers in the panel are redrawn without losing what the user is typing
+function refresh(light){
+  const r=rec(),st=STEPS[stepIdx];
+  if(light&&document.activeElement&&/^(calmm|pname|pcount|pnames)$/.test(document.activeElement.id)){draw();$('bNext').disabled=!st.ok();return;}
+  render();
+}
+$('bBack').onclick=()=>{if(stepIdx>0){stepIdx--;manualPts=null;pendingHole=null;pinDraft=null;lastMsg='';render();}};
+$('bNext').onclick=()=>{if(STEPS[stepIdx].ok()&&stepIdx<STEPS.length-1){stepIdx++;manualPts=null;pendingHole=null;pinDraft=null;lastMsg='';render();}};
+$('stepBody').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const a=b.dataset.act,r=rec();
+  if(a==='pick')pickPhoto(b.dataset.kind);
+  else if(a==='redraw'){r.roi=null;r.corners=null;r.box=null;r.lines=null;manualPts=null;lastMsg='';render();}
+  else if(a==='manual'){manualPts=[];r.corners=null;setHint('Click the 4 corners of the part, one after another.');render();setHint('Click the 4 corners of the part, one after another.');}
+  else if(a==='turn'){r.k=(r.k+1)%4;render();}
+  else if(a==='addrow'&&pinDraft){const n=pinDraft.b?Math.max(1,Math.min(80,Math.round(+pinForm.count)||1)):1;r.pinRows.push({a:pinDraft.a,b:pinDraft.b||pinDraft.a,count:n,names:pinForm.names.split(/[,\n;]+/).map(x=>x.trim()).filter(Boolean)});pinDraft=null;pinForm.names='';render();}
+  else if(a==='delrow'){r.pinRows.splice(+b.dataset.i,1);render();}
+  else if(a==='delhole'){r.holes.splice(+b.dataset.i,1);render();}
+  else if(a==='pcb16'&&r.lines){r.lines.boardTop=Math.max(r.lines.top,r.lines.boardBot-1.6/r.scale);render();}
+  else if(a==='addpart'){saved.push(makePart());persist();stepIdx=STEPS.length-1;lastMsg='';renderDone();}
+});
+$('stepBody').addEventListener('input',e=>{
+  const id=e.target.id,r=rec();
+  if(id==='calmm'){r.mm=+e.target.value||0;updateScale(r);draw();$('bNext').disabled=!STEPS[stepIdx].ok();}
+  else if(id==='sens'){r.sens=(+e.target.value)/100;clearTimeout(window._st);window._st=setTimeout(runDetect,150);}
+  else if(id==='pcount'){pinForm.count=e.target.value;draw();}
+  else if(id==='pnames'){pinForm.names=e.target.value;}
+  else if(id==='pname'){form.name=e.target.value;const b=document.querySelector('[data-act=addpart]');if(b){b.disabled=!form.name.trim();}drawPreview();}
+});
+$('stepBody').addEventListener('change',e=>{
+  const id=e.target.id,r=rec();
+  if(id==='hasBoard'){r.hasBoard=e.target.checked;render();}
+  else if(id==='ptype')form.type=e.target.value;
+  else if(id==='pmount')form.mount=e.target.value;
+  else if(id==='pround'){form.round=e.target.checked;render();}
+});
+function renderDone(){
+  const p=saved[saved.length-1];
+  $('stepNo').textContent='All done';$('stepTitle').textContent='✓ "'+p.name+'" is saved';
+  $('stepBody').innerHTML=`<p>Size <b>${p.w} × ${p.d} mm</b>, height ${R(p.h+p.pcb+p.below,1)} mm, ${p.features.length} hole${p.features.length===1?'':'s'}, ${p.pins.length} pin${p.pins.length===1?'':'s'}.</p>
+   <div class="card"><b>Next:</b> press <b>Save all to a file</b>. In EvenUCan open <b>Parts</b>, press <b>Import</b> and choose that file. The part appears in your list, marked as measured.</div>
+   <div class="row"><button class="primary" data-act2="save">⬇ Save all ${saved.length} part${saved.length===1?'':'s'} to a file</button></div>
+   <div class="row"><button data-act2="another">＋ Measure another part</button></div>`;
+  $('stepBtns').style.display='none';renderSession();
+}
+$('stepBody').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-act2]');if(!b)return;
+  if(b.dataset.act2==='save')downloadAll();
+  else if(b.dataset.act2==='another'){P.top=blank('top');P.side=blank('side');Object.assign(form,{name:'',type:'board',mount:'floor',round:false});pinDraft=null;pinForm={count:8,names:''};stepIdx=0;manualPts=null;pendingHole=null;lastMsg='';$('stepBtns').style.display='';render();}
+});
+function persist(){try{localStorage.setItem('evenucan.measured',JSON.stringify(saved));}catch(e){console.warn('could not remember the measured parts',e);}}
+function downloadAll(){
+  if(!saved.length)return;
+  const blob=new Blob([JSON.stringify({app:'EvenUCan',kind:'parts',version:1,parts:saved},null,1)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='EvenUCan parts (measured).json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+}
+function renderSession(){
+  $('sessSum').textContent='Parts measured so far: '+saved.length;
+  $('sessBody').innerHTML=saved.length?`<ul class="holes">${saved.map((p,i)=>`<li><span>${esc(p.name)} <span class="note">${p.w} × ${p.d} × ${R(p.h+p.pcb+p.below,1)}</span></span><button class="small" data-del="${i}">Remove</button></li>`).join('')}</ul><div class="row"><button class="small primary" data-dl="1">⬇ Save all to a file</button><button class="small" data-clear="1">Clear the list</button></div>`:'<p class="note">Parts you finish appear here, so you can save several in one file.</p>';
+}
+$('sessBody').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.del!==undefined){saved.splice(+b.dataset.del,1);persist();renderSession();}
+  else if(b.dataset.dl)downloadAll();
+  else if(b.dataset.clear&&confirm('Remove all the parts from this list?')){saved=[];persist();renderSession();}
+});
+window.MP={refresh,render,form,get saved(){return saved;},get step(){return stepIdx;},segment,minRect,hull,frame,bestK,P,updateScale,toLocal,heights,initLines};// for testing
+render();
+</script>
+</body>
+</html>

@@ -689,6 +689,7 @@ $('plExport').onclick=async()=>{
   WF.download('EvenUCan parts.json',JSON.stringify({app:'EvenUCan',kind:'parts',version:1,parts},null,1),'application/json');
 };
 $('plImport').onclick=()=>$('plFile').click();
+$('plMeasure').onclick=()=>{window.open('measure-part.html','_blank');WF.flash('The photo measuring tool opened in a new tab. When it gives you a file, come back here and press Import…',9000);};
 $('plFzBulk').onclick=()=>{$('fzImLog').innerHTML='';$('fzImBack').style.display='grid';};// opens in-app drop dialog
 $('plBrowse').onclick=browseParts;
 $('plFile').addEventListener('change',async e=>{

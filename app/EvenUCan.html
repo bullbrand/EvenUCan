@@ -5546,7 +5546,7 @@ markDirty();
 </div></div>
 <div id="plBack" class="ewBack"><div class="ewWin">
   <div class="ewHead"><h2>Parts Library</h2><span class="ewNote">Built-in parts plus your own, saved on this computer. Add a part from a photo, or just type its sizes.</span>
-    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plFzBulk" title="Import one or more Fritzing part files (.fzpz) all at once — select as many as you like">Import Fritzing parts…</button><button id="plFzPhoto" title="Use Google Gemini (free) to find a top-down photo for each custom part that has none — runs in the background">Find photos…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
+    <button id="plBrowse" class="primary" title="Choose from over 2,000 ready-made parts: search by part number or by what it does">Browse parts…</button><button id="plNew">+ New part</button><button id="plImport" title="Add parts from a .json file exported from EvenUCan">Import…</button><button id="plMeasure" title="Measure a part you have in your hand: two photos and a steel ruler give its size, holes and pins. Opens in a new tab; save the file it makes, then use Import here.">📏 Measure from photos</button><button id="plFzBulk" title="Import one or more Fritzing part files (.fzpz) all at once — select as many as you like">Import Fritzing parts…</button><button id="plFzPhoto" title="Use Google Gemini (free) to find a top-down photo for each custom part that has none — runs in the background">Find photos…</button><button id="plExport" title="Save your parts to a .json file (to back them up or give to a friend)">Export…</button>
     <button id="plX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
   <div id="plSelBar" class="plSelBar"><span id="plSelCount"></span><button class="plSelDelBtn" id="plSelDelBtn">Delete selected</button><button class="plSelClrBtn" id="plSelClrBtn">Clear</button></div>
   <div id="plBgBar" style="display:none;padding:5px 10px;background:#e8f5e9;border-bottom:1px solid #c8e6c9;font-size:12px;align-items:center;gap:8px;flex-shrink:0"><span id="plBgMsg" style="flex:1"></span><button id="plBgStop" style="background:#fff;border:1px solid #ccc;color:#555;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:12px">Stop</button></div>
@@ -7670,6 +7670,7 @@ $('plExport').onclick=async()=>{
   WF.download('EvenUCan parts.json',JSON.stringify({app:'EvenUCan',kind:'parts',version:1,parts},null,1),'application/json');
 };
 $('plImport').onclick=()=>$('plFile').click();
+$('plMeasure').onclick=()=>{window.open('measure-part.html','_blank');WF.flash('The photo measuring tool opened in a new tab. When it gives you a file, come back here and press Import…',9000);};
 $('plFzBulk').onclick=()=>{$('fzImLog').innerHTML='';$('fzImBack').style.display='grid';};// opens in-app drop dialog
 $('plBrowse').onclick=browseParts;
 $('plFile').addEventListener('change',async e=>{
