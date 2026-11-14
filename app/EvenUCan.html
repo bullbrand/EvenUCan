@@ -7168,7 +7168,15 @@ function drawLayout(){
       c.beginPath();
       if(p.shape==='round'){const m=floorXY(it,o.w/2,o.d/2);c.arc(X(m[0]),Y(m[1]),o.w/2*s,0,Math.PI*2);}
       else{c.moveTo(X(q[0][0]),Y(q[0][1]));for(const r of q.slice(1))c.lineTo(X(r[0]),Y(r[1]));c.closePath();}
-      c.fillStyle=colr+'40';c.fill();c.strokeStyle=colr;c.lineWidth=1;c.stroke();
+      // the part's own photo (a straight-on picture cropped to the part) is drawn on it, turned the way the part is placed
+      const pim=imgOf(p.photo||p.img,drawLayout);
+      if(pim){
+        const A=floorXY(it,0,o.d),B=floorXY(it,o.w,o.d),Cc=floorXY(it,0,0);// the picture's top-left, top-right and bottom-left corners
+        c.save();c.clip();
+        c.transform((X(B[0])-X(A[0]))/pim.naturalWidth,(Y(B[1])-Y(A[1]))/pim.naturalWidth,(X(Cc[0])-X(A[0]))/pim.naturalHeight,(Y(Cc[1])-Y(A[1]))/pim.naturalHeight,X(A[0]),Y(A[1]));
+        c.drawImage(pim,0,0);c.restore();
+      }else{c.fillStyle=colr+'40';c.fill();}
+      c.strokeStyle=colr;c.lineWidth=1;c.stroke();
       for(const f of p.features||[]){
         if(f.t==='hole'||f.t==='button'||f.t==='led'||f.t==='mic'||f.t==='opening'){const m=floorXY(it,f.x,f.y);c.beginPath();c.arc(X(m[0]),Y(m[1]),Math.max(1,f.dia/2)*s,0,Math.PI*2);c.strokeStyle=f.t==='hole'?'#333':'#1e5af0';c.stroke();}
         if(f.t==='header'){const a=floorXY(it,f.x-f.fw/2,f.y-f.fd/2),e=floorXY(it,f.x+f.fw/2,f.y+f.fd/2);c.setLineDash([2,2]);c.strokeStyle='#555';c.strokeRect(X(Math.min(a[0],e[0])),Y(Math.max(a[1],e[1])),Math.abs(e[0]-a[0])*s,Math.abs(e[1]-a[1])*s);c.setLineDash([]);}

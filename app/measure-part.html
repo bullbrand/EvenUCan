@@ -182,7 +182,8 @@ function frame(r){
   const ex=[(A[0]-O[0]+B[0]-Dd[0])/2,(A[1]-O[1]+B[1]-Dd[1])/2],ey=[(Dd[0]-O[0]+B[0]-A[0])/2,(Dd[1]-O[1]+B[1]-A[1])/2];
   return {O,ex:unit(ex),ey:unit(ey),w:Math.hypot(ex[0],ex[1])*r.scale,d:Math.hypot(ey[0],ey[1])*r.scale};
 }
-const toLocal=(r,p)=>{const f=frame(r);const v=[p[0]-f.O[0],p[1]-f.O[1]];return[dot(v,f.ex)*r.scale,dot(v,f.ey)*r.scale];};
+// x goes right and y goes UP from the bottom-left corner as seen from above: the way EvenUCan measures every part
+const toLocal=(r,p)=>{const f=frame(r);const v=[p[0]-f.O[0],p[1]-f.O[1]];return[dot(v,f.ex)*r.scale,f.d-dot(v,f.ey)*r.scale];};
 
 // ============================== numbers from the clicks ==============================
 function updateScale(r){
@@ -233,8 +234,8 @@ function draw(){
     const c=r.corners;ctx.strokeStyle='#4cff9a';ctx.beginPath();c.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();ctx.stroke();
     if(r.scale){const f=frame(r);
       // origin and the two directions
-      ctx.strokeStyle='#ff5d8f';ctx.fillStyle='#ff5d8f';ctx.beginPath();ctx.moveTo(f.O[0],f.O[1]);ctx.lineTo(f.O[0]+f.ex[0]*40*k,f.O[1]+f.ex[1]*40*k);ctx.moveTo(f.O[0],f.O[1]);ctx.lineTo(f.O[0]+f.ey[0]*40*k,f.O[1]+f.ey[1]*40*k);ctx.stroke();
-      ctx.beginPath();ctx.arc(f.O[0],f.O[1],hr*0.6,0,7);ctx.fill();
+      const BL=c[(r.k+3)%4];ctx.strokeStyle='#ff5d8f';ctx.fillStyle='#ff5d8f';ctx.beginPath();ctx.moveTo(BL[0],BL[1]);ctx.lineTo(BL[0]+f.ex[0]*40*k,BL[1]+f.ex[1]*40*k);ctx.moveTo(BL[0],BL[1]);ctx.lineTo(BL[0]-f.ey[0]*40*k,BL[1]-f.ey[1]*40*k);ctx.stroke();
+      ctx.beginPath();ctx.arc(BL[0],BL[1],hr*0.6,0,7);ctx.fill();
       const A=c[(r.k+1)%4],B=c[(r.k+2)%4],D=c[(r.k+3)%4];
       label(R(f.w,1)+' mm',(f.O[0]+A[0])/2,(f.O[1]+A[1])/2-8*k,'#4cff9a');
       label(R(f.d,1)+' mm',(f.O[0]+D[0])/2+8*k,(f.O[1]+D[1])/2,'#4cff9a');
@@ -353,7 +354,7 @@ const STEPS=[
   <div class="row"><button data-act="redraw" class="small">↺ Draw the box again</button><button data-act="manual" class="small">✋ Click the 4 corners myself</button>${r.corners?'<button data-act="turn" class="small">⟳ Turn 90°</button>':''}</div>
   ${r.roi?`<label>Outline sensitivity <input type="range" id="sens" min="40" max="200" value="${Math.round(r.sens*100)}"></label><div class="note">Slide if the outline is too big or too small.</div>`:''}
   ${r.corners?`<div class="card"><b>Got your calipers?</b> Measure the <b>long side</b> of the part and type it here. The tool then corrects its scale from your number.<br><label>Long side by calipers <input type="number" id="capL" step="any" min="1" placeholder="mm" style="width:100px" value="${r.capL||''}"> mm</label>${r.fix&&r.fix!==1?`<br><span class="ok">✓ Scale corrected by ${R((r.fix-1)*100,2)}%</span>`:''}</div>`:''}
-  ${r.corners?'<div class="card">The pink dot is the <b>corner the measurements start from</b>, and the arrows show the lengths. Use <b>Turn 90°</b> so that it matches how you want the part drawn (for example the USB end on the left).</div>':''}`;},
+  ${r.corners?'<div class="card">The pink dot is the <b>bottom-left corner</b>: hole and pin positions are measured from it, going right and up (the arrows). Use <b>Turn 90°</b> so the part sits the way you want it drawn, for example with the USB end on the left.</div>':''}`;},
   ok:()=>!!P.top.corners},
  {k:'top',mode:'holes',title:'Mounting holes (optional)',
   body:()=>{const r=P.top;return `<p>If the part has screw holes, click the <b>centre</b> of a hole, then click its <b>edge</b>. No holes? Just press Next.</p>
@@ -423,20 +424,24 @@ function draftPart(){
 }
 function makePart(){
   const d=draftPart(),name=form.name.trim()||'Measured part';
-  const t=document.createElement('canvas'),s=Math.min(1,360/P.top.src.width);t.width=Math.round(P.top.src.width*s);t.height=Math.round(P.top.src.height*s);
-  t.getContext('2d').drawImage(P.top.src,0,0,t.width,t.height);
+  // the top photo straightened and cropped to the part's outline (what EvenUCan draws on the part)
+  const r=P.top,f=frame(r),ppm=Math.min(12,640/Math.max(f.w,f.d)),t=document.createElement('canvas');
+  t.width=Math.max(8,Math.round(f.w*ppm));t.height=Math.max(8,Math.round(f.d*ppm));
+  const kx=t.width/(f.w/r.scale),ky=t.height/(f.d/r.scale),tg=t.getContext('2d');
+  tg.setTransform(kx*f.ex[0],ky*f.ey[0],kx*f.ex[1],ky*f.ey[1],-kx*dot(f.ex,f.O),-ky*dot(f.ey,f.O));
+  tg.imageSmoothingQuality='high';tg.drawImage(r.src,0,0);
   return {id:'m-'+name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30)+'-'+Date.now().toString(36),name,type:form.type,shape:form.round?'round':'rect',
     w:d.w,d:d.d,pcb:d.pcb,h:d.h,below:d.below,mount:form.mount,features:d.features,pins:d.pins,acc:'measured',
-    notes:'Measured from two photos with a steel ruler (EvenUCan photo measuring), good to about 0.5 mm. Hole positions are from the top-left corner of the part as seen from above. Check tight fits with calipers.',
-    photo:t.toDataURL('image/jpeg',0.7)};
+    notes:'Measured from two photos with a steel ruler (EvenUCan photo measuring), good to about 0.5 mm. Hole and pin positions are measured from the bottom-left corner of the part as seen from above (x right, y up). Check tight fits with calipers.',
+    photo:t.toDataURL('image/jpeg',0.85)};
 }
 function drawPreview(){
   const c=$('preview');if(!c)return;const g=c.getContext('2d'),d=draftPart();g.clearRect(0,0,c.width,c.height);
   const k=Math.min((c.width-40)/d.w,(c.height-40)/d.d),x0=(c.width-d.w*k)/2,y0=(c.height-d.d*k)/2;
   g.fillStyle='#2a7a4b';g.strokeStyle='#9ee7bd';g.lineWidth=2;
   if(form.round){g.beginPath();g.arc(c.width/2,c.height/2,d.w*k/2,0,7);g.fill();g.stroke();}else{g.fillRect(x0,y0,d.w*k,d.d*k);g.strokeRect(x0,y0,d.w*k,d.d*k);}
-  g.strokeStyle='#ffd43b';for(const h of d.features){g.beginPath();g.arc(x0+h.x*k,y0+h.y*k,Math.max(2,h.dia*k/2),0,7);g.stroke();}
-  g.fillStyle='#4dd0e1';for(const q of d.pins){g.fillRect(x0+q.x*k-2,y0+q.y*k-2,4,4);}
+  g.strokeStyle='#ffd43b';for(const h of d.features){g.beginPath();g.arc(x0+h.x*k,y0+(d.d-h.y)*k,Math.max(2,h.dia*k/2),0,7);g.stroke();}
+  g.fillStyle='#4dd0e1';for(const q of d.pins){g.fillRect(x0+q.x*k-2,y0+(d.d-q.y)*k-2,4,4);}
   g.fillStyle='#fff';g.font='13px system-ui';g.fillText(d.w+' mm',c.width/2-22,y0-6>10?y0-6:12);g.fillText(d.d+' mm',4,c.height/2);
 }
 function render(){
