@@ -33,7 +33,8 @@ function briefDoctor(desc,A,pf,power){
     if(!online)add('risk','This board has no Wi-Fi, so it cannot get the time.','Pick an ESP32 board, or add a real-time clock module (DS3231).');
     if(window_)add('assumed','If the clock is not set yet (just after a power cut, before Wi-Fi connects), it counts as outside the allowed hours.','The safe side: an alarm that is too watchful is better than one that is asleep.');
   }
-  if(noise){
+  const namedNoise=has(/\bbuzzers?\b|\bsirens?\b|\bhorns?\b|\bspeakers?\b|\bsounders?\b|\bpiezo\b|\bbells?\b/);
+  if(noise&&!namedNoise){
     add('assumed',siren?'You asked for a noise but did not say what makes it. I chose a loud 12 V siren, because you want to be heard or to scare someone off.':'You asked for a sound but did not say what makes it. I chose a small piezo buzzer, because a beep is enough.',siren?'A buzzer is only about 85 dB up close and is not loud across a garden. If you want something smaller and quieter, say so in your idea.':'If you wanted something much louder, say "loud alarm" in your idea and I will use a siren.');
   }
   if(siren){
@@ -48,6 +49,10 @@ function briefDoctor(desc,A,pf,power){
   if(mains){
     add('risk','Mains voltage (230 V / 120 V) can kill. Do not switch it with a hobby relay board unless it is rated for it and fully enclosed.','Use a ready-made, enclosed, certified smart plug or relay unit, and have an electrician do the mains wiring.');
   }
+  const retrigger=has(/motion|movement|\bpir\b|vibration|knock|door|gate|flap|someone enters/);
+  if(wantsPhone&&online&&retrigger&&!reportWhen){
+    add('assumed','While it keeps triggering, it sends at most one phone message every 5 minutes.','A motion sensor fires again and again while someone is moving. Without a limit one visit could send dozens of alerts and you would stop reading them.');
+  }
   if(wantsPhone&&online){
     add('assumed','Messages go to your phone through ntfy.sh (free, no account).','You install the ntfy app and subscribe to your private topic name shown further down.');
     if(power==='battery')add('added','A check on the daily report: if one does not arrive, look at the battery first.','A device that sleeps to save power is offline most of the time, so it cannot send a "went offline" message. A missing report is the warning instead.');
@@ -58,6 +63,13 @@ function briefDoctor(desc,A,pf,power){
     add('ask','Is there Wi-Fi where it will live? Stand there with your phone and check the signal.','No Wi-Fi means no phone messages and no clock. This is the most common reason these projects fail after the build.');
     if(power!=='battery'&&power!=='mains')add('ask','Is there mains power there, or must it run on a battery?','It decides the power choice below. Wi-Fi on a battery lasts only days unless the device sleeps between events.');
     add('added','A weatherproof box (IP65 or better) with cable glands'+(has(/\bflap\b/)?'':', and the electronics mounted off the floor')+'.','Damp is the usual killer of outdoor electronics. EvenUCan designs the box in the next step.');
+  }
+  const weather=has(/weather|temperature|humidity|barometric|pressure|bme280|bmp280|dht2?2|dht11|climate/)||hasP(/bme280|bmp280|dht|temperature|humidity/);
+  if(weather){
+    add('risk','Do not seal the weather sensor inside the box. Mount it outside, shaded from the sun and away from the board, on a short cable or in a vented white shield.','The board gives off heat and a sealed box traps damp. Inside it the sensor reads the box, not the air: temperature too high and humidity wrong.');
+  }
+  if(outdoors&&power!=='battery'){
+    add('risk','Mains in a damp or outdoor place (shed, garage): keep the charger and plug dry and off the floor, on a socket protected by an RCD (residual-current device), and use the cable rated for the job.','Damp and mains do not mix. Where possible put the charger indoors and run a low-voltage USB cable out to the device.');
   }
   if(guard){
     add('assumed','You can disarm it when you arrive (a button or a phone message), or it waits a short delay before sounding.','Otherwise the first person it catches is you.');
