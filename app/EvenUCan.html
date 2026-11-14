@@ -9654,7 +9654,8 @@ function capIssues(pf,desc,A,power,dropped){
     out.push({k:'wifi',block:true,msg:`Your idea says it should ${what}. An Arduino Nano can't connect to Wi-Fi, so it can't do that.`,
       fixes:[['esp32ide','Switch to an ESP32 and keep using the Arduino IDE (recommended)'],['esphome','Switch to an ESP32 with ESPHome'],['drop-wifi','Keep the Arduino Nano and leave that out']]});
   }
-  const batWanted=/\bbatter(y|ies)\b|cordless|portable|no (power )?(cable|wires?|plug)|without (a )?(cable|plug|wires?)/i.test(String(desc||''));
+  const _noBat=String(desc||'').replace(/\b(no|not|without|never|don'?t need|doesn'?t need|does not need|needs? no|isn'?t needed)\b[^.,;]{0,25}\bbatter(y|ies)\b[^.,;]*/gi,' ').replace(/\bbatter(y|ies)\b[^.,;]{0,20}\b(not needed|isn'?t needed|is not needed|not required|unneeded)\b/gi,' ');// (Brief Doctor) "so no battery is needed" is not a request for a battery
+  const batWanted=/\bbatter(y|ies)\b|cordless|portable|no (power )?(cable|wires?|plug)|without (a )?(cable|plug|wires?)/i.test(_noBat);
   if(batWanted&&power!=='battery'&&!dropped.includes('battery'))
     out.push({k:'battery',block:true,msg:'Your idea says it should run on a battery, but the power is set to '+POW_NAME[power]+'.',fixes:[['pow-battery','Use a battery'],['drop-battery','Keep '+POW_NAME[power]]]});
   if(power==='battery'&&pf==='raspberrypi')
@@ -11843,7 +11844,7 @@ function briefDoctor(desc,A,pf,power){
   const noise=has(/siren|alarm|loud|horn|sounder|bell|hooter|noise|sound|beep|buzz|bleep|ring|shout|scream|scare|wake (me|us)|make a racket/);
   const siren=has(/siren|alarm|loud|horn|sounder|hooter|deter|scare|scream|wake (me|us)|racket|intruder/);
   const times=has(/\b\d{1,2}\s*(am|pm)\b|\b\d{1,2}:\d{2}\b|between .* and |outside (those )?hours|at night|overnight|after hours|office hours|every (day|morning|evening|night|week)|daily|weekly|each (day|morning|night)/);
-  const window_=has(/\b\d{1,2}\s*(am|pm)\b|between .* and |outside (those )?hours|office hours|after hours|overnight|at night/);
+  const window_=has(/between .{1,25} and |\b\d{1,2}\s*(am|pm)?\s*(to|until|till|-)\s*\d{1,2}\s*(am|pm)\b|outside (those )?hours|office hours|after hours|overnight|at night/);
   const reportWhen=has(/daily|each day|every day|weekly|every week|each week|on request|when i ask/);
   const outdoors=has(/shed|garage|garden|outside|outdoor|greenhouse|barn|gate|fence|yard|porch|flap|kennel|hutch|coop|pond|roof|caravan|boat|\brv\b/);
   const counting=has(/how many|count|log\b|history|record|report|statistic|how often|times a day|per day/);

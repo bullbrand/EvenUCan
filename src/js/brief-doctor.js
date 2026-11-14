@@ -16,7 +16,7 @@ function briefDoctor(desc,A,pf,power){
   const noise=has(/siren|alarm|loud|horn|sounder|bell|hooter|noise|sound|beep|buzz|bleep|ring|shout|scream|scare|wake (me|us)|make a racket/);
   const siren=has(/siren|alarm|loud|horn|sounder|hooter|deter|scare|scream|wake (me|us)|racket|intruder/);
   const times=has(/\b\d{1,2}\s*(am|pm)\b|\b\d{1,2}:\d{2}\b|between .* and |outside (those )?hours|at night|overnight|after hours|office hours|every (day|morning|evening|night|week)|daily|weekly|each (day|morning|night)/);
-  const window_=has(/\b\d{1,2}\s*(am|pm)\b|between .* and |outside (those )?hours|office hours|after hours|overnight|at night/);
+  const window_=has(/between .{1,25} and |\b\d{1,2}\s*(am|pm)?\s*(to|until|till|-)\s*\d{1,2}\s*(am|pm)\b|outside (those )?hours|office hours|after hours|overnight|at night/);
   const reportWhen=has(/daily|each day|every day|weekly|every week|each week|on request|when i ask/);
   const outdoors=has(/shed|garage|garden|outside|outdoor|greenhouse|barn|gate|fence|yard|porch|flap|kennel|hutch|coop|pond|roof|caravan|boat|\brv\b/);
   const counting=has(/how many|count|log\b|history|record|report|statistic|how often|times a day|per day/);

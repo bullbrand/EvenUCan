@@ -30,7 +30,8 @@ function capIssues(pf,desc,A,power,dropped){
     out.push({k:'wifi',block:true,msg:`Your idea says it should ${what}. An Arduino Nano can't connect to Wi-Fi, so it can't do that.`,
       fixes:[['esp32ide','Switch to an ESP32 and keep using the Arduino IDE (recommended)'],['esphome','Switch to an ESP32 with ESPHome'],['drop-wifi','Keep the Arduino Nano and leave that out']]});
   }
-  const batWanted=/\bbatter(y|ies)\b|cordless|portable|no (power )?(cable|wires?|plug)|without (a )?(cable|plug|wires?)/i.test(String(desc||''));
+  const _noBat=String(desc||'').replace(/\b(no|not|without|never|don'?t need|doesn'?t need|does not need|needs? no|isn'?t needed)\b[^.,;]{0,25}\bbatter(y|ies)\b[^.,;]*/gi,' ').replace(/\bbatter(y|ies)\b[^.,;]{0,20}\b(not needed|isn'?t needed|is not needed|not required|unneeded)\b/gi,' ');// (Brief Doctor) "so no battery is needed" is not a request for a battery
+  const batWanted=/\bbatter(y|ies)\b|cordless|portable|no (power )?(cable|wires?|plug)|without (a )?(cable|plug|wires?)/i.test(_noBat);
   if(batWanted&&power!=='battery'&&!dropped.includes('battery'))
     out.push({k:'battery',block:true,msg:'Your idea says it should run on a battery, but the power is set to '+POW_NAME[power]+'.',fixes:[['pow-battery','Use a battery'],['drop-battery','Keep '+POW_NAME[power]]]});
   if(power==='battery'&&pf==='raspberrypi')
