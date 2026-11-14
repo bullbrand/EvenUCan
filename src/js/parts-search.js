@@ -190,9 +190,10 @@ function tidyIntent(d,desc){
   A.platform=pfNorm(d.platform);A.platform_reason=str(d.platform_reason,400);A.code_description=str(d.code_description,2500);A.missing_parts_hint=str(d.missing_parts_hint,300);
   A.microcontroller=d.microcontroller&&typeof d.microcontroller==='object'?{name:str(d.microcontroller.name,60),why:str(d.microcontroller.why,300)}:null;
   A.requirements=(Array.isArray(d.requirements)?d.requirements:[]).map(x=>str(x,200).trim()).filter(Boolean).slice(0,10);
+  A.hidden_needs=(Array.isArray(d.hidden_needs)?d.hidden_needs:[]).filter(h=>h&&typeof h==='object'&&h.need).slice(0,6).map(h=>({kind:/^(ask|risk)$/.test(h.kind)?h.kind:'added',need:str(h.need,220),why:str(h.why,220)}));
   A.code_libraries=(Array.isArray(d.code_libraries)?d.code_libraries:[]).map(x=>str(x,60)).filter(Boolean).slice(0,12);
   if(!/^(ntfy|none|email)$/.test(A.notification_method))A.notification_method='ntfy';
-  A.parts=(Array.isArray(d.parts)?d.parts:[]).filter(p=>p&&typeof p==='object').slice(0,12).map(p=>({category:str(p.category,40),function:str(p.function,300),search:str(p.search||p.function,60),required:p.required!==false,why:str(p.why,300)}));
+  A.parts=(Array.isArray(d.parts)?d.parts:[]).filter(p=>p&&typeof p==='object').slice(0,12).map(p=>({category:str(p.category,40),function:str(p.function,300),search:str(p.search||p.function,60),required:p.required!==false,why:(p.support?'Added for you: ':'')+str(p.why,300),support:!!p.support}));
   // Sanity-filter: remove parts the AI hallucinated that the user never asked for.
   // Each rule: if the description does NOT mention any of the trigger words, remove parts matching the sensor pattern.
   const _d=desc.toLowerCase();
@@ -475,7 +476,7 @@ ${iw.err?`<div class="bad" style="margin-top:8px">${esc(iw.err)}</div>`:''}`;
 <div class="ewRow" style="margin-top:6px"><input id="iwAddSearch" type="search" placeholder="Type what you're looking for — e.g. gyroscope, air quality, DHT22, screen…" style="flex:1;min-width:0" autocomplete="off"></div>
 <div id="iwAddResults" style="max-height:230px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;margin-top:6px"><div class="ewNote" style="padding:6px 8px">Type above to search your own parts and the full ready-made library.</div></div></div>`;
     }
-    b.innerHTML=`<h4 style="margin-top:0">${esc(A.name||'Your device')}</h4><p style="margin:4px 0 10px">${esc(A.summary)}</p>`+capHtml(issues)+`
+    b.innerHTML=`<h4 style="margin-top:0">${esc(A.name||'Your device')}</h4><p style="margin:4px 0 10px">${esc(A.summary)}</p>`+capHtml(issues)+briefDoctorHtml(briefDoctor(iw.desc,A,pf,iw.power),A)+`
 <h4>Which board runs it?</h4><div class="ewRow" role="group" aria-label="Platform" style="flex-wrap:wrap">${pfBtns}</div><p style="margin:4px 0">${why}<span class="ewNote">${esc(PF.about)}</span></p>${gone}
 <h4 id="iwPartsHead">The parts I picked, and why</h4><ul style="list-style:none;padding:0;margin:0">${rows}</ul>${missingWarning}${editor}${pow}`+
       (A.code_description||A.esphome_notes?`<h4>How the code will work</h4><p class="ewNote" style="font-size:13px;margin:0">${esc(A.code_description||A.esphome_notes)}</p>`:'')+
