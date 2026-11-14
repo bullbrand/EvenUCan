@@ -8941,6 +8941,14 @@ const WAKE_WORDS={okay_nabu:'Okay Nabu',hey_jarvis:'Hey Jarvis',hey_mycroft:'Hey
 // Which ESPHome board a controller part is, or null if it can't run ESPHome.
 function espBoard(part){
   const t=(part.name+' '+(part.notes||'')).toLowerCase(),mcu=part.mcu||(builtinById(part.id)||{}).mcu;
+  // Seeed XIAO boards have their own ESPHome board names. Judged by the part's NAME only (the notes may mention other chips).
+  // No status-light pin: the XIAO's own LED is a plain one on a different pin, not the RGB one the DevKitC-1 has.
+  const nm=String(part.name||'').toLowerCase();
+  if(/xiao/.test(nm)){
+    if(/esp32-?s3/.test(nm))return {chip:'esp32',board:'seeed_xiao_esp32s3',s3:true};
+    if(/esp32-?c3/.test(nm))return {chip:'esp32',board:'seeed_xiao_esp32c3'};
+    if(/esp32-?c6/.test(nm))return {chip:'esp32',board:'seeed_xiao_esp32c6'};
+  }
   if(mcu==='esp32s3'||/esp32-?s3/.test(t)){
     // Only include flash_size / psram when the variant name explicitly names them —
     // adding them for a generic board confuses novices (wrong for most boards they own).
