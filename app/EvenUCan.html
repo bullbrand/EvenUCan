@@ -11830,8 +11830,11 @@ async function openPartsLibrary() {
 // ask for: hidden essentials, what it ASSUMED (so they can correct it), questions to settle, and risks.
 // Every note: {kind:'added'|'assumed'|'ask'|'risk', text, why, checked}. checked=true: a fixed rule written from known
 // electronics facts. checked=false: the AI's own guess (shown, but marked as not checked).
+// Text the user said they do NOT want ("no WiFi", "needs no phone alerts") must not trigger those rules.
+const BD_NEG=/\b(no|not|without|never|don'?t|do not|doesn'?t|needs? no)\b[^.,;]{0,25}\b(phone|wi-?fi|internet|message|notification|alert|app|wireless)s?\b[^.,;]*/gi;
+function bdStrip(t){t=String(t||'').toLowerCase().replace(BD_NEG,' ');try{if(typeof NO_NET!=='undefined')t=t.replace(NO_NET,' ');}catch(e){}return t;}
 function briefDoctor(desc,A,pf,power){
-  const d=String(desc||'').toLowerCase()+' '+((A&&A.requirements)||[]).join(' ').toLowerCase();
+  const d=bdStrip(String(desc||'')+' '+((A&&A.requirements)||[]).join(' . '));
   const parts=((A&&A.parts)||[]).map(p=>(p.search+' '+p.category+' '+p.function).toLowerCase()).join(' | ');
   const has=re=>re.test(d),hasP=re=>re.test(parts);
   const out=[],add=(kind,text,why,checked)=>out.push({kind,text,why:why||'',checked:checked!==false});
@@ -11880,7 +11883,7 @@ function briefDoctor(desc,A,pf,power){
   }
   if(outdoors){
     add('ask','Is there Wi-Fi where it will live? Stand there with your phone and check the signal.','No Wi-Fi means no phone messages and no clock. This is the most common reason these projects fail after the build.');
-    if(power!=='battery')add('ask','Is there mains power there, or must it run on a battery?','It decides the power choice below. Wi-Fi on a battery lasts only days unless the device sleeps between events.');
+    if(power!=='battery'&&power!=='mains')add('ask','Is there mains power there, or must it run on a battery?','It decides the power choice below. Wi-Fi on a battery lasts only days unless the device sleeps between events.');
     add('added','A weatherproof box (IP65 or better) with cable glands'+(has(/\bflap\b/)?'':', and the electronics mounted off the floor')+'.','Damp is the usual killer of outdoor electronics. EvenUCan designs the box in the next step.');
   }
   if(guard){
@@ -11905,6 +11908,24 @@ function briefDoctor(desc,A,pf,power){
   }
   if(pet&&(outdoors||flap)){
     add('risk','Animals chew and knock things: put the box and its wires out of reach or inside a chew-proof cover, and keep the flap swinging freely.','A chewed battery or wire is dangerous to the animal.');
+  }
+  const motors=has(/\bmotors?\b|\bjacks?\b|actuator|winch|linear|gearbox|leveller|leveler|levelling|leveling/);
+  if(motors){
+    add('ask','How much current does each motor draw when it pushes hard or stalls? Vehicle jacks and winches can draw 20 A or more.','A typical relay board is rated about 10 A and its contacts burn out. The relays, the wire and the fuse must all be rated above the stall current, and the supply must be able to give it.');
+    add('added','A maximum run time for every move, so a stuck or fully extended motor stops itself.','Without it a stalled motor draws full current until something overheats or the fuse blows.');
+  }
+  if(motors&&has(/\bup\b.{0,20}\bdown\b|forward.{0,20}reverse|reversible|both directions|extend.{0,20}retract/)){
+    add('added','An interlock: the two relays of one motor (up and down) can never be on at the same time, with a short pause before it reverses.','Both relays on at once connects the supply straight across itself, which is a dead short. The interlock is in the code and does not depend on you pressing buttons carefully.');
+  }
+  if(motors&&has(/motorhome|caravan|camper|\brv\b|van\b|boat|vehicle|trailer|truck/))add('ask','Where does the 12 V come from? A vehicle or boat battery can supply the heavy current, but a small mains adapter cannot.','Jack motors need a battery or a large supply. Use thick wire, keep the runs short, and put the fuse close to the battery.');
+  const watering=loads&&has(/water|irrigat|pump|valve|drip|sprinkl|plant|tank|reservoir/);
+  if(watering){
+    add('added','A safety limit on watering: the pump may run at most 30 seconds at a time, and must rest at least 1 hour before it can run again.','If a sensor fails or a wire comes loose, always dry would run the pump until the tank is empty or the floor is flooded. Change the numbers in the code if you need to.');
+    if(has(/tank|reservoir|bucket|bottle|barrel|butt/))add('added','The pump stops if the tank is empty, so it never runs dry.','A pump running dry overheats and wears out in minutes.');
+  }
+  if(has(/soil|moist|plant|compost/)){
+    add('assumed','The soil sensor is set up once: a reading in dry air and a reading in a glass of water, so that dry and wet mean something.','Every sensor reads a little differently. Without this the pump would water at the wrong time.');
+    add('risk','Cheap two-prong soil probes corrode in weeks and then read wrongly. Use a capacitive soil sensor, and keep its electronics above the soil line.','Capacitive sensors have no exposed metal in the soil. The top part must stay dry.');
   }
   if(has(/water|wet|rain|irrigat|pump|leak|pond/)&&loads)add('risk','Keep every water joint below and away from the electronics, and use hose clips.','A drip onto a relay board is a short circuit.');
   const disposable=has(/\baaa?\b|\baa\b|alkaline|disposable|non.?rechargeable|battery holder|\bcr2032\b|coin cell|\bpp3\b/);
