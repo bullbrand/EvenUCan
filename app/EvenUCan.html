@@ -250,6 +250,7 @@ if(location.protocol==='file:'){
     <span class="mspace"></span>
     <button id="bBuild" title="Start a new gadget: describe what it should do and EvenUCan plans the parts, the box and the code, step by step">💡 <span class="bl">Start a project</span></button>
     <button id="bGuide" title="New here? A guided walk-through: build your first project, one highlighted button at a time" style="padding:4px 10px">🧭 <span class="bl">First project</span></button>
+    <button id="bGuideCad" title="Never drawn on a computer? A gentle guide: draw a box, pull it up, cut a hole, one highlighted tool at a time" style="padding:4px 10px">📐 <span class="bl">Learn to draw</span></button>
     <button id="bCookbook" title="Cookbook: tick the parts you own at home, then ask the AI what you can build today" style="padding:4px 10px">🍳 <span class="bl">Cookbook</span></button>
     <button id="bProjects" title="Save and reload your builds so you can pick up where you left off" style="padding:4px 10px">💾 <span class="bl">Projects</span></button>
     <!-- The old menu-bar buttons stay here, hidden, so every id and handler keeps working; the menus click them. -->
@@ -5261,6 +5262,7 @@ markDirty();
 .ewBack{position:fixed;inset:0;background:#0006;display:none;place-items:center;z-index:40}
 /* Guided first project (coach.js): a ring round the next button on a dimmed screen, and a tip card beside it */
 #coRing{position:fixed;display:none;z-index:9000;pointer-events:none;border-radius:10px;border:4px solid #ffd43b;box-shadow:0 0 0 9999px #0008,0 0 18px 4px #ffd43b;animation:coPulse 1.1s ease-in-out infinite}
+#coRing.soft{box-shadow:inset 0 0 0 2px #ffd43b88;border-width:3px;border-style:dashed;animation:none}
 @keyframes coPulse{50%{box-shadow:0 0 0 9999px #0008,0 0 30px 10px #ffd43b}}
 #coTip{position:fixed;display:none;z-index:9001;width:min(330px,calc(100vw - 20px));box-sizing:border-box;background:#fffbe6;color:#222;border:3px solid #ffd43b;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.45;box-shadow:0 8px 28px #0006}
 #coTip .coStep{font-size:12px;font-weight:700;color:#8a6d00;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
@@ -12872,12 +12874,15 @@ const COOKBOOK_RECIPES=[
    extra:['A 12V supply: the buck converter makes 5V for the ESP32 from it','Hose fittings for 1/2 inch threads','The valve needs some water pressure to work'],
    build:'A timed garden tap on an ESP32 with a 12V solenoid valve switched by a relay board, a YF-S201 flow sensor, a DS3231 clock and an LM2596 buck converter making 5V from the 12V supply.'}
 ];
-// ---- (coach-r1) "Build my first project": a guided walk-through. It dims the screen, rings the one button to click next
-// and waits for the click, from the first idea right through to sending the code to ESPHome / the Arduino IDE.
-// It uses no AI. It only points at buttons that already exist, so every step is the real app, not a pretend one.
+// ---- (coach-r1) Guided walk-throughs. The screen dims and ONE button is ringed; the user clicks it and the guide moves on.
+// A step is {sel, text} (wait for a click on the ringed button) or {sel, text, until(base), soft:true} (a drawing step: the
+// picture is ringed softly, and the guide moves on by itself when until() says the drawing has changed).
+// It uses no AI and only points at buttons that already exist, so every step is the real app, not a pretend one.
 document.body.insertAdjacentHTML('beforeend','<div id="coRing" aria-hidden="true"></div><div id="coTip" role="status" aria-live="polite"></div>');
 const coRing=$('coRing'),coTip=$('coTip');
-const coach={on:false,i:0,steps:[],last:null,timer:null,since:0,pending:false};
+const coach={on:false,guide:'',i:0,steps:[],last:null,timer:null,since:0,pending:false,base:0};
+const nFaces=()=>WF.model.faces.length;
+// ---- Guide 1: build my first project (the electronics route, from an idea to the code on the board)
 // Which ready-made example to build, by the board the user said they use (setup asks this). ESPHome is the default.
 const COACH_EX={esphome:1,esp32ide:0,arduino:4,raspberrypi:1};
 function coachSteps(pf){
@@ -12893,11 +12898,27 @@ function coachSteps(pf){
     {sel:'#gNext:not([disabled])',text:'Your code is written for you. Click the highlighted button to send it to <b>'+esc(ide)+'</b>.'}
   ];
 }
+// ---- Guide 2: draw a box, cut a hole. Gentle CAD: three tools, no jargon.
+const toolSel=n=>'#toolbar button[data-tool="'+n+'"]';
+function cadSteps(){
+  return [
+    {sel:toolSel('rect'),text:'Drawing on the computer is just <b>three moves</b>: draw a flat shape, pull it up, cut a hole. Nothing here can break. Start with the <b>Rectangle</b> tool: click it.'},
+    {sel:'#view',soft:true,until:()=>nFaces()>=1,text:'Click once on the grid floor, move the mouse away, and click again. You have drawn a flat <b>rectangle</b>. (Made a mess? Press <b>Ctrl+Z</b> to undo.)'},
+    {sel:toolSel('push'),text:'Now make it solid. This is the <b>Push/Pull</b> tool: it pulls a flat shape up into a 3D one. Click it.'},
+    {sel:'#view',soft:true,until:()=>nFaces()>=5,text:'Click on the <b>top</b> of your rectangle, move the mouse up, and click again. It grows into a <b>box</b>! (You can also type a number, such as 20, and press Enter.)'},
+    {sel:toolSel('circle'),text:'Now a hole. First draw a circle where the hole goes. Click the <b>Circle</b> tool.'},
+    {sel:'#view',soft:true,until:b=>nFaces()>b,base:true,text:'Click on the <b>top of the box</b> for the middle of the hole, move out, and click for its size. A <b>circle</b> now sits on the box.'},
+    {sel:toolSel('push'),text:'Same tool as before: <b>Push/Pull</b>. Click it again.'},
+    {sel:'#view',soft:true,until:b=>nFaces()>b+3,base:true,text:'Click inside the <b>circle</b>, move the mouse <b>down</b> into the box and click. The circle is cut right out: that is a <b>hole</b>!'},
+    {sel:toolSel('orbit'),text:'Well done! Now look at your work. Click <b>Orbit</b>, then drag in the picture to turn the box round.'},
+    {sel:toolSel('select'),text:'Last one: click <b>Select</b> to get your ordinary pointer back.'}
+  ];
+}
 function coachVisible(el){
   if(!el||el.disabled)return false;
   const r=el.getBoundingClientRect();if(r.width<2||r.height<2)return false;
   const s=getComputedStyle(el);if(s.visibility==='hidden'||s.display==='none')return false;
-  return r.bottom>0&&r.right>0&&r.top<innerHeight&&r.left<innerWidth;
+  return true;// off the screen is fine: the guide scrolls it into view
 }
 function coachFind(){
   const st=coach.steps[coach.i];if(!st)return null;
@@ -12905,63 +12926,93 @@ function coachFind(){
 }
 function coachShow(el){
   const st=coach.steps[coach.i],n=coach.steps.length;
-  const r=el?el.getBoundingClientRect():null;
+  const r=el?el.getBoundingClientRect():null,soft=!!(st&&st.soft);
   if(r){
-    coRing.style.cssText='display:block;left:'+(r.left-6)+'px;top:'+(r.top-6)+'px;width:'+(r.width+12)+'px;height:'+(r.height+12)+'px';
+    const pad=soft?-4:6;
+    coRing.className=soft?'soft':'';
+    coRing.style.cssText='display:block;left:'+(r.left-pad)+'px;top:'+(r.top-pad)+'px;width:'+(r.width+2*pad)+'px;height:'+(r.height+2*pad)+'px';
   }else coRing.style.display='none';
   const wait=!el&&Date.now()-coach.since>7000;
   coTip.innerHTML='<div class="coStep">Step '+(coach.i+1)+' of '+n+'</div><div>'+(el?st.text:'Getting the next screen ready…'+(wait?'<br>Can\'t see the button? Press <b>Skip this step</b>.':''))+'</div>'+
-    '<div class="coBtns"><button id="coSkip">Skip this step</button><button id="coStop" class="linkBtn">Stop the guide</button></div>';
+    '<div class="coBtns"><button id="coSkip">'+(soft?'I did it, next':'Skip this step')+'</button><button id="coStop" class="linkBtn">Stop the guide</button></div>';
   coTip.style.display='block';
   const w=coTip.offsetWidth,h=coTip.offsetHeight;
   let x,y;
-  if(r){x=Math.min(Math.max(10,r.left),innerWidth-w-10);y=r.bottom+14;if(y+h>innerHeight-10)y=Math.max(10,r.top-h-14);}
+  if(r&&soft){x=r.left+16;y=r.bottom-h-16;}// big picture area: tip in its bottom corner, out of the way of the drawing
+  else if(r){x=Math.min(Math.max(10,r.left),innerWidth-w-10);y=r.bottom+14;if(y+h>innerHeight-10)y=Math.max(10,r.top-h-14);}
   else{x=Math.max(10,(innerWidth-w)/2);y=Math.max(10,innerHeight-h-30);}
   coTip.style.left=x+'px';coTip.style.top=y+'px';
 }
 function coachTick(){
   if(!coach.on||coach.pending)return;
+  const st=coach.steps[coach.i];
+  if(st&&st.until&&coach.stepStarted&&st.until(coach.base)){coach.pending=true;coRing.style.display='none';coTip.style.display='none';setTimeout(coachNext,500);return;}
   const el=coachFind();
-  if(el&&coach.i>=0){
+  if(el&&!st.soft){
     const r=el.getBoundingClientRect();
-    if(r.top<60||r.bottom>innerHeight-60)el.scrollIntoView({block:'center'});
+    if(r.top<60||r.bottom>innerHeight-60||r.left<0||r.right>innerWidth){el.scrollIntoView({block:'center',inline:'center'});return coachShow(coachFind());}
   }
   coachShow(el);
 }
+function coachBegin(){// a step starts: remember how the drawing looks now, so "something changed" can be seen
+  const st=coach.steps[coach.i];coach.base=nFaces();coach.stepStarted=!!st;coach.since=Date.now();
+}
 function coachNext(){
-  coach.pending=false;coach.i++;coach.since=Date.now();
+  coach.pending=false;coach.i++;
   if(coach.i>=coach.steps.length)return coachFinish();
-  coachTick();
+  coachBegin();coachTick();
 }
 function coachFinish(){
-  coachStop(true);
-  WF.store.set('coach_done','1');
-  WF.flash('🎉 You did it! That is how every EvenUCan project goes. Start your own with 💡 Start a project.',9000);
+  const g=coach.guide;coachStop(true);
+  if(g==='first'){
+    WF.store.set('coach_done','1');
+    coTip.innerHTML='<div class="coStep">All done</div><div><b>🎉 You did it!</b> That is how every EvenUCan project goes: idea, parts, box, wiring, code.<br><br>Would you like to learn to <b>draw your own box</b> next? It is easier than it sounds.</div>'+
+      '<div class="coBtns"><button id="coCad" class="primary">📐 Yes, show me how to draw</button><button id="coClose" class="linkBtn">Not now</button></div>';
+    coTip.style.display='block';coTip.style.left=Math.max(10,(innerWidth-coTip.offsetWidth)/2)+'px';coTip.style.top=Math.max(10,innerHeight-coTip.offsetHeight-40)+'px';
+  }else{
+    WF.store.set('coach_cad_done','1');
+    WF.flash('🎉 You drew a box and cut a hole. That is all CAD is! Try more tools, or press Ctrl+Z if you want to undo anything.',9000);
+  }
 }
 function coachStop(done){
   coach.on=false;coach.pending=false;clearInterval(coach.timer);
   coRing.style.display='none';coTip.style.display='none';
-  if(!done)WF.flash('Guide stopped. You can run it again any time from 🧭 First project.',5000);
+  if(!done)WF.flash('Guide stopped. You can run it again any time from the top bar.',5000);
 }
 async function coachStart(){
   if(coach.on)return;
   if((!WF.docEmpty||intentNow())&&!await askConfirm('The guide builds a small practice project in a fresh start.\n\nIf you are working on something, save it first (💾 Save at the top) so you can open it again.\n\nStart the guide?'))return;
   const pf=WF.store.get('pref_pf')||'esphome';
-  coach.steps=coachSteps(pf);coach.i=0;coach.last=null;coach.since=Date.now();coach.pending=false;coach.on=true;
+  coach.guide='first';coach.steps=coachSteps(pf);coach.i=0;coach.last=null;coach.pending=false;coach.on=true;coachBegin();
   try{closeWizard();closeWiring();}catch(e){}
   gStep=null;drawGuide();
   iw.w={text:'',does:[],pf:'auto',noShow:wcSeen()};iw.welcome=true;iw.step='welcome';iw.err='';iw.busy=false;
   iwBack.style.display='grid';renderIntent();
   coach.timer=setInterval(coachTick,300);coachTick();
 }
+async function coachStartCad(){
+  if(coach.on)return;
+  coTip.style.display='none';
+  if(!WF.docEmpty){
+    if(!await askConfirm('The drawing guide needs an empty page, so it starts a new drawing (and clears the parts list of your current project).\n\nIf you are working on something, save it first (💾 Save at the top).\n\nStart the guide?'))return;
+    $('bNew').click();// asks again if there are unsaved changes
+    if(!WF.docEmpty)return;
+  }
+  iwBack.style.display='none';try{closeWizard();closeWiring();}catch(e){}
+  gStep=null;drawGuide();
+  coach.guide='cad';coach.steps=cadSteps();coach.i=0;coach.last=null;coach.pending=false;coach.on=true;coachBegin();
+  coach.timer=setInterval(coachTick,300);coachTick();
+}
 // The click on the ringed button is the user's own click: let it do its job, then go on to the next step.
 document.addEventListener('click',e=>{
-  if(!coach.on)return;
   const id=e.target&&e.target.id;
-  if(id==='coSkip'){coach.last=null;coachNext();return;}
+  if(id==='coCad'){coachStartCad();return;}
+  if(id==='coClose'){coTip.style.display='none';return;}
+  if(!coach.on)return;
+  if(id==='coSkip'){coach.last=null;coach.pending=false;coachNext();return;}
   if(id==='coStop'){coachStop(false);return;}
   if(coach.pending)return;
-  const st=coach.steps[coach.i];if(!st)return;
+  const st=coach.steps[coach.i];if(!st||st.until)return;
   const hit=e.target.closest&&e.target.closest(st.sel);
   if(!hit||hit.disabled)return;
   coach.last=hit;coach.pending=true;coRing.style.display='none';coTip.style.display='none';
@@ -12969,6 +13020,7 @@ document.addEventListener('click',e=>{
 },true);
 document.addEventListener('keydown',e=>{if(coach.on&&e.key==='Escape')coachStop(false);},true);
 $('bGuide').onclick=()=>coachStart();
+$('bGuideCad').onclick=()=>coachStartCad();
 window.addEventListener('resize',()=>{if(coach.on)coachTick();});
 // ---------------------------------------------------------------- keys and menu wiring
 // While a window is open, keys belong to it (so typing doesn't switch drawing tools).

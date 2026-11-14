@@ -2,6 +2,7 @@
 .ewBack{position:fixed;inset:0;background:#0006;display:none;place-items:center;z-index:40}
 /* Guided first project (coach.js): a ring round the next button on a dimmed screen, and a tip card beside it */
 #coRing{position:fixed;display:none;z-index:9000;pointer-events:none;border-radius:10px;border:4px solid #ffd43b;box-shadow:0 0 0 9999px #0008,0 0 18px 4px #ffd43b;animation:coPulse 1.1s ease-in-out infinite}
+#coRing.soft{box-shadow:inset 0 0 0 2px #ffd43b88;border-width:3px;border-style:dashed;animation:none}
 @keyframes coPulse{50%{box-shadow:0 0 0 9999px #0008,0 0 30px 10px #ffd43b}}
 #coTip{position:fixed;display:none;z-index:9001;width:min(330px,calc(100vw - 20px));box-sizing:border-box;background:#fffbe6;color:#222;border:3px solid #ffd43b;border-radius:12px;padding:12px 14px;font-size:15px;line-height:1.45;box-shadow:0 8px 28px #0006}
 #coTip .coStep{font-size:12px;font-weight:700;color:#8a6d00;margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em}
