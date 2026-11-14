@@ -13098,7 +13098,7 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
     const all=allRecipes();
     const list=all.filter(r=>cbFilter==='all'||(cbFilter==='mine'?r.mine:r.where===cbFilter));
     const opts=[['all','All ideas ('+all.length+')'],...WHERE.filter(w=>all.some(r=>r.where===w)).map(w=>[w,w]),['mine','My recipes ('+all.filter(r=>r.mine).length+')']];
-    box.innerHTML=`<div class="cbIdeaBar"><select id="cbIdeaFilter" title="Show one kind of idea">${opts.map(([v,l])=>`<option value="${v}"${cbFilter===v?' selected':''}>${esc(l)}</option>`).join('')}</select><button id="cbNewRecipe" class="primary" title="Write down your own project and the parts it uses">+ New recipe</button></div>`+
+    box.innerHTML=`<div class="cbIdeaBar"><select id="cbIdeaFilter" title="Show one kind of idea">${opts.map(([v,l])=>`<option value="${v}"${cbFilter===v?' selected':''}>${esc(l)}</option>`).join('')}</select><button id="cbNewRecipe" class="primary" title="Write down your own project and the parts it uses">+ New recipe</button><button id="cbExport" title="Save your own recipes to a file, to keep or to give to a friend">⬇ Save mine to a file</button><button id="cbImport" title="Add recipes from a file someone gave you, or one you saved before">⬆ Add from a file</button></div>`+
       (list.length?list.map(r=>{
         const need=(r.parts||[]).map(pr=>{const p=partById(pr[0]);const own=(stock[pr[0]]||0)>0;return `<li class="${own?'cbHave':''}">${own?'✓ ':''}${esc(p?p.name:(pr[1]||pr[0]))}${p?'':' <small>(not in the parts list yet)</small>'}</li>`;}).join('');
         const extra=(r.extra||[]).map(x=>`<li>${esc(x)}</li>`).join('');
@@ -13139,6 +13139,38 @@ $('bEnclosure').onclick=openWizard;$('bParts').onclick=()=>openLibrary();
     const rid=b.dataset.rid;
     if(b.id==='cbNewRecipe'){cbForm={id:'',title:'',where:'House',blurb:'',ids:[],extra:''};renderIdeas();return;}
     if(b.id==='cbfCancel'){cbForm=null;renderIdeas();return;}
+    if(b.id==='cbExport'){
+      const mine=getMine();
+      if(!mine.length){WF.flash('You have no recipes of your own yet. Press + New recipe to write one.',5000);return;}
+      WF.download('my-evenucan-recipes.json',JSON.stringify({kind:'evenucan-recipes',version:1,recipes:mine},null,1),'application/json');
+      WF.flash('✅ Saved '+mine.length+' recipe'+(mine.length===1?'':'s')+' to your Downloads folder: my-evenucan-recipes.json',7000);return;
+    }
+    if(b.id==='cbImport'){
+      const inp=document.createElement('input');inp.type='file';inp.accept='.json,application/json';
+      inp.onchange=async()=>{
+        const f=inp.files&&inp.files[0];if(!f)return;
+        try{
+          const d=JSON.parse(await f.text());
+          const list=Array.isArray(d)?d:(d&&d.kind==='evenucan-recipes'&&Array.isArray(d.recipes)?d.recipes:null);
+          if(!list)return WF.flash('That file does not hold EvenUCan recipes.',6000);
+          const str=(v,n)=>String(v==null?'':v).slice(0,n);
+          const mine=getMine();let added=0,updated=0;
+          for(const r of list){
+            if(!r||!r.title)continue;
+            const rec={id:str(r.id||'u-'+Date.now().toString(36)+added,40).replace(/[^\w-]/g,'')||'u-'+Date.now().toString(36)+added,title:str(r.title,80),
+              where:WHERE.includes(r.where)?r.where:'Other',blurb:str(r.blurb,400),icon:str(r.icon||'🛠️',8),
+              parts:(Array.isArray(r.parts)?r.parts:[]).filter(p=>Array.isArray(p)&&p[0]).slice(0,60).map(p=>[str(p[0],80),str(p[1]||p[0],80)]),
+              extra:(Array.isArray(r.extra)?r.extra:[]).slice(0,30).map(x=>str(x,200)).filter(Boolean)};
+            if(COOKBOOK_RECIPES.some(c=>c.id===rec.id))rec.id='u-'+rec.id;// never overwrite a ready-made idea
+            const i=mine.findIndex(x=>x.id===rec.id);if(i>=0){mine[i]=rec;updated++;}else{mine.push(rec);added++;}
+          }
+          if(!added&&!updated)return WF.flash('No recipes were found in that file.',6000);
+          setMine(mine);cbFilter='mine';renderIdeas();
+          WF.flash('✅ Added '+added+' recipe'+(added===1?'':'s')+(updated?' and updated '+updated:'')+'. They are under "My recipes".',7000);
+        }catch(err){console.warn('EvenUCan: could not read the recipes file',err);WF.flash('Could not read that file. Is it a recipes file saved from EvenUCan?',6000);}
+      };
+      inp.click();return;
+    }
     if(b.id==='cbfSave'){
       readForm();
       if(!cbForm.title){WF.flash('Give your recipe a name first');$('cbfTitle').focus();return;}
