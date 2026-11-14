@@ -184,10 +184,12 @@ if(location.protocol==='file:'){
 <input type="file" id="plImgIn" accept="image/*" style="display:none">
 <input type="file" id="plDrawIn" accept="image/*,application/pdf,.pdf" style="display:none">
 <div id="cbBack" class="ewBack"><div class="ewWin" role="dialog" aria-modal="true" aria-label="Cookbook" style="width:min(620px,calc(100vw - 20px));height:min(640px,calc(100vh - 20px));display:flex;flex-direction:column">
-  <div class="ewHead"><h2>🍳 Cookbook</h2><span class="ewNote">Tick the parts you have at home — the AI tells you what you can build today.</span>
+  <div class="ewHead"><h2>🍳 Cookbook</h2><span class="ewNote">Ready-made project ideas, your own saved recipes, and the parts you have at home.</span>
     <button id="cbX" class="x" title="Close (Esc)" style="font-size:18px">✕</button></div>
   <div class="cbBody">
     <div class="cbDesc">Tick every part you own and set how many you have. The list is saved on this computer. This shows <b>EvenUCan's own built-in parts</b> plus any you've added — it is <b>not</b> a Fritzing, Eagle or KiCad database. When you're ready, press <b>💡 What can I build?</b> and the AI will suggest up to 6 projects you can start right now using parts you already own. The AI will also prioritise your stock whenever you describe a new project.</div>
+    <div class="cbTabs"><button id="cbTabIdeas" class="on">💡 Ready-made ideas</button><button id="cbTabParts">📦 My parts</button></div>
+    <div class="cbIdeas" id="cbIdeas"></div>
     <div class="cbSearch"><input id="cbSearch" type="search" placeholder="Search by name, type or part number…" autocomplete="off"></div>
     <div class="cbList" id="cbList"></div>
     <div class="cbAiResult" id="cbAiResult"></div>
@@ -211,6 +213,7 @@ if(location.protocol==='file:'){
 <!-- INJECT js/parts-import.js -->
 <!-- INJECT js/intent-wizard.js -->
 <!-- INJECT js/parts-search.js -->
+<!-- INJECT js/recipes.js -->
 <!-- INJECT js/guide-cookbook.js -->
 </script>
 <script>

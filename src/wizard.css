@@ -208,6 +208,27 @@
 #cbBack .cbSearch{padding:7px 12px;border-bottom:1px solid var(--line)}
 #cbBack .cbSearch input{width:100%;box-sizing:border-box;padding:5px 10px;border:1px solid var(--line);border-radius:5px;font-size:13px;background:var(--bg2);color:var(--fg)}
 #cbBack .cbList{flex:1;overflow-y:auto;padding:4px 0}
+#cbBack .cbTabs{display:flex;gap:4px;padding:6px 12px 0;border-bottom:1px solid var(--line)}
+#cbBack .cbTabs button{border:1px solid var(--line);border-bottom:none;border-radius:6px 6px 0 0;padding:6px 12px;background:var(--bg2);color:var(--fg);cursor:pointer;font-size:13px}
+#cbBack .cbTabs button.on{background:#7048e8;color:#fff;border-color:#7048e8;font-weight:600}
+#cbBack .cbIdeas{flex:1;overflow-y:auto;padding:8px 12px;min-height:0}
+#cbBack .cbIdeaBar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+#cbBack .cbIdeaBar select{flex:1;padding:5px;font-size:13px}
+#cbBack .cbCard{border:1px solid var(--line);border-radius:8px;padding:9px 12px;margin-bottom:9px;background:var(--bg2)}
+#cbBack .cbCardHead{display:flex;gap:8px;align-items:center;font-size:14px}
+#cbBack .cbIcon{font-size:20px}
+#cbBack .cbTag{margin-left:auto;font-size:11px;border:1px solid var(--line);border-radius:10px;padding:1px 8px;color:var(--muted);white-space:nowrap}
+#cbBack .cbTag.mine{margin-left:0;background:#7048e8;color:#fff;border-color:#7048e8}
+#cbBack .cbBlurb{font-size:13px;margin:5px 0;line-height:1.4}
+#cbBack .cbNeed,#cbBack .cbExtra{font-size:12px;color:var(--muted)}
+#cbBack .cbNeed ul,#cbBack .cbExtra ul{margin:2px 0 4px 18px;padding:0}
+#cbBack .cbNeed li.cbHave{color:#2f7d4f;font-weight:600}
+#cbBack .cbCardBtns{display:flex;gap:6px;margin-top:6px}
+#cbBack .cbForm label{display:block;font-size:12px;color:var(--muted);margin:8px 0 2px}
+#cbBack .cbForm input[type=text],#cbBack .cbForm textarea,#cbBack .cbForm select{width:100%;box-sizing:border-box;padding:5px 8px;border:1px solid var(--line);border-radius:5px;font-size:13px;background:var(--bg);color:var(--fg)}
+#cbBack .cbFormParts{max-height:210px;overflow-y:auto;border:1px solid var(--line);border-radius:5px;margin-top:4px}
+#cbBack .cbFormParts label{display:flex;gap:8px;align-items:center;margin:0;padding:3px 8px;font-size:13px;color:var(--fg);cursor:pointer}
+#cbBack .cbFormParts label:hover{background:color-mix(in srgb,#7048e8 8%,transparent)}
 #cbBack .cbItem{display:flex;align-items:center;gap:10px;padding:5px 14px;cursor:pointer;border-bottom:1px solid color-mix(in srgb,var(--line) 50%,transparent)}
 #cbBack .cbItem:hover{background:color-mix(in srgb,#7048e8 6%,transparent)}
 #cbBack .cbItem.cbOwned{background:color-mix(in srgb,#7048e8 9%,transparent)}
