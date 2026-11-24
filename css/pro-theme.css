@@ -1,0 +1,245 @@
+/* ==========================================================================
+   EvenUCan professional theme (light and dark)
+   Loaded last, so it overrides app.css and dark-theme.css. Changes looks only:
+   no layout, no ids, no behaviour. Remove this one link to go back.
+   ========================================================================== */
+
+:root {
+  --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* light */
+  --bg: #f2f4f7;
+  --panel: #ffffff;
+  --panel-hover: #f3f5f9;
+  --panel-active: #e6ebf3;
+  --line: #d3d9e3;
+  --line-subtle: #e7eaf0;
+  --text: #17202e;
+  --text-muted: #5a6577;
+  --muted: #5a6577;
+  --accent: #1d4ed8;
+  --accent-hover: #1740b4;
+  --accent-subtle: #eaf0fd;
+  --accent-border: #a9bfee;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 14px 34px rgba(15, 23, 42, 0.18);
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 6px;
+  --trans-fast: 0.12s ease;
+}
+
+/* dark: the app sets data-theme on <html> (dark is the default) */
+:root[data-theme="dark"] {
+  --bg: #13161c;
+  --panel: #1a1e26;
+  --panel-hover: #222835;
+  --panel-active: #29303f;
+  --line: #2c3442;
+  --line-subtle: #232a36;
+  --text: #e4e8f0;
+  --text-muted: #98a2b3;
+  --muted: #98a2b3;
+  --accent: #5b8def;
+  --accent-hover: #7ea5f4;
+  --accent-subtle: #1b2638;
+  --accent-border: #3a5a8c;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+
+/* aliases for names the older styles use (so every one of them has a value in both themes) */
+:root, :root[data-theme="dark"] {
+  --bg2: var(--panel-hover);
+  --fg: var(--text);
+  --hover: var(--panel-hover);
+  --border: var(--line);
+  --primary: var(--accent);
+  --accent2: var(--accent-border);
+  --success: var(--ok);
+  --warning: var(--warn);
+}
+
+/* ---- base ---- */
+html, body {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- top bar: flat, one rule under it ---- */
+#menubar {
+  background: var(--panel) !important;
+  border-bottom: 1px solid var(--line) !important;
+  box-shadow: none !important;
+}
+#menubar .brand { font-weight: 600; letter-spacing: 0.01em; }
+#menubar .brand .tag { color: var(--text-muted); font-weight: 400; }
+#menubar #mbar .mtop {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+#menubar #mbar .mtop:hover,
+#menubar #mbar .mtop[aria-expanded="true"] {
+  background: var(--panel-active) !important;
+  color: var(--text);
+}
+#menubar button {
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  box-shadow: none;
+  font-weight: 500;
+}
+#menubar button:hover { background: var(--panel-hover); }
+
+/* the Build a Gadget button: the same accent as everything else, not a gradient */
+#bBuild {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+#bBuild:hover { background: var(--accent-hover) !important; }
+
+/* ---- buttons ---- */
+button {
+  font-family: var(--font-ui);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: none;
+  transition: background var(--trans-fast), border-color var(--trans-fast);
+}
+button:hover { background: var(--panel-hover); border-color: var(--accent-border); }
+button:focus-visible { outline: 2px solid var(--accent-border); outline-offset: 1px; }
+button.primary,
+.primary {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+button.primary:hover,
+.primary:hover { background: var(--accent-hover) !important; }
+.linkBtn { border: none !important; background: none !important; color: var(--accent); }
+
+/* ---- windows, cards and panels ---- */
+.ewWin {
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--line);
+  background: var(--panel) !important;
+  color: var(--text);
+}
+.wcBig, .wcPlain {
+  border-radius: var(--radius-md) !important;
+  font-weight: 500;
+}
+.wcBig.primary { font-weight: 600; }
+.aiHelp, .ewRow, .ewNote {
+  font-family: var(--font-ui);
+}
+.ewNote { color: var(--text-muted); }
+
+/* the setup screens: plain card, with a clean rule under the heading */
+#suBack .ewWin, #welcomeBack .ewWin { border-radius: var(--radius-lg) !important; }
+
+/* ---- toolbars and tool palette ---- */
+#toolbar {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+#toolbar button,
+#toolbar .tb {
+  border-radius: var(--radius-sm);
+}
+#toolbar button.on,
+#toolbar button[aria-pressed="true"] {
+  background: var(--accent-subtle) !important;
+  border-color: var(--accent-border) !important;
+  color: var(--accent);
+}
+
+/* ---- menus (the drop-down under the top bar) ---- */
+#mdrop, .menu-drop, .mdrop {
+  background: var(--panel) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+/* ---- inputs ---- */
+input, select, textarea {
+  font-family: var(--font-ui);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
+}
+
+/* ---- scrollbars: thin and quiet ---- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 6px; border: 2px solid var(--panel); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ---- icons: one quiet tone, colour only on hover or when the tool is on ----
+   The toolbar and menu icons were drawn in bright colours. They now show in grey, and come back to full
+   colour when the pointer is over them or the tool is switched on. Remove this block to bring the colour back. */
+#toolbar button svg,
+#menubar button svg,
+#mbar .mtop svg,
+#mdrop svg {
+  filter: grayscale(1) contrast(1.35);
+  opacity: 1;
+  transition: filter var(--trans-fast), opacity var(--trans-fast);
+}
+#toolbar button:hover svg,
+#menubar button:hover svg,
+#toolbar button.on svg,
+#toolbar button[aria-pressed="true"] svg {
+  filter: none;
+  opacity: 1;
+}
+
+/* ---- keyboard shortcut badges in the tooltips (Find Centre [K], Move [M]...) ----
+   The old yellow badge had light text, which could not be read. Now: the accent colour on a soft accent tint. */
+#tip kbd {
+  background: var(--text) !important;      /* a keycap: light in dark mode, dark in light mode */
+  color: var(--panel) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  padding: 1px 7px !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* ---- right-click and drop-down menus: items readable in both themes ----
+   Greyed-out (unavailable) items were drawn in the line colour, almost invisible on the dark panel. */
+#ctx, #mdrop {
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+#ctx .it, #mdrop .it { color: var(--text) !important; }
+#ctx .it:hover, #ctx .it:focus,
+#mdrop .it:hover, #mdrop .it:focus { background: var(--panel-active) !important; }
+#ctx .it.off, #mdrop .it.off {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
+}
+#ctx .it kbd, #mdrop .it kbd { color: var(--text-muted) !important; }
+#ctx .sep, #mdrop .sep { background: var(--line-subtle) !important; }

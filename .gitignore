@@ -1,0 +1,18 @@
+﻿__pycache__/
+*.pyc
+firmware/*.bin
+builds/
+firmware/*.json
+node_modules/
+dist/
+
+# Local AI runtime logs (written by the app)
+*.log
+
+# Projects folder choice saved by the app (per computer)
+projects-dir.txt
+*.evenucan.json.tmp
+
+# API keys and Wi-Fi (never commit)
+secrets.json
+secrets.json.tmp

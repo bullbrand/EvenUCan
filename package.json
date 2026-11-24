@@ -1,0 +1,101 @@
+{
+  "name": "evenucan",
+  "productName": "EvenUCan",
+  "version": "2.0.0-beta",
+  "description": "EvenUCan - ESP32/Arduino enclosure designer, wiring, code and flashing",
+  "main": "electron/main.js",
+  "private": true,
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --publish never",
+    "dist:dir": "electron-builder --win --dir --publish never",
+    "predist": "node tools/bump-version.js --require-clean",
+    "predist:dir": "node tools/bump-version.js --require-clean",
+    "postdist": "node tools/release-commit.js",
+    "postdist:dir": "node tools/release-commit.js",
+    "check:colours": "node tools/check-colours.js"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^26.18.0"
+  },
+  "author": "David John Waugh",
+  "homepage": "https://github.com/bullbrand/EvenUCan-Source",
+  "build": {
+    "appId": "com.evenucan.app",
+    "productName": "EvenUCan",
+    "copyright": "Copyright © David John Waugh",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "engine",
+        "to": "engine",
+        "filter": [
+          "**/*",
+          "!README.md"
+        ]
+      },
+      {
+        "from": ".",
+        "to": "webapp",
+        "filter": [
+          "EvenUCan.html",
+          "sw.js",
+          "manifest.json",
+          "server.py",
+          "ai_mini.py",
+          "measure-part.html",
+          "parts-library.json",
+          "parts-curated.json",
+          "EvenUCan User Manual.pdf",
+          "LICENSE.txt",
+          "THIRD-PARTY-NOTICES.txt",
+          "Modelfile",
+          "ai-models.json",
+          "ai-reference/**/*",
+          "css/**/*",
+          "js/**/*",
+          "drivers/**/*",
+          "icons/**/*"
+        ]
+      }
+    ],
+    "icon": "build/icon",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EvenUCan",
+      "artifactName": "EvenUCan-Setup-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "EvenUCan-Portable-${version}.${ext}"
+    }
+  }
+}

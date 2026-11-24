@@ -1,0 +1,154 @@
+/* ==========================================================================
+   EvenUCan UI kit: the shared classes for dialogs, popups and panels.
+   Use these instead of inline style="" so one change here (or in pro-theme.css,
+   for colours) reaches every dialog. Each class holds only the rules it names.
+   ========================================================================== */
+
+:root {
+  --text2: var(--text-muted);      /* secondary text (was used but never defined) */
+  --warn: #b45309;
+  --warn-subtle: #fdf3e4;
+  --warn-border: #e7b56a;
+  --danger: #b42318;
+  --ok: #15803d;
+}
+:root[data-theme="dark"] {
+  --warn: #f5a524;
+  --warn-subtle: #2a2415;
+  --warn-border: #6b5520;
+  --danger: #f97066;
+  --ok: #4ade80;
+}
+
+/* ---- colour ---- */
+.u-muted { color: var(--text-muted); }
+.u-warn-text { color: var(--warn); }
+.u-danger-text { color: var(--danger); }
+.u-ok-text { color: var(--ok); }
+
+/* ---- boxes ---- */
+.u-warn-box {
+  padding: 10px 12px;
+  border: 2px solid var(--warn-border);
+  border-radius: 8px;
+  background: var(--warn-subtle);
+}
+.u-pill { border-radius: 14px; padding: 2px 10px; }
+.u-reset-btn { border: none; padding: 0; margin: 0; }
+.u-noborder { border: none; }
+
+/* ---- layout ---- */
+.u-row { display: flex; gap: 8px; align-items: center; }
+.u-row-start { display: flex; gap: 6px; align-items: flex-start; }
+.u-wrap-6 { flex-wrap: wrap; gap: 6px; }
+.u-grow { flex: 1; min-width: 0; }
+.u-full { width: 100%; box-sizing: border-box; }
+.u-w68 { width: 68px; font: inherit; padding: 3px 5px; }
+
+/* ---- spacing ---- */
+.u-mt-2 { margin-top: 2px; }
+.u-mt-4 { margin-top: 4px; }
+.u-mt-6 { margin-top: 6px; }
+.u-mt-8 { margin-top: 8px; }
+.u-mt-10 { margin-top: 10px; }
+.u-mt-12 { margin-top: 12px; }
+.u-mb-4 { margin-bottom: 4px; }
+.u-mb-6 { margin-bottom: 6px; }
+.u-mb-8 { margin-bottom: 8px; }
+.u-mb-10 { margin-bottom: 10px; }
+.u-my-4 { margin: 4px 0; }
+.u-my-6 { margin: 6px 0; }
+.u-my-7 { margin: 7px 0; }
+.u-my-8 { margin: 8px 0; }
+.u-m0-8 { margin: 0 0 8px; }
+.u-m4-0-8 { margin: 4px 0 8px; }
+.u-pad-5-10 { padding: 5px 10px 1px; }
+.u-pad-6-8 { padding: 6px 8px; }
+
+/* ---- type ---- */
+.u-fs-12 { font-size: 12px; }
+.u-fs-14 { font-size: 14px; }
+.u-fs-15 { font-size: 15px; }
+.u-fs-18 { font-size: 18px; }
+.u-fw-400 { font-weight: 400; }
+.u-lh-14 { line-height: 1.4; }
+.u-lh-145 { line-height: 1.45; }
+.u-title-14 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.u-title-16 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.u-resize-v { resize: vertical; }
+
+/* ---- small buttons ---- */
+.u-btn-sm { font-size: 11px; padding: 2px 8px; }
+
+/* ---- boxes used by the setup, welcome and projects dialogs ---- */
+.u-dashed-box { padding: 10px 12px; border: 2px dashed var(--line); border-radius: 8px; }
+.u-ok-box { padding: 10px 12px; border: 2px solid var(--ok); border-radius: 8px; }
+.u-alert-box { margin: 10px 0; padding: 10px 12px; border-radius: 6px; border-left: 4px solid var(--danger); }
+.u-path-box {
+  font-size: 16px; font-weight: 700; font-family: Consolas, "Cascadia Mono", monospace;
+  padding: 10px 12px; border-radius: 8px; background: var(--panel-hover);
+  border: 1px solid var(--line); word-break: break-all;
+}
+.u-tint-box {
+  margin-top: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--panel-hover); text-align: left;
+}
+.u-help-box {
+  border: 1px solid var(--accent-border); background: var(--accent-subtle); border-radius: 8px;
+  padding: 8px 10px; margin: 4px 0 10px; font-size: 13px; line-height: 1.5;
+}
+.u-list-indent { margin: 6px 0 4px; padding-left: 18px; }
+.u-label-15 { font-weight: 600; font-size: 15px; display: block; margin-bottom: 6px; }
+.u-proj-row {
+  align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid var(--line-subtle);
+}
+.u-proj-name { flex: 1; font-weight: 600; }
+.u-build-btn {
+  margin-top: 5px; padding: 3px 10px; font-size: 12px; border-radius: 5px; cursor: pointer;
+  border: 1px solid var(--accent-border); background: var(--accent-subtle); color: var(--accent);
+}
+
+/* ---- popup: a dimmed backdrop and a white (light) / panel (dark) card ---- */
+.u-backdrop {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(15, 23, 42, 0.45); z-index: 10000;
+}
+.u-card {
+  max-width: 460px; padding: 20px 22px; border-radius: 10px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--line);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---- error and warning surfaces (light / dark) ---- */
+:root { --danger-subtle: #fef2f2; --danger-border: #f5a3a3; }
+:root[data-theme="dark"] { --danger-subtle: #2d1716; --danger-border: #7a2e2c; }
+
+/* ---- Icon guide (Help menu) ---- */
+.u-ig-card { width: min(640px, calc(100vw - 32px)); max-width: none; max-height: 82vh; display: flex; flex-direction: column; padding: 0; }
+.u-ig-head { padding: 16px 20px 10px; border-bottom: 1px solid var(--line); }
+.u-ig-list { overflow-y: auto; padding: 6px 20px; }
+.u-ig-group { border-bottom: 1px solid var(--line-subtle); padding: 4px 0; }
+.u-ig-group:last-child { border-bottom: none; }
+.u-ig-row { display: grid; grid-template-columns: 30px 150px 58px 1fr; gap: 10px; align-items: center; padding: 6px 0; }
+.u-ig-icon svg { width: 22px; height: 22px; }
+.u-ig-name { font-weight: 600; }
+.u-ig-key {
+  justify-self: start; font-size: 12px; font-weight: 700; padding: 1px 7px; border-radius: 4px;
+  background: var(--text); color: var(--panel); box-shadow: 0 1px 0 rgba(0,0,0,.35);
+}
+.u-ig-desc { color: var(--text-muted); font-size: 12.5px; line-height: 1.4; }
+.u-ig-foot { padding: 10px 20px 16px; border-top: 1px solid var(--line); text-align: right; }
+
+/* ---- tool detail popup (on top of the Icon guide) ---- */
+.u-backdrop-top { z-index: 10001; }
+.u-ig-row { cursor: pointer; border-radius: 4px; }
+.u-ig-row:hover, .u-ig-row:focus-visible { background: var(--panel-hover); outline: none; }
+.u-th-card { width: min(480px, calc(100vw - 32px)); max-width: none; padding: 0; }
+.u-th-head { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.u-th-head .u-ig-icon svg { width: 34px; height: 34px; }
+.u-th-head > div { flex: 1; }
+.u-th-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); padding: 12px 20px 0; }
+.u-th-text { padding: 4px 20px 0; line-height: 1.5; }
+.u-th-ex { padding-bottom: 6px; font-style: italic; }
+.u-ig-esc { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; font-size: 12.5px; color: var(--text-muted); line-height: 1.45; }
+.u-ig-esc .u-ig-key { flex: none; }

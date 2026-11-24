@@ -1,0 +1,697 @@
+/* ============================================================
+   EvenUCan – Dark Theme Override
+   Append to / link after app.css and enclosure-wizard.css
+   Activated by: <html data-theme="dark">
+   ============================================================ */
+
+/* ---- Root variables ---------------------------------------- */
+[data-theme="dark"] {
+  --bg:           #1a1d24;
+  --panel:        #22262f;
+  --line:         #363b48;
+  --text:         #dde2ee;
+  --accent:       #4d8ff7;
+  --muted:        #8491a8;
+  --panel-hover:  #2a2f3d;
+  --panel-active: #2e3447;
+  --line-subtle:  #2d3140;
+  --text-muted:   #7a8699;
+  --accent-hover: #6aa1ff;
+  --accent-subtle:#1c2b48;
+  --accent-border:#3a5fbe;
+  color-scheme:   dark;
+}
+
+/* ---- Scrollbars -------------------------------------------- */
+[data-theme="dark"] * {
+  scrollbar-color: var(--line) transparent;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--line);
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #515c75;
+}
+
+/* ---- Menubar – menu titles ---------------------------------- */
+[data-theme="dark"] #menubar #mbar .mtop:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] #menubar #mbar .mtop[aria-expanded="true"] {
+  background: var(--panel-active);
+  border-color: var(--accent-border);
+}
+
+/* ---- Menubar – buttons / selects --------------------------- */
+[data-theme="dark"] #menubar button,
+[data-theme="dark"] #menubar select {
+  background: var(--panel);
+}
+[data-theme="dark"] #menubar button:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] #menubar button.on {
+  background: var(--panel-active);
+  border-color: var(--accent-border);
+}
+[data-theme="dark"] #menubar #bCmdPalette {
+  background: var(--panel);
+}
+[data-theme="dark"] #menubar #bCmdPalette:hover {
+  background: var(--panel-hover);
+  border-color: var(--accent-border);
+}
+
+/* ---- Toolbar ----------------------------------------------- */
+[data-theme="dark"] #toolbar button:hover,
+[data-theme="dark"] #toolbar .tgh:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] #toolbar button.on {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  box-shadow: inset 0 0 0 1px var(--accent-border);
+}
+[data-theme="dark"] #toolbar .tgb .bd {
+  background: var(--panel);
+  color: #8ab4f8;
+  border-color: #3a5494;
+}
+[data-theme="dark"] #toolbar .tgn {
+  background: var(--panel);
+}
+[data-theme="dark"] #toolbar.names .tgb .tl {
+  color: var(--text);
+}
+
+/* ---- Drop-down menus (#mdrop, #ctx) ------------------------ */
+[data-theme="dark"] #mdrop,
+[data-theme="dark"] #ctx {
+  background: var(--panel-hover);
+  border-color: var(--line);
+}
+[data-theme="dark"] #mdrop .it:hover,
+[data-theme="dark"] #mdrop .it:focus,
+[data-theme="dark"] #ctx .it:hover {
+  background: var(--line);
+}
+[data-theme="dark"] #mdrop .sep,
+[data-theme="dark"] #ctx .sep {
+  background: #3a4155;
+}
+[data-theme="dark"] #mdrop .it.off,
+[data-theme="dark"] #ctx .it.off {
+  color: var(--line);
+}
+
+/* ---- Statusbar hint ---------------------------------------- */
+[data-theme="dark"] #hint {
+  color: var(--text);
+}
+[data-theme="dark"] #stats:hover {
+  background: var(--panel-hover);
+  color: var(--accent);
+}
+
+/* ---- Floating panels --------------------------------------- */
+[data-theme="dark"] .panel {
+  background: var(--panel);
+}
+
+/* ---- Ask / dialog box -------------------------------------- */
+[data-theme="dark"] #askBox {
+  background: var(--panel);
+}
+[data-theme="dark"] #askBox input {
+  background: var(--bg);
+  color: var(--text);
+}
+[data-theme="dark"] #askBox button {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+/* ---- Check panel ------------------------------------------- */
+[data-theme="dark"] #checkPanel .item {
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] #checkPanel button {
+  background: var(--panel);
+}
+
+/* ---- Hole / standoff / board panels ----------------------- */
+[data-theme="dark"] #holePanel label,
+[data-theme="dark"] #standoffPanel label,
+[data-theme="dark"] #boardPanel label,
+[data-theme="dark"] #textPanel label {
+  color: var(--text);
+}
+[data-theme="dark"] #holePanel select,
+[data-theme="dark"] #holePanel input[type=number],
+[data-theme="dark"] #standoffPanel select,
+[data-theme="dark"] #standoffPanel input[type=number],
+[data-theme="dark"] #boardPanel select,
+[data-theme="dark"] #boardPanel input[type=number],
+[data-theme="dark"] #textPanel label input:not([type=checkbox]):not([type=radio]),
+[data-theme="dark"] #textPanel select {
+  background: var(--bg);
+  color: var(--text);
+}
+[data-theme="dark"] #standoffPanel .warn {
+  background: #2b1f0a;
+  border-color: #7a5218;
+  color: #e8b060;
+}
+[data-theme="dark"] #standoffPanel button,
+[data-theme="dark"] #boardPanel button {
+  background: var(--panel);
+}
+[data-theme="dark"] #holePanel .sizes,
+[data-theme="dark"] #standoffPanel .sizes,
+[data-theme="dark"] #boardPanel .sizes {
+  background: #1c2b40;
+  color: var(--accent-hover);
+}
+
+/* ---- Shapes panel ------------------------------------------ */
+[data-theme="dark"] #shapes button {
+  background: var(--panel);
+}
+[data-theme="dark"] #shapes button:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] #shapes button.on {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
+
+/* ---- Bed panel button -------------------------------------- */
+[data-theme="dark"] #bedPanel button {
+  background: var(--panel);
+}
+
+/* ---- Help table -------------------------------------------- */
+[data-theme="dark"] #help td {
+  border-bottom-color: var(--line);
+}
+
+/* ---- Keyboard shortcut chips ------------------------------ */
+[data-theme="dark"] kbd {
+  background: var(--panel-hover);
+  border-color: var(--line);
+  color: var(--text);
+}
+/* Keep the tip kbd highlighted (yellow) */
+[data-theme="dark"] #tip kbd {
+  background: #ffd43b;
+  color: var(--text);
+  border-color: transparent;
+}
+
+/* ---- Hover marker label ------------------------------------ */
+[data-theme="dark"] #marker .lbl {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+/* ---- History panel ----------------------------------------- */
+[data-theme="dark"] #hist {
+  background: #22262fe8;
+}
+[data-theme="dark"] #hist .hHead,
+[data-theme="dark"] #hist .hFoot {
+  border-color: var(--line);
+}
+[data-theme="dark"] #hist .hHead:hover,
+[data-theme="dark"] #hist li:hover {
+  background: var(--panel-hover);
+}
+
+/* ---- Viewport cube ----------------------------------------- */
+[data-theme="dark"] #vcube .vcHome {
+  background: #22262fe0;
+  border-color: var(--line);
+  color: var(--text);
+}
+[data-theme="dark"] #vcube .vcHome:hover,
+[data-theme="dark"] #vcube.center .vcSkip:hover {
+  background: #2a3148;
+}
+[data-theme="dark"] #vcube .vcPlane {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+  color: var(--accent-hover);
+}
+[data-theme="dark"] #vcube.center .vcIntro {
+  background: var(--panel);
+  box-shadow: 0 2px 12px #0005;
+}
+[data-theme="dark"] #vcube.center .vcIntro span {
+  color: var(--text-muted);
+}
+[data-theme="dark"] #vcube.center .vcSkip {
+  background: var(--panel);
+}
+
+/* ---- Dimension labels -------------------------------------- */
+[data-theme="dark"] #dims .dim {
+  background: var(--panel);
+  color: var(--accent-hover);
+}
+[data-theme="dark"] #dims .dim:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] #dims input {
+  background: var(--panel);
+  color: var(--text);
+}
+
+/* ---- Copyright watermark ----------------------------------- */
+[data-theme="dark"] #copyright {
+  background: #0005;
+  color: var(--text-muted);
+}
+
+/* ---- Stats bar -------------------------------------------- */
+[data-theme="dark"] #stats:hover {
+  background: var(--panel-hover);
+}
+
+/* ============================================================
+   Command Palette
+   ============================================================ */
+[data-theme="dark"] .cmd-palette-win {
+  background: var(--panel);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+}
+[data-theme="dark"] .cmd-palette-search {
+  background: var(--panel);
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] .cmd-palette-search input {
+  color: var(--text);
+}
+[data-theme="dark"] .cmd-palette-search input::placeholder {
+  color: var(--line);
+}
+[data-theme="dark"] .cmd-esc-badge {
+  background: var(--panel-hover);
+  color: var(--text-muted);
+  border-color: var(--line);
+}
+[data-theme="dark"] .cmd-item:hover,
+[data-theme="dark"] .cmd-item.active {
+  background: var(--accent-subtle);
+}
+[data-theme="dark"] .cmd-item-title {
+  color: var(--text);
+}
+[data-theme="dark"] .cmd-item-desc {
+  color: var(--text-muted);
+}
+[data-theme="dark"] .cmd-item-badge {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--text-muted);
+}
+[data-theme="dark"] .cmd-palette-footer {
+  background: var(--panel);
+  border-top-color: #2d3140;
+  color: var(--text-muted);
+}
+[data-theme="dark"] .cmd-palette-footer kbd {
+  background: var(--panel);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+/* ============================================================
+   Drag-and-drop overlay card
+   ============================================================ */
+[data-theme="dark"] .drop-card {
+  background: var(--panel);
+  border-color: var(--accent);
+}
+[data-theme="dark"] .drop-card h3 {
+  color: var(--text);
+}
+[data-theme="dark"] .drop-card p {
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   Snap / Camera Modal
+   ============================================================ */
+[data-theme="dark"] .snap-modal-box {
+  background: var(--panel);
+  color: var(--text);
+}
+[data-theme="dark"] .snap-modal-close {
+  color: var(--text-muted);
+}
+[data-theme="dark"] .snap-modal-close:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+[data-theme="dark"] .snap-tabs {
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] .snap-tab-btn {
+  background: var(--panel-hover);
+  color: var(--text-muted);
+}
+[data-theme="dark"] .snap-tab-btn:hover {
+  background: var(--line);
+  color: var(--text);
+}
+[data-theme="dark"] .snap-tab-btn.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent) inset;
+}
+[data-theme="dark"] .camera-select-row label {
+  color: var(--text);
+}
+[data-theme="dark"] .camera-select-row select {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--line);
+}
+/* QR code canvas: KEEP white – scanners need high contrast */
+/* [data-theme="dark"] .snap-qr-wrap canvas { } */
+[data-theme="dark"] .snap-modal-url {
+  background: var(--accent-subtle);
+  color: var(--accent);
+}
+[data-theme="dark"] .snap-poll-status {
+  background: #1b2f20;
+  color: var(--ok);
+}
+[data-theme="dark"] .snap-poll-dot {
+  background: var(--ok);
+}
+[data-theme="dark"] .viewfinder-helper {
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   Enclosure Wizard & Parts Library
+   ============================================================ */
+
+/* Welcome screen buttons */
+[data-theme="dark"] .wcPlain {
+  background: var(--panel);
+}
+[data-theme="dark"] .wcPlain:hover {
+  background: var(--panel-hover);
+}
+
+/* Workflow strip */
+[data-theme="dark"] #wfStrip button {
+  background: var(--panel);
+}
+[data-theme="dark"] #wfStrip button.locked {
+  background: var(--panel);
+  color: var(--line);
+}
+
+/* Guide panel */
+[data-theme="dark"] #wfGuide {
+  background: var(--panel);
+  border-color: #5a4800;
+  color: var(--text);
+}
+[data-theme="dark"] #wfGuide.float {
+  box-shadow: 0 4px 18px #0007;
+}
+[data-theme="dark"] #wfGuide > div:not(.gStrip):not(.gBtns) {
+  color: var(--text);
+}
+[data-theme="dark"] #wfGuide .gStrip {
+  color: #8899bb;
+}
+[data-theme="dark"] #wfGuide .gStrip .gd {
+  color: #7ecf80;
+}
+[data-theme="dark"] #wfGuide .linkBtn {
+  color: #7ba8f7;
+  opacity: 0.85;
+}
+[data-theme="dark"] #wfGuide .linkBtn:hover {
+  opacity: 1;
+}
+[data-theme="dark"] #wfGuide summary {
+  color: #e09050;
+}
+[data-theme="dark"] #wfGuide .hoPre {
+  background: var(--bg);
+  border-color: var(--line);
+}
+[data-theme="dark"] #wfGuide .hoBtn {
+  background: var(--panel-hover);
+  border-color: var(--line);
+  color: var(--text);
+}
+
+/* Main window chrome */
+[data-theme="dark"] .ewWin {
+  background: var(--panel);
+}
+[data-theme="dark"] .ewTools {
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] .ewInfo {
+  border-top-color: var(--line);
+}
+[data-theme="dark"] .ewWin button {
+  background: var(--panel);
+}
+[data-theme="dark"] .ewWin button:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] .ewWin button.on {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
+[data-theme="dark"] .ewStyle label {
+  color: var(--text);
+}
+[data-theme="dark"] .ewStyle label.on {
+  background: var(--accent-subtle);
+}
+[data-theme="dark"] .ewPart {
+  border-color: var(--line);
+}
+
+/* Parts list */
+[data-theme="dark"] .plBar {
+  background: var(--panel);
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] .plItem:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] .plItem.on {
+  background: var(--accent-subtle);
+}
+/* plItem canvas: keep light – thumbnail rendering needs it */
+
+[data-theme="dark"] .plFeat {
+  border-color: var(--line);
+}
+[data-theme="dark"] .plFeat.on {
+  background: var(--accent-subtle);
+}
+
+[data-theme="dark"] .plHint {
+  background: #2b2410;
+  border-bottom-color: #3a3010;
+}
+
+[data-theme="dark"] #plRef {
+  background: var(--panel);
+  border-color: var(--line);
+}
+[data-theme="dark"] #plRefX {
+  background: var(--panel);
+}
+[data-theme="dark"] #plXY {
+  background: #22262fe0;
+  border-color: var(--line);
+  color: var(--text);
+}
+[data-theme="dark"] .plCanvasBtns button {
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--line);
+}
+[data-theme="dark"] .plCanvasBtns button:hover {
+  background: var(--panel-hover);
+  border-color: #616d87;
+}
+
+[data-theme="dark"] .plForm .plActions {
+  background: var(--panel);
+  border-top-color: var(--line);
+  box-shadow: 0 -3px 6px rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .plPins td {
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] .plPins tr.hd td {
+  border-bottom-color: var(--line);
+}
+
+[data-theme="dark"] .fzRow {
+  border-bottom-color: var(--line);
+}
+[data-theme="dark"] .fzRow:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] .fzRow.on {
+  background: var(--accent-subtle);
+}
+/* fzPic img: keep white for part images */
+
+/* Badges: semantic colours get dark-adjusted backgrounds */
+[data-theme="dark"] .plBadgeOk {
+  background: #1b3a24;
+  color: #4ade80;
+}
+[data-theme="dark"] .plBadgeWarn {
+  background: #3a2e0a;
+  color: #fbbf24;
+}
+[data-theme="dark"] .plBadgeFail {
+  background: #3a1218;
+  color: #f87171;
+}
+
+/* Warning / notification banners – keep distinct colours */
+[data-theme="dark"] .mfNote,
+[data-theme="dark"] .plSizeWarn {
+  background: #2d2510;
+  border-color: #7a6218;
+  color: #e8c060;
+}
+/* capBox (red) retains its semantic colour; ntfyBox gets a dark variant */
+[data-theme="dark"] .ntfyBox {
+  background: #0f2318;
+  border-color: #2a6b3a;
+  color: #9dd9b0;
+}
+[data-theme="dark"] .ntfyBox .topic {
+  background: var(--bg);
+  border-color: #2a6b3a;
+  color: #c8f0d8;
+}
+
+/* AI wizard step strip (Parts Doctor / Electric Doctor / Specialist) */
+[data-theme="dark"] .iwDocStrip {
+  background: linear-gradient(135deg, #1a2e24, #1a2535) !important;
+  border-color: #2d5040 !important;
+}
+
+/* Wiring tools */
+[data-theme="dark"] #wrTools button {
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] #wrStepBox {
+  background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+[data-theme="dark"] .wrNet {
+  border-color: var(--line);
+}
+[data-theme="dark"] .wrNet.on {
+  background: var(--accent-subtle);
+}
+[data-theme="dark"] .wrNet .wrLink:hover {
+  background: var(--panel-hover);
+}
+[data-theme="dark"] .wrNet .wrLink.on {
+  background: var(--accent-subtle);
+}
+
+/* Firmware / efbox */
+[data-theme="dark"] .efbox {
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+/* Chat log */
+[data-theme="dark"] .chatLog {
+  background: var(--panel);
+}
+[data-theme="dark"] .chatMsg.me {
+  background: var(--accent-subtle);
+  border-color: var(--accent-border);
+}
+[data-theme="dark"] .chatMsg.ai {
+  background: var(--panel);
+}
+
+/* ===== One look for every step's buttons =====
+   The next step is ALWAYS a solid blue button at the bottom RIGHT; Back and the others are plain outlines beside it.
+   (In dark theme the generic ".ewWin button" rule used to outrank ".primary", so the main button lost its blue.) */
+.ewWin button.primary, .wcBig.primary, #wfGuide button.primary, [data-theme="dark"] .ewWin button.primary, [data-theme="dark"] .wcBig.primary, [data-theme="dark"] #wfGuide button.primary {
+  background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; font-weight: 600;
+}
+.ewWin button.primary:hover, .wcBig.primary:hover, #wfGuide button.primary:hover { filter: brightness(1.1); }
+.ewWin button.primary:disabled, #wfGuide button.primary:disabled { filter: grayscale(.5) opacity(.6); }
+/* window footers: everything sits to the right, the main button last */
+.ewFoot { justify-content: flex-end; flex-wrap: wrap; }
+.ewFoot button.primary { order: 9; }
+.ewFoot .linkBtn { margin-right: auto; }
+/* the first-run setup: buttons side by side on the right instead of stacked across the width */
+#suFoot { justify-content: flex-end; align-items: center; }
+#suFoot .wcBig { display: inline-block; width: auto; padding: 10px 18px; }
+#suFoot .wcBig.primary { order: 9; }
+#suFoot > div { order: 20; }
+/* the step-by-step guide panel */
+#wfGuide .gBtns { justify-content: flex-end; }
+#wfGuide .gBtns button.primary { order: 9; }
+#wfGuide .gBtns .linkBtn { margin-right: auto; }
+#wfGuide .gBtns #gBack { order: 5; }
+
+/* the backup reminder bar must never sit on top of an open window's buttons: it waits until the window is closed */
+body:has(.ewBack[style*="display: grid"]) #bkBar { display: none !important; }
+
+/* ===== Code-panel actions: grouped by purpose, equal size, colour = meaning =====
+   blue = the recommended next step · amber = writes to the board (be careful) · plain = safe helpers · red = destructive */
+.actGrid { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.actGrp { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.actGrp > b { flex-basis: 100%; font-size: 11.5px; letter-spacing: .5px; text-transform: uppercase; color: var(--text2, #667085); font-weight: 600; }
+.ewWin .actBtn { font-size: 14px; padding: 8px 14px; font-weight: 600; min-width: 150px; text-align: center; }
+.ewWin button.hwBtn { background: #f59e0b !important; border-color: #d97706 !important; color: #1c1917 !important; }
+.ewWin button.hwBtn:hover { filter: brightness(1.08); }
+.ewWin button.dangerBtn { background: #dc2626 !important; border-color: #b91c1c !important; color: #fff !important; }
+
+/* ---- Toolbar and menu icons: SolidCraft-style blue in dark mode -----------
+   pro-theme.css greys the icons out. In dark mode they now show in the accent blue
+   (full strength on hover and when a tool is on), with a soft blue fill, as in SolidCraft.
+   Remove this block to get back the grey icons. */
+[data-theme="dark"] #toolbar button svg,
+[data-theme="dark"] #menubar button svg,
+[data-theme="dark"] #mbar .mtop svg,
+[data-theme="dark"] #mdrop svg {
+  filter: none;
+}
+[data-theme="dark"] #toolbar svg:not(.fi) {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+[data-theme="dark"] #toolbar svg:not(.fi) :is(rect,circle,ellipse,path[d$="z"]) {
+  fill: color-mix(in srgb, var(--accent) 22%, transparent);
+}
+[data-theme="dark"] #toolbar button:hover svg:not(.fi) {
+  stroke: var(--accent-hover);
+}
+
+/* Toolbar icons drawn from the sprite (svg.fi) keep their own multi-colour fills, so in dark mode
+   they are tinted to one blue, as SolidCraft's ribbon icons are. Remove this block for the coloured icons. */
+[data-theme="dark"] #toolbar svg.fi {
+  filter: grayscale(1) brightness(1.5) sepia(1) hue-rotate(180deg) saturate(3.5);
+}

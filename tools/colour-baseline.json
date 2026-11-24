@@ -1,0 +1,22 @@
+{
+  "js/ai/02-ai-chat.js": 7,
+  "js/ai/03-intent-wizard.js": 3,
+  "js/ai/05-missing-parts-ai.js": 1,
+  "js/ai/07-training-suite.js": 6,
+  "js/ai/08-part-database-search.js": 3,
+  "js/cad/02-storage-and-warnings.js": 1,
+  "js/cad/08-toolbar-mouse-keyboard.js": 1,
+  "js/cad/14-print-check-help-updates.js": 5,
+  "js/cad/17-menus-and-palette.js": 3,
+  "js/wizard/08-parts-library.js": 2,
+  "js/wizard/12-wiring-diagram-and-doctor.js": 8,
+  "js/wizard/14-wiring-window.js": 16,
+  "js/wizard/20-parts-import-and-browser.js": 5,
+  "EvenUCan.html": 881,
+  "css/ai-specialist.css": 10,
+  "css/app.css": 187,
+  "css/cookbook.css": 17,
+  "css/dark-theme.css": 45,
+  "css/enclosure-wizard.css": 99,
+  "css/pro-theme.css": 2
+}
